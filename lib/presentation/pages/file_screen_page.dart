@@ -1,3 +1,5 @@
+// android_files_screen.dart
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:pdf_kit/core/models/file_model.dart';
@@ -7,7 +9,8 @@ import 'package:pdf_kit/service/path_service.dart';
 import 'package:pdf_kit/service/permission_service.dart';
 
 class AndroidFilesScreen extends StatefulWidget {
-  const AndroidFilesScreen({super.key});
+  final String? initialPath;
+  const AndroidFilesScreen({super.key, this.initialPath});
   @override
   State<AndroidFilesScreen> createState() => _AndroidFilesScreenState();
 }
@@ -17,11 +20,20 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
   String? _currentPath;
   List<FileInfo> _entries = [];
   String _query = '';
+  bool _searching = false;
+
+  StreamSubscription? _searchSub;
 
   @override
   void initState() {
     super.initState();
     _boot();
+  }
+
+  @override
+  void dispose() {
+    _searchSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _boot() async {
@@ -31,71 +43,162 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
       final vols = await PathService.volumes();
       vols.fold((_) {}, (dirs) async {
         setState(() => _roots = dirs);
-        if (dirs.isNotEmpty) await _open(dirs.first.path);
+        final startPath =
+            widget.initialPath ?? (dirs.isNotEmpty ? dirs.first.path : null);
+        if (startPath != null) await _open(startPath);
       });
     });
   }
 
   Future<void> _open(String path) async {
+    _cancelSearch();
     final res = await FileSystemService.list(path);
     res.fold((_) {}, (items) {
       setState(() {
         _currentPath = path;
         _entries = items;
+        _query = '';
+        _searching = false;
       });
     });
   }
 
-  Future<void> _search(String q) async {
+  void _cancelSearch() {
+    _searchSub?.cancel();
+    _searchSub = null;
+  }
+
+  Future<void> _openFolder(String path) async {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => AndroidFilesScreen(initialPath: path)),
+    );
+  }
+
+  void _startDeepSearch(String q) {
     if (_currentPath == null) return;
-    if (q.isEmpty) return _open(_currentPath!);
-    final res = await FileSystemService.search(_currentPath!, q, recursive: true);
-    res.fold((_) {}, (items) => setState(() => _entries = items));
+    _cancelSearch();
+    setState(() {
+      _query = q;
+      _entries = [];
+      _searching = true;
+    });
+    debugPrint('startDeepSearch: query="$q" path=$_currentPath');
+    // Optional: exclude heavy system paths if desired.
+    final stream = FileSystemService.searchStream(
+      _currentPath!,
+      q,
+      // excludePrefixes: const ['/storage/emulated/0/Android/obb'],
+    );
+    _searchSub = stream.listen(
+      (either) {
+        either.fold(
+          (err) {
+            debugPrint('searchStream yielded error: $err');
+          },
+          (fi) {
+            debugPrint('searchStream hit: ${fi.path}');
+            setState(() => _entries = [..._entries, fi]);
+          },
+        );
+      },
+      onDone: () {
+        debugPrint('searchStream done for query="$q"');
+      },
+      onError: (err) {
+        debugPrint('searchStream subscription error: $err');
+      },
+    );
+  }
+
+  Future<void> _clearSearchAndRestore() async {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _query = '';
+      _searching = false;
+    });
+    debugPrint('clearSearchAndRestore: restoring $_currentPath');
+    if (_currentPath != null) await _open(_currentPath!);
   }
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _query.isEmpty
-        ? _entries
-        : _entries.where((e) => e.name.toLowerCase().contains(_query.toLowerCase())).toList();
+    // In AndroidFilesScreen.build:
+    final items = _searching
+        ? _entries // deep-search already filtered to files
+        : (_query.isEmpty
+              ? _entries
+              : _entries
+                    .where(
+                      (e) =>
+                          e.name.toLowerCase().contains(_query.toLowerCase()),
+                    )
+                    .toList());
 
-    final folders = filtered.where((e) => e.isDirectory).toList();
-    final files = filtered.where((e) => !e.isDirectory).toList();
+    final folders = items
+        .where((e) => e.isDirectory)
+        .toList(); // will be empty when _searching
+    final files = items.where((e) => !e.isDirectory).toList();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_currentPath ?? 'Storage'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () async {
-              final q = await showSearch<String>(
-                context: context,
-                delegate: _QueryDelegate(initial: _query),
-              );
-              if (q != null) {
-                setState(() => _query = q);
-                await _search(q);
-              }
-            },
-          ),
-        ],
+    return PopScope(
+      canPop: !(_searching || _query.isNotEmpty),
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        // Back pressed while searching: clear filter and stay
+        await _clearSearchAndRestore();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: _searching || _query.isNotEmpty
+              ? TextField(
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    hintText: 'Search files and folders...',
+                  ),
+                  onChanged: _startDeepSearch,
+                )
+              : Text(_currentPath ?? 'Storage'),
+          actions: [
+            if (!_searching && _query.isEmpty)
+              IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () => setState(() => _searching = true),
+              ),
+            if (_searching || _query.isNotEmpty)
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: _clearSearchAndRestore,
+              ),
+          ],
+        ),
+        body: _currentPath == null
+            ? _buildRoots()
+            : _buildListing(folders, files),
+        floatingActionButton: !_searching && _query.isEmpty
+            ? FloatingActionButton(
+                onPressed: () =>
+                    Navigator.of(context).popUntil((r) => r.isFirst),
+                tooltip: 'Back to Roots',
+                child: const Icon(Icons.home),
+              )
+            : null,
       ),
-      body: _currentPath == null ? _buildRoots() : _buildListing(folders, files),
     );
   }
 
   Widget _buildRoots() => ListView(
-        children: _roots
-            .map((d) => ListTile(
-                  leading: const Icon(Icons.sd_storage),
-                  title: Text(d.path),
-                  onTap: () => _open(d.path),
-                ))
-            .toList(),
-      );
+    children: _roots
+        .map(
+          (d) => ListTile(
+            leading: const Icon(Icons.sd_storage),
+            title: Text(d.path),
+            onTap: () => _openFolder(d.path),
+          ),
+        )
+        .toList(),
+  );
 
-  Widget _buildListing(List<FileInfo> folders, List<FileInfo> files) => RefreshIndicator(
+  Widget _buildListing(List<FileInfo> folders, List<FileInfo> files) =>
+      RefreshIndicator(
         onRefresh: () => _open(_currentPath!),
         child: ListView(
           children: [
@@ -103,23 +206,28 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
               padding: const EdgeInsets.all(12),
               child: Text('Total: ${folders.length + files.length} items'),
             ),
-            if (folders.isNotEmpty) const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Text('Folders'),
+            if (folders.isNotEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Text('Folders'),
+              ),
+            ...folders.map(
+              (f) => ListTile(
+                leading: const Icon(Icons.folder),
+                title: Text(f.name),
+                subtitle: Text('${f.mediaInfo?['children'] ?? 0} items'),
+                onTap: () => _openFolder(f.path),
+              ),
             ),
-            ...folders.map((f) => ListTile(
-                  leading: const Icon(Icons.folder),
-                  title: Text(f.name),
-                  subtitle: Text('${f.mediaInfo?['children'] ?? 0} items'),
-                  onTap: () => _open(f.path),
-                )),
             const Divider(),
-            ...files.map((f) => ListTile(
-                  leading: Icon(_iconFor(f)),
-                  title: Text(f.name),
-                  subtitle: Text('${f.readableSize} • ${f.lastModified ?? ''}'),
-                  onTap: () => OpenService.open(f.path),
-                )),
+            ...files.map(
+              (f) => ListTile(
+                leading: Icon(_iconFor(f)),
+                title: Text(f.name),
+                subtitle: Text('${f.readableSize} • ${f.lastModified ?? ''}'),
+                onTap: () => OpenService.open(f.path),
+              ),
+            ),
           ],
         ),
       );
@@ -131,15 +239,4 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
     if (m.startsWith('image/')) return Icons.image;
     return Icons.insert_drive_file;
   }
-}
-
-class _QueryDelegate extends SearchDelegate<String> {
-  final String initial;
-  _QueryDelegate({this.initial = ''}) { query = initial; }
-  @override List<Widget>? buildActions(BuildContext context) =>
-      [IconButton(icon: const Icon(Icons.clear), onPressed: () => query = '')];
-  @override Widget? buildLeading(BuildContext context) =>
-      IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => close(context, initial));
-  @override Widget buildResults(BuildContext context) => const SizedBox.shrink();
-  @override Widget buildSuggestions(BuildContext context) => const SizedBox.shrink();
 }
