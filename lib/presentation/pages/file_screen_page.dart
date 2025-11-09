@@ -3,6 +3,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:pdf_kit/core/models/file_model.dart';
+import 'package:pdf_kit/presentation/component/document_tile.dart';
+import 'package:pdf_kit/presentation/component/folder_tile.dart';
 import 'package:pdf_kit/service/file_system_serevice.dart';
 import 'package:pdf_kit/service/open_service.dart';
 import 'package:pdf_kit/service/path_service.dart';
@@ -170,9 +172,13 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
               ),
           ],
         ),
-        body: _currentPath == null
-            ? _buildRoots()
-            : _buildListing(folders, files),
+        body: SafeArea(
+          top: false,
+          bottom: true,
+          child: _currentPath == null
+              ? _buildRoots()
+              : _buildListing(folders, files),
+        ),
         floatingActionButton: !_searching && _query.isEmpty
             ? FloatingActionButton(
                 onPressed: () =>
@@ -197,46 +203,80 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
         .toList(),
   );
 
-  Widget _buildListing(List<FileInfo> folders, List<FileInfo> files) =>
-      RefreshIndicator(
-        onRefresh: () => _open(_currentPath!),
-        child: ListView(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Text('Total: ${folders.length + files.length} items'),
-            ),
-            if (folders.isNotEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: Text('Folders'),
-              ),
-            ...folders.map(
-              (f) => ListTile(
-                leading: const Icon(Icons.folder),
-                title: Text(f.name),
-                subtitle: Text('${f.mediaInfo?['children'] ?? 0} items'),
-                onTap: () => _openFolder(f.path),
-              ),
-            ),
-            const Divider(),
-            ...files.map(
-              (f) => ListTile(
-                leading: Icon(_iconFor(f)),
-                title: Text(f.name),
-                subtitle: Text('${f.readableSize} • ${f.lastModified ?? ''}'),
-                onTap: () => OpenService.open(f.path),
-              ),
-            ),
-          ],
+  Widget _buildListing(
+    List<FileInfo> folders,
+    List<FileInfo> files,
+  ) => RefreshIndicator(
+    onRefresh: () => _open(_currentPath!),
+    child: ListView(
+      padding: const EdgeInsets.only(bottom: 16),
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: Text('Total: ${folders.length + files.length} items'),
         ),
-      );
 
-  IconData _iconFor(FileInfo f) {
-    final m = f.mimeType ?? '';
-    final e = f.extension;
-    if (e == 'pdf') return Icons.picture_as_pdf;
-    if (m.startsWith('image/')) return Icons.image;
-    return Icons.insert_drive_file;
+        if (folders.isNotEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: Text('Folders'),
+          ),
+
+        // Folders with FolderEntryCard (uses only FileInfo)
+        ...folders.map(
+          (f) => Container(
+            margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+            child: FolderEntryCard(
+              info: f,
+              onTap: () => _openFolder(f.path),
+              onMenuSelected: (v) => _handleFolderMenu(v, f),
+            ),
+          ),
+        ),
+
+        // if (files.isNotEmpty) const Divider(),
+
+        // Files with DocEntryCard (uses only FileInfo; shows PDF/image preview)
+        ...files.map(
+          (f) => Container(
+            margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+            child: DocEntryCard(
+              info: f,
+              onOpen: () => OpenService.open(f.path),
+              onMenu: (v) => _handleFileMenu(v, f),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  // Optional simple handlers
+  void _handleFolderMenu(String v, FileInfo f) {
+    switch (v) {
+      case 'open':
+        _openFolder(f.path);
+        break;
+      case 'rename':
+        // TODO: implement rename
+        break;
+      case 'delete':
+        // TODO: implement delete
+        break;
+    }
+  }
+
+  void _handleFileMenu(String v, FileInfo f) {
+    switch (v) {
+      case 'open':
+        OpenService.open(f.path);
+        break;
+      case 'rename':
+        // TODO: implement rename
+        break;
+      case 'delete':
+        // TODO: implement delete
+        break;
+    }
   }
 }

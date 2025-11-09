@@ -1,0 +1,106 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:pdf_kit/core/models/file_model.dart';
+
+class FolderEntryCard extends StatelessWidget {
+  final FileInfo info;
+  final VoidCallback? onTap;
+  final ValueChanged<String>? onMenuSelected;
+
+  const FolderEntryCard({
+    super.key,
+    required this.info,
+    this.onTap,
+    this.onMenuSelected,
+  });
+
+  bool get _isDir => info.isDirectory;
+
+  String _recent() {
+    final dt = info.lastModified ?? DateTime.now();
+    return DateFormat('MM/dd/yyyy  HH:mm').format(dt);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final countOrSize = _isDir
+        ? '${info.childrenCount ?? 0} files'
+        : info.readableSize;
+
+    return Material(
+      color: Colors.black.withAlpha(28),
+      shadowColor: Colors.black.withAlpha(28),
+      elevation: 2,
+      borderRadius: BorderRadius.circular(12),
+
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 18, left: 18),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    // default asset inside the widget: keep path consistent in pubspec
+                    'assets/folder.png',
+                    width: 56,
+                    height: 56,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              // const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      info.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      countOrSize,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withAlpha(179),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _recent(),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withAlpha(153),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 18),
+                child: PopupMenuButton<String>(
+                  onSelected: onMenuSelected,
+                  itemBuilder: (ctx) => const [
+                    PopupMenuItem(value: 'open', child: Text('Open')),
+                    PopupMenuItem(value: 'rename', child: Text('Rename')),
+                    PopupMenuItem(value: 'delete', child: Text('Delete')),
+                  ],
+                  icon: const Icon(Icons.more_vert),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
