@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pdf_kit/core/permission_service.dart';
 
 // Route name constants
 class AppRoutes {
@@ -31,8 +32,7 @@ class OnboardingPage extends StatelessWidget {
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Home')));
+  Widget build(BuildContext context) => const FilePermissionScreen();
 }
 
 class AllFilesPage extends StatelessWidget {
