@@ -11,6 +11,7 @@ import 'package:pdf_kit/service/path_service.dart';
 import 'package:pdf_kit/service/permission_service.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/presentation/sheets/new_folder_sheet.dart';
+import 'package:path/path.dart' as p;
 
 class AndroidFilesScreen extends StatefulWidget {
   final String? initialPath;
@@ -24,7 +25,6 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
   String? _currentPath;
   List<FileInfo> _entries = [];
 
-  // Search-related fields left intact in case you reuse filtering locally later.
   String _query = '';
   bool _searching = false;
   StreamSubscription? _searchSub;
@@ -74,20 +74,19 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
   }
 
   Future<void> _openFolder(String path) async {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => AndroidFilesScreen(initialPath: path)),
+    AppRouter.filesNavKey.currentState?.pushNamed(
+      FilesRoutes.folder,
+      arguments: path,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // No in-place searching here; this screen only lists.
     final items = _entries;
     final folders = items.where((e) => e.isDirectory).toList();
     final files = items.where((e) => !e.isDirectory).toList();
 
     return Scaffold(
-      // Custom header replaces AppBar
       body: SafeArea(
         child: Padding(
           padding: screenPadding,
@@ -103,11 +102,6 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
-        tooltip: 'Back to Roots',
-        child: const Icon(Icons.home),
-      ),
     );
   }
 
@@ -118,7 +112,6 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
       alignment: Alignment.center,
       child: Row(
         children: [
-          // Left: app glyph (simple circle + star to emulate Files brand feel)
           Container(
             width: 34,
             height: 34,
@@ -143,11 +136,9 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
-              // Go to dedicated search screen, pass the current path.
-              Navigator.pushNamed(
-                context,
-                AppRoutes.search,
-                arguments: {'path': _currentPath},
+              AppRouter.filesNavKey.currentState?.pushNamed(
+                FilesRoutes.search,
+                arguments: _currentPath,
               );
             },
             tooltip: 'Search',
@@ -198,36 +189,92 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
     );
   }
 
-  Widget _buildListing(List<FileInfo> folders, List<FileInfo> files, BuildContext context) {
+  Widget _buildListing(
+    List<FileInfo> folders,
+    List<FileInfo> files,
+    BuildContext context,
+  ) {
     final isEmpty = folders.isEmpty && files.isEmpty;
+
+    final String displayName;
+    if (_currentPath == null) {
+      displayName = '/';
+    } else {
+      final normalizedCurrent = p.normalize(_currentPath!);
+
+      // If current path is exactly one of the known roots, label it as 'root'.
+      final exactRoot = _roots.firstWhere(
+        (r) => p.normalize(r.path) == normalizedCurrent,
+        orElse: () => Directory(''),
+      );
+      if (exactRoot.path.isNotEmpty) {
+        displayName = 'root';
+      } else {
+        // Otherwise try to find which root this path belongs to and show the
+        // relative path from that root, e.g. '/Documents/new'. If no root is
+        // found, fall back to the basename.
+        Directory? parentRoot;
+        for (final r in _roots) {
+          final rp = p.normalize(r.path);
+          if (normalizedCurrent.startsWith(rp)) {
+            parentRoot = r;
+            break;
+          }
+        }
+
+        if (parentRoot != null) {
+          var rel = p.relative(_currentPath!, from: parentRoot.path);
+          // Normalize separators to forward slashes for display consistency.
+          rel = rel.replaceAll(Platform.pathSeparator, '/');
+          displayName = '/$rel';
+        } else {
+          displayName = p.basename(_currentPath!);
+        }
+      }
+    }
 
     return Column(
       children: [
-        // Fixed (non-scrollable) toolbar
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'Total: ${folders.length + files.length} items',
-                style: Theme.of(context).textTheme.titleMedium,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Current directory name
+                    Text(
+                      displayName,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    // Total items
+                    Text(
+                      'Total: ${folders.length + files.length} items',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
               ),
-              const Spacer(),
               const IconButton(
                 padding: EdgeInsets.all(0),
                 onPressed: null,
                 icon: Icon(Icons.import_export_rounded),
               ),
               IconButton(
-                onPressed:() {showNewFolderSheet(context: context, onCreate: null);},
-                icon: Icon(Icons.create_new_folder_outlined),
+                onPressed: () {
+                  showNewFolderSheet(context: context, onCreate: null);
+                },
+                icon: const Icon(Icons.create_new_folder_outlined),
               ),
             ],
           ),
         ),
-
-        // Scrollable content only
         Expanded(
           child: isEmpty
               ? _buildEmptyState()
@@ -236,7 +283,6 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
                   child: ListView(
                     padding: const EdgeInsets.only(bottom: 16),
                     children: [
-                      // Folders
                       ...folders.map(
                         (f) => Container(
                           margin: const EdgeInsets.symmetric(
@@ -250,7 +296,6 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
                           ),
                         ),
                       ),
-                      // Files
                       ...files.map(
                         (f) => Container(
                           margin: const EdgeInsets.symmetric(

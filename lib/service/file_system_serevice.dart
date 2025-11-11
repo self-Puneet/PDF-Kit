@@ -59,6 +59,10 @@ class FileSystemService {
                 lastModified: st.modified,
                 parentDirectory: e.parent.path,
                 isDirectory: true,
+                // populate childrenCount so UI widgets (e.g., FolderEntryCard)
+                // that read `info.childrenCount` show the correct value.
+                childrenCount: count,
+                // keep mediaInfo for backward compatibility
                 mediaInfo: {'children': count},
               ),
             );
@@ -204,6 +208,7 @@ class FileSystemService {
   static Future<int> _countVisibleChildren(Directory dir, {int? cap}) async {
     int n = 0;
     try {
+      print("we can enter te directory atleast.");
       // Skip if we can’t enter this directory at all.
       if (!await FileAccessGuard.canEnterDirectory(dir)) return 0;
 

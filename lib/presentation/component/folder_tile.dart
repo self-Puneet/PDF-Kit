@@ -104,17 +104,14 @@ class FolderEntryCard extends StatelessWidget {
                 ),
                 // ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: PopupMenuButton<String>(
-                  onSelected: onMenuSelected,
-                  itemBuilder: (ctx) => const [
-                    PopupMenuItem(value: 'open', child: Text('Open')),
-                    PopupMenuItem(value: 'rename', child: Text('Rename')),
-                    PopupMenuItem(value: 'delete', child: Text('Delete')),
-                  ],
-                  icon: const Icon(Icons.more_vert),
-                ),
+              PopupMenuButton<String>(
+                onSelected: onMenuSelected,
+                itemBuilder: (ctx) => const [
+                  PopupMenuItem(value: 'open', child: Text('Open')),
+                  PopupMenuItem(value: 'rename', child: Text('Rename')),
+                  PopupMenuItem(value: 'delete', child: Text('Delete')),
+                ],
+                icon: const Icon(Icons.more_vert),
               ),
             ],
           ),

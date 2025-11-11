@@ -151,26 +151,30 @@ class NotFoundPage extends StatelessWidget {
   );
 }
 
+class FilesRoutes {
+  static const String root = '/';
+  static const String folder = '/folder';
+  static const String search = '/search';
+}
+
+
 // Centralized route generator
 class AppRouter {
+  // Nested navigator for Files tab
+  static final GlobalKey<NavigatorState> filesNavKey = GlobalKey<NavigatorState>();
+
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
-      case AppRoutes.home:
-        return _material(HomeShell(), settings);
-      case AppRoutes.search:
-        String? path;
+      case AppRoutes.home: {
         final args = settings.arguments;
-        if (args is Map && args['path'] is String) {
-          path = args['path'] as String;
+        int initialTab = 0;
+        if (args is Map && args['tab'] is int) {
+          initialTab = args['tab'] as int;
         }
-        return _material(SearchFilesScreen(initialPath: path), settings);
-
+        return _material(HomeShell(initialIndex: initialTab), settings);
+      }
       case AppRoutes.onboarding:
         return _material(const OnboardingPage(), settings);
-      case AppRoutes.allFiles:
-        return _material(const AndroidFilesScreen(), settings);
-      // case AppRoutes.search:
-      //   return _material(const SearchFilePage(), settings);
       case AppRoutes.preferences:
         return _material(const PreferencesPage(), settings);
       case AppRoutes.language:
@@ -181,14 +185,12 @@ class AppRouter {
         return _material(const AboutAppPage(), settings);
       case AppRoutes.takeImage:
         return _material(const TakeImagePage(), settings);
-      case AppRoutes.showPdf:
-        // Example: accept an argument map with 'path'
+      case AppRoutes.showPdf: {
         final args = settings.arguments;
         String? path;
-        if (args is Map && args['path'] is String) {
-          path = args['path'] as String;
-        }
+        if (args is Map && args['path'] is String) path = args['path'] as String;
         return _material(ShowPdfPage(path: path), settings);
+      }
       case AppRoutes.recent:
         return _material(const RecentFilesPage(), settings);
       case AppRoutes.addWatermark:
@@ -201,10 +203,38 @@ class AppRouter {
         return _material(const ProtectPdfPage(), settings);
       case AppRoutes.compressPdf:
         return _material(const CompressPdfPage(), settings);
+
+      // Optional: App-wide search (keeps bar if you place it inside Files nested routes instead)
+      case AppRoutes.search: {
+        String? path;
+        final args = settings.arguments;
+        if (args is Map && args['path'] is String) path = args['path'] as String;
+        return _material(SearchFilesScreen(initialPath: path), settings);
+      }
+
       default:
-        // Let onUnknownRoute handle anything not matched here
         return _unknown(settings);
     }
+  }
+
+  // Files tab nested router: use this inside FilesTab widget
+  static Route<dynamic> onGenerateFilesRoute(RouteSettings settings) {
+    late Widget page;
+    switch (settings.name) {
+      case FilesRoutes.root:
+      case '/':
+        page = AndroidFilesScreen(initialPath: settings.arguments as String?);
+        break;
+      case FilesRoutes.folder:
+        page = AndroidFilesScreen(initialPath: settings.arguments as String);
+        break;
+      case FilesRoutes.search:
+        page = SearchFilesScreen(initialPath: settings.arguments as String?);
+        break;
+      default:
+        page = AndroidFilesScreen();
+    }
+    return MaterialPageRoute(builder: (_) => page, settings: settings);
   }
 
   static Route<dynamic> onUnknownRoute(RouteSettings settings) {
@@ -218,6 +248,5 @@ class AppRouter {
     return MaterialPageRoute(builder: (_) => page, settings: settings);
   }
 
-  static Route<dynamic> _unknown(RouteSettings settings) =>
-      onUnknownRoute(settings);
+  static Route<dynamic> _unknown(RouteSettings settings) => onUnknownRoute(settings);
 }

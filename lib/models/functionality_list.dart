@@ -3,17 +3,6 @@ import 'package:pdf_kit/models/functionality_model.dart';
 
 final List<Functionality> actions = [
   Functionality(
-    id: 'scan',
-    label: 'Scan Code',
-    icon: Icons.document_scanner_outlined,
-    color: Colors.amber,
-    onPressed: (context) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Scan Code')));
-    },
-  ),
-  Functionality(
     id: 'watermark',
     label: 'Watermark',
     icon: Icons.water_drop_outlined,

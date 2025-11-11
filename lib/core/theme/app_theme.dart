@@ -147,6 +147,7 @@ class AppTheme {
 
     // Navigation bar theme for modern navigation
     navigationBarTheme: NavigationBarThemeData(
+      height: 64,
       backgroundColor: surfaceLight,
       elevation: 3,
       shadowColor: shadowLight,

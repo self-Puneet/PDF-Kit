@@ -9,9 +9,10 @@ Future<void> showNewFolderSheet({
 
   return showModalBottomSheet(
     context: context,
+    useRootNavigator: true, // <- make it use the root Navigator
     isScrollControlled: true,
     backgroundColor: Colors.white,
-    clipBehavior: Clip.antiAlias, // keep rounded corners clean
+    clipBehavior: Clip.antiAlias,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -29,7 +30,6 @@ Future<void> showNewFolderSheet({
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Drag handle
                   Container(
                     width: 44,
                     height: 4,
@@ -39,16 +39,16 @@ Future<void> showNewFolderSheet({
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  // Title
                   const Text(
                     'New Folder',
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 12),
-                  const Divider(height: 1),
+                  Divider(
+                    height: 1,
+                    color: Theme.of(context).dividerColor.withAlpha(64),
+                  ),
                   const SizedBox(height: 16),
-
-                  // Label
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
@@ -59,8 +59,6 @@ Future<void> showNewFolderSheet({
                     ),
                   ),
                   const SizedBox(height: 8),
-
-                  // Text field with underline style
                   TextField(
                     controller: controller,
                     textInputAction: TextInputAction.done,
@@ -83,14 +81,11 @@ Future<void> showNewFolderSheet({
                       final name = controller.text.trim();
                       if (name.isNotEmpty) {
                         Navigator.of(ctx).pop();
-                        // onCreate(name);
+                        // onCreate?.call(name);
                       }
                     },
                   ),
-
                   const SizedBox(height: 20),
-
-                  // Buttons row
                   Row(
                     children: [
                       Expanded(
@@ -112,7 +107,7 @@ Future<void> showNewFolderSheet({
                             final name = controller.text.trim();
                             if (name.isNotEmpty) {
                               Navigator.of(ctx).pop();
-                              // onCreate(name);
+                              // onCreate?.call(name);
                             }
                           },
                           style: ElevatedButton.styleFrom(
