@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pdf_kit/models/functionality_model.dart';
+import 'package:pdf_kit/core/app_export.dart';
 
 final List<Functionality> actions = [
   Functionality(
@@ -28,7 +29,15 @@ final List<Functionality> actions = [
     label: 'Merge PDF',
     icon: Icons.merge_type,
     color: Colors.indigo,
-    onPressed: (context) => _toast(context, 'Merge PDF'),
+    onPressed: (context) {
+      context.pushNamed(
+        AppRouteName.filesRootFullscreen,
+        queryParameters: {
+          // 'path': '/storage/emulated/0/Documents',
+          'selectable': 'true',
+        },
+      );
+    },
   ),
   Functionality(
     id: 'protect',

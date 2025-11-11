@@ -19,8 +19,21 @@ class DocEntryCard extends StatefulWidget {
   final FileInfo info;
   final VoidCallback? onOpen;
   final ValueChanged<String>? onMenu;
+  final bool selectable; // NEW
+  final bool selected; // NEW
+  final VoidCallback? onToggleSelected; // NEW
+  final VoidCallback? onLongPress; // NEW
 
-  const DocEntryCard({super.key, required this.info, this.onOpen, this.onMenu});
+  const DocEntryCard({
+    super.key,
+    required this.info,
+    this.onOpen,
+    this.onMenu,
+    this.selectable = false,
+    this.selected = false,
+    this.onToggleSelected,
+    this.onLongPress,
+  });
 
   @override
   State<DocEntryCard> createState() => _DocEntryCardState();
@@ -185,21 +198,33 @@ class _DocEntryCardState extends State<DocEntryCard> {
                   ],
                 ),
               ),
-              PopupMenuButton<String>(
-                onSelected: widget.onMenu,
-                itemBuilder: (c) => [
-                  PopupMenuItem(value: 'open', child: Text('Open')),
-                  PopupMenuItem(value: 'rename', child: Text('Rename')),
-                  PopupMenuItem(value: 'delete', child: Text('Delete')),
-                  PopupMenuItem(
-                    value: 'share',
-                    onTap: () {
-                      _share();
-                    },
-                    child: Text('Share'),
-                  ),
-                ],
-              ),
+              (widget.selectable)
+                  ? Padding(
+                      padding: const EdgeInsets.only(left: 12, right: 8),
+                      child: InkResponse(
+                        onTap: widget.onToggleSelected,
+                        child: Icon(
+                          widget.selected
+                              ? Icons.check_box
+                              : Icons.check_box_outline_blank,
+                        ),
+                      ),
+                    )
+                  : PopupMenuButton<String>(
+                      onSelected: widget.onMenu,
+                      itemBuilder: (c) => [
+                        PopupMenuItem(value: 'open', child: Text('Open')),
+                        PopupMenuItem(value: 'rename', child: Text('Rename')),
+                        PopupMenuItem(value: 'delete', child: Text('Delete')),
+                        PopupMenuItem(
+                          value: 'share',
+                          onTap: () {
+                            _share();
+                          },
+                          child: Text('Share'),
+                        ),
+                      ],
+                    ),
             ],
           ),
         ),

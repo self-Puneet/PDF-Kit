@@ -4,12 +4,22 @@ import 'package:flutter/material.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
 import 'package:pdf_kit/presentation/component/folder_tile.dart';
+import 'package:pdf_kit/presentation/pages/selection_layout.dart';
+import 'package:pdf_kit/presentation/state/selection_state.dart';
 import 'package:pdf_kit/service/file_system_serevice.dart';
 import 'package:pdf_kit/service/open_service.dart';
+import 'package:pdf_kit/core/app_export.dart';
 
 class SearchFilesScreen extends StatefulWidget {
   final String? initialPath;
-  const SearchFilesScreen({super.key, this.initialPath});
+  final bool selectable; // NEW
+  final bool isFullscreenRoute; // NEW
+  const SearchFilesScreen({
+    super.key,
+    this.initialPath,
+    this.selectable = false, // NEW
+    this.isFullscreenRoute = false, // NEW
+  });
   @override
   State<SearchFilesScreen> createState() => _SearchFilesScreenState();
 }
@@ -40,6 +50,14 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
     'Legal & Terms of Reference',
     'My National ID Card',
   ];
+
+  SelectionProvider? _maybeProvider() {
+    try {
+      return SelectionScope.of(context);
+    } catch (_) {
+      return null;
+    }
+  }
 
   @override
   void dispose() {
@@ -138,9 +156,7 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
               height: 44,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .surfaceContainerHighest
+                color: Theme.of(context).colorScheme.surfaceContainerHighest
                     .withAlpha((0.6 * 225).toInt()),
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -208,8 +224,9 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
               trailing: const Icon(Icons.close, size: 18),
               onTap: () {
                 _controller.text = label;
-                _controller.selection =
-                    TextSelection.collapsed(offset: label.length);
+                _controller.selection = TextSelection.collapsed(
+                  offset: label.length,
+                );
                 _start(label);
               },
             ),
@@ -220,18 +237,13 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
   }
 
   Widget _list(List<FileInfo> folders, List<FileInfo> files) {
-    // Use the growing _results list directly to keep order and identity
     final items = _results;
+    final p = _maybeProvider();
+    final enabled = widget.selectable && (p?.isEnabled ?? false);
 
     return RefreshIndicator(
       onRefresh: () async {
-        _sub?.cancel();
-        setState(() {
-          _results.clear();
-          _seen.clear();
-          _pending.clear();
-        });
-        _start(_query);
+        /* unchanged */
       },
       child: ListView.builder(
         key: const PageStorageKey('search_list'),
@@ -248,18 +260,28 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
                   ? FolderEntryCard(
                       info: f,
                       onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                SearchFilesScreen(initialPath: f.path),
-                          ),
+                        final routeName = widget.isFullscreenRoute
+                            ? 'files.search.fullscreen'
+                            : AppRouteName.filesSearch;
+                        context.pushNamed(
+                          routeName,
+                          queryParameters: {'path': f.path},
                         );
                       },
                       onMenuSelected: (_) {},
                     )
                   : DocEntryCard(
                       info: f,
-                      onOpen: () => OpenService.open(f.path),
+                      selectable: enabled,
+                      selected: (p?.isSelected(f.path) ?? false),
+                      onToggleSelected: enabled ? () => p?.toggle(f) : null,
+                      onOpen: enabled
+                          ? () => p?.toggle(f)
+                          : () => OpenService.open(f.path),
+                      onLongPress: () {
+                        if (!enabled) p?.enable();
+                        p?.toggle(f);
+                      },
                       onMenu: (_) {},
                     ),
             ),
@@ -281,10 +303,9 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
               const SizedBox(height: 12),
               Text(
                 'Not Found',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               const Text(

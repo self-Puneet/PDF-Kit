@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pdf_kit/presentation/pages/page_export.dart';
+import 'package:pdf_kit/presentation/pages/selection_layout.dart';
 
 // Navigator keys
 final _rootNavKey = GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -23,12 +24,16 @@ class AppRouteName {
   static const mergePdf = 'pdf.merge';
   static const protectPdf = 'pdf.protect';
   static const compressPdf = 'pdf.compress';
+  static const filesRootFullscreen = 'files.root.fullscreen';
+  static const filesFolderFullScreen = 'files.folder.fullscreen';
+  static const filesSearchFullscreen = 'files.search.fullscreen'; // NEW
 }
 
 final appRouter = GoRouter(
   navigatorKey: _rootNavKey,
   initialLocation: '/',
-  errorBuilder: (context, state) => NotFoundPage(routeName: state.uri.toString()),
+  errorBuilder: (context, state) =>
+      NotFoundPage(routeName: state.uri.toString()),
   routes: [
     GoRoute(
       name: AppRouteName.onboarding,
@@ -38,7 +43,8 @@ final appRouter = GoRouter(
 
     // Shell with 3 tabs
     StatefulShellRoute.indexedStack(
-      builder: (context, state, navShell) => HomeShell(navigationShell: navShell),
+      builder: (context, state, navShell) =>
+          HomeShell(navigationShell: navShell),
       branches: [
         // Home branch
         StatefulShellBranch(
@@ -97,12 +103,62 @@ final appRouter = GoRouter(
       ],
     ),
 
+    // One persistent SelectionScaffold across the fullscreen selection flow
+    ShellRoute(
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state, child) {
+        return SelectionScaffold(
+          actionText: state.uri.queryParameters['actionText'],
+          onAction: (files) {
+            // Push Merge screen with the selected files
+            // _rootNavKey.currentContext!.pushNamed(
+            //   AppRouteName.mergePdf,
+            //   extra: files,
+            // );
+          },
+          child: child,
+        );
+      },
+      routes: [
+        GoRoute(
+          name: AppRouteName.filesRootFullscreen,
+          path: '/files-fullscreen',
+          builder: (context, state) => AndroidFilesScreen(
+            initialPath: state.uri.queryParameters['path'],
+            selectable: true,
+            isFullscreenRoute: true,
+          ),
+          routes: [
+            GoRoute(
+              name: AppRouteName.filesFolderFullScreen,
+              path: 'folder',
+              builder: (context, state) => AndroidFilesScreen(
+                initialPath: state.uri.queryParameters['path'],
+                selectable: true,
+                isFullscreenRoute: true,
+              ),
+            ),
+            GoRoute(
+              name: AppRouteName.filesSearchFullscreen, // NEW
+              path: 'search',
+              builder: (context, state) => SearchFilesScreen(
+                initialPath: state.uri.queryParameters['path'],
+                selectable: true, // NEW
+                isFullscreenRoute: true, // NEW
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+
     // App-wide overlays (above shell)
     GoRoute(
       name: AppRouteName.showPdf,
       path: '/pdf/view',
       parentNavigatorKey: _rootNavKey,
-      builder: (context, state) => ShowPdfPage(path: state.uri.queryParameters['path']),
+      builder: (context, state) =>
+          ShowPdfPage(path: state.uri.queryParameters['path']),
     ),
     GoRoute(
       name: AppRouteName.addWatermark,
@@ -136,7 +192,6 @@ final appRouter = GoRouter(
     ),
   ],
 );
-
 
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
@@ -221,13 +276,6 @@ class AddSignaturePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       const Scaffold(body: Center(child: Text('Add Digital Signature')));
-}
-
-class MergePdfPage extends StatelessWidget {
-  const MergePdfPage({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Merge PDFs')));
 }
 
 class ProtectPdfPage extends StatelessWidget {

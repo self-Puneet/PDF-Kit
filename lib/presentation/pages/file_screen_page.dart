@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
 import 'package:pdf_kit/presentation/component/folder_tile.dart';
+import 'package:pdf_kit/presentation/pages/selection_layout.dart';
+import 'package:pdf_kit/presentation/state/selection_state.dart';
 import 'package:pdf_kit/service/file_system_serevice.dart';
+import 'package:pdf_kit/service/folder_service.dart';
 import 'package:pdf_kit/service/open_service.dart';
 import 'package:pdf_kit/service/path_service.dart';
 import 'package:pdf_kit/service/permission_service.dart';
@@ -15,7 +18,19 @@ import 'package:path/path.dart' as p;
 
 class AndroidFilesScreen extends StatefulWidget {
   final String? initialPath;
-  const AndroidFilesScreen({super.key, this.initialPath});
+  final bool selectable;
+  final String? selectionActionText;
+  final bool? isFullscreenRoute;
+  final void Function(List<FileInfo> files)? onSelectionAction;
+
+  const AndroidFilesScreen({
+    super.key,
+    this.initialPath,
+    this.selectable = false,
+    this.selectionActionText,
+    this.onSelectionAction,
+    this.isFullscreenRoute = false,
+  });
   @override
   State<AndroidFilesScreen> createState() => _AndroidFilesScreenState();
 }
@@ -24,7 +39,6 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
   List<Directory> _roots = [];
   String? _currentPath;
   List<FileInfo> _entries = [];
-
   StreamSubscription? _searchSub;
 
   @override
@@ -38,6 +52,17 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
     _searchSub?.cancel();
     super.dispose();
   }
+
+  SelectionProvider? _maybeProvider() {
+    try {
+      return SelectionScope.of(context);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool get _selectionEnabled =>
+      widget.selectable && (_maybeProvider()?.isEnabled ?? false);
 
   Future<void> _boot() async {
     final perm = await PermissionService.requestStoragePermission();
@@ -69,12 +94,20 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
     _searchSub = null;
   }
 
+  // Fix fullscreen folder navigation
   Future<void> _openFolder(String path) async {
     if (!mounted) return;
-    context.pushNamed(
-      AppRouteName.filesFolder,
-      queryParameters: {'path': path},
-    );
+    if (widget.isFullscreenRoute == true) {
+      context.pushNamed(
+        AppRouteName.filesFolderFullScreen,
+        queryParameters: {'path': path},
+      );
+    } else {
+      context.pushNamed(
+        AppRouteName.filesFolder,
+        queryParameters: {'path': path},
+      );
+    }
   }
 
   @override
@@ -89,7 +122,9 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
           padding: screenPadding,
           child: Column(
             children: [
-              _buildHeader(context),
+              _buildHeader(context, files),
+
+              // Make the listing the scrollable area
               Expanded(
                 child: _currentPath == null
                     ? _buildRoots()
@@ -99,10 +134,16 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
           ),
         ),
       ),
+      // bottom bar is drawn by SelectionScaffold when in fullscreen selection flow
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, List<FileInfo> visibleFiles) {
+    final p = _maybeProvider();
+    final enabled = widget.selectable && (p?.isEnabled ?? false);
+    final allOnPage = enabled
+        ? (p?.areAllSelected(visibleFiles) ?? false)
+        : false;
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -133,18 +174,44 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
-              context.pushNamed(
-                AppRouteName.filesSearch,
-                queryParameters: {'path': _currentPath},
-              );
+              if (widget.isFullscreenRoute == true) {
+                context.pushNamed(
+                  'files.search.fullscreen',
+                  queryParameters: {'path': _currentPath},
+                );
+              } else {
+                context.pushNamed(
+                  AppRouteName.filesSearch,
+                  queryParameters: {'path': _currentPath},
+                );
+              }
             },
             tooltip: 'Search',
           ),
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {},
-            tooltip: 'More',
-          ),
+          if (widget.selectable)
+            IconButton(
+              icon: Icon(
+                !enabled
+                    ? Icons.check_box_outline_blank
+                    : (allOnPage
+                          ? Icons.check_box
+                          : Icons.check_box_outline_blank),
+              ),
+              tooltip: !enabled
+                  ? 'Enable selection'
+                  : (allOnPage ? 'Clear this page' : 'Select all on page'),
+              onPressed: () {
+                final prov = _maybeProvider();
+                if (prov == null) return;
+                prov.cyclePage(visibleFiles);
+              },
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.more_vert),
+              onPressed: () {},
+              tooltip: 'More',
+            ),
         ],
       ),
     );
@@ -198,8 +265,6 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
       displayName = '/';
     } else {
       final normalizedCurrent = p.normalize(_currentPath!);
-
-      // If current path is exactly one of the known roots, label it as 'root'.
       final exactRoot = _roots.firstWhere(
         (r) => p.normalize(r.path) == normalizedCurrent,
         orElse: () => Directory(''),
@@ -207,9 +272,6 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
       if (exactRoot.path.isNotEmpty) {
         displayName = 'root';
       } else {
-        // Otherwise try to find which root this path belongs to and show the
-        // relative path from that root, e.g. '/Documents/new'. If no root is
-        // found, fall back to the basename.
         Directory? parentRoot;
         for (final r in _roots) {
           final rp = p.normalize(r.path);
@@ -218,10 +280,8 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
             break;
           }
         }
-
         if (parentRoot != null) {
           var rel = p.relative(_currentPath!, from: parentRoot.path);
-          // Normalize separators to forward slashes for display consistency.
           rel = rel.replaceAll(Platform.pathSeparator, '/');
           displayName = '/$rel';
         } else {
@@ -230,19 +290,18 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
       }
     }
 
+    final pvd = _maybeProvider();
+
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Current directory name
                     Text(
                       displayName,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -250,7 +309,6 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    // Total items
                     Text(
                       'Total: ${folders.length + files.length} items',
                       style: Theme.of(context).textTheme.bodySmall,
@@ -265,7 +323,37 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
               ),
               IconButton(
                 onPressed: () {
-                  showNewFolderSheet(context: context, onCreate: null);
+                  showNewFolderSheet(
+                    context: context,
+                    onCreate: (String folderName) async {
+                      if (_currentPath == null || folderName.trim().isEmpty)
+                        return;
+
+                      final base = _currentPath!;
+
+                      // Determine if this path is inside app-specific external storage.
+                      // If not, request "All files access" for public/shared folders.
+                      final appBase = await FolderServiceAndroid.appFilesPath();
+                      final requireAll = !p.isWithin(
+                        appBase,
+                        base,
+                      ); // true for e.g. Downloads/Pictures [public] [web:47]
+
+                      final res = await FolderServiceAndroid.createFolder(
+                        basePath: base,
+                        folderName: folderName,
+                        requireAllFilesAccess: requireAll,
+                        recursive: true,
+                      );
+
+                      res.fold(
+                        (err) => ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text(err))),
+                        (_) async => await _open(base), // refresh listing
+                      );
+                    },
+                  );
                 },
                 icon: const Icon(Icons.create_new_folder_outlined),
               ),
@@ -301,7 +389,20 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
                           ),
                           child: DocEntryCard(
                             info: f,
-                            onOpen: () => OpenService.open(f.path),
+                            selectable: _selectionEnabled,
+                            selected: (pvd?.isSelected(f.path) ?? false),
+                            onToggleSelected: _selectionEnabled
+                                ? () => pvd?.toggle(f)
+                                : null,
+                            onOpen: _selectionEnabled
+                                ? () => pvd?.toggle(f)
+                                : () => OpenService.open(f.path),
+                            onLongPress: () {
+                              if (!_selectionEnabled) {
+                                pvd?.enable();
+                              }
+                              pvd?.toggle(f);
+                            },
                             onMenu: (v) => _handleFileMenu(v, f),
                           ),
                         ),
