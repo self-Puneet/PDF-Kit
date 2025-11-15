@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
 import 'package:pdf_kit/presentation/provider/selection_provider.dart';
+import 'package:pdf_kit/service/pdf_merge_service.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:path/path.dart' as p;
+import 'package:provider/provider.dart';
 
 class MergePdfPage extends StatefulWidget {
   final String? selectionId;
@@ -16,6 +18,7 @@ class MergePdfPage extends StatefulWidget {
 
 class _MergePdfPageState extends State<MergePdfPage> {
   late final TextEditingController _nameCtrl;
+  bool _isMerging = false;
 
   @override
   void initState() {
@@ -43,6 +46,55 @@ class _MergePdfPageState extends State<MergePdfPage> {
     return '${first.isEmpty ? "Merged Document" : first} - Merged';
   }
 
+  Future<void> _handleMerge(BuildContext context, SelectionProvider selection) async {
+    setState(() => _isMerging = true);
+    
+    final outName = _nameCtrl.text.trim().isEmpty
+        ? 'Merged Document'
+        : _nameCtrl.text.trim();
+    
+    final filesWithRotation = selection.filesWithRotation;
+    
+    final result = await PdfMergeService.mergePdfs(
+      filesWithRotation: filesWithRotation,
+      outputFileName: outName,
+    );
+    
+    setState(() => _isMerging = false);
+    
+    result.fold(
+      (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${error.message}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      },
+      (mergedFile) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Successfully merged to ${mergedFile.name}'),
+            backgroundColor: Colors.green,
+            action: SnackBarAction(
+              label: 'Open',
+              onPressed: () {
+                context.pushNamed(
+                  AppRouteName.showPdf,
+                  queryParameters: {'path': mergedFile.path},
+                );
+              },
+            ),
+          ),
+        );
+        selection.disable();
+        context.pop();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -50,7 +102,6 @@ class _MergePdfPageState extends State<MergePdfPage> {
     return Consumer<SelectionProvider>(
       builder: (context, selection, _) {
         final files = selection.files;
-        print(selection.selected);
 
         if ((_nameCtrl.text.isEmpty || _nameCtrl.text == 'Merged Document') &&
             files.isNotEmpty) {
@@ -107,26 +158,18 @@ class _MergePdfPageState extends State<MergePdfPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Selected files (display cards)
+                  // Selected files with action buttons
                   for (final f in files) ...[
                     DocEntryCard(
                       info: f,
-                      selectable: false,
-                      selected: false,
+                      showActions: true,
+                      rotation: selection.getRotation(f.path),
+                      onRotate: () => selection.rotateFile(f.path),
+                      onRemove: () => selection.removeFile(f.path),
                       onOpen: () => context.pushNamed(
                         AppRouteName.showPdf,
                         queryParameters: {'path': f.path},
                       ),
-                      onMenu: (action) {
-                        if (action == 'open') {
-                          context.pushNamed(
-                            AppRouteName.showPdf,
-                            queryParameters: {'path': f.path},
-                          );
-                        }
-                        // 'rename' / 'delete' / 'share' are stubs here.
-                        // You can hook actual behaviors later.
-                      },
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -154,21 +197,19 @@ class _MergePdfPageState extends State<MergePdfPage> {
               width: double.infinity,
               height: 56,
               child: FilledButton(
-                onPressed: files.length >= 2
-                    ? () {
-                        final outName = _nameCtrl.text.trim().isEmpty
-                            ? 'Merged Document'
-                            : _nameCtrl.text.trim();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Merging ${files.length} files into "$outName"...',
-                            ),
-                          ),
-                        );
-                      }
+                onPressed: (files.length >= 2 && !_isMerging)
+                    ? () => _handleMerge(context, selection)
                     : null,
-                child: const Text('Merge'),
+                child: _isMerging
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text('Merge'),
               ),
             ),
           ),

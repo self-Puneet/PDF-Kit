@@ -1,10 +1,11 @@
-// selection_provider.dart (replace with this API)
+// selection_provider.dart
 import 'package:flutter/foundation.dart';
 import 'package:pdf_kit/models/file_model.dart';
 
 class SelectionProvider extends ChangeNotifier {
   final Map<String, FileInfo> _selected = {};
-  int _mode = 0; // 0 off, 1 on
+  final Map<String, int> _rotations = {};
+  int _mode = 0;
 
   int get mode => _mode;
   bool get isEnabled => _mode != 0;
@@ -12,6 +13,14 @@ class SelectionProvider extends ChangeNotifier {
   Map<String, FileInfo> get selected => _selected;
   bool isSelected(String path) => _selected.containsKey(path);
   List<FileInfo> get files => _selected.values.toList(growable: false);
+  
+  int getRotation(String path) => _rotations[path] ?? 0;
+  
+  List<MapEntry<FileInfo, int>> get filesWithRotation {
+    return _selected.entries
+        .map((e) => MapEntry(e.value, _rotations[e.key] ?? 0))
+        .toList(growable: false);
+  }
 
   void enable() {
     if (_mode == 0) {
@@ -24,6 +33,7 @@ class SelectionProvider extends ChangeNotifier {
     if (_mode != 0) {
       _mode = 0;
       _selected.clear();
+      _rotations.clear();
       notifyListeners();
     }
   }
@@ -31,10 +41,26 @@ class SelectionProvider extends ChangeNotifier {
   void toggle(FileInfo f) {
     if (_selected.containsKey(f.path)) {
       _selected.remove(f.path);
+      _rotations.remove(f.path);
     } else {
       _selected[f.path] = f;
+      _rotations[f.path] = 0;
     }
     notifyListeners();
+  }
+  
+  void removeFile(String path) {
+    _selected.remove(path);
+    _rotations.remove(path);
+    notifyListeners();
+  }
+  
+  void rotateFile(String path) {
+    if (_selected.containsKey(path)) {
+      final currentRotation = _rotations[path] ?? 0;
+      _rotations[path] = (currentRotation + 90) % 360;
+      notifyListeners();
+    }
   }
 
   bool areAllSelected(Iterable<FileInfo> visible) {
@@ -56,7 +82,12 @@ class SelectionProvider extends ChangeNotifier {
 
   void selectAllVisible(Iterable<FileInfo> visible) {
     for (final f in visible) {
-      if (!f.isDirectory) _selected[f.path] = f;
+      if (!f.isDirectory) {
+        _selected[f.path] = f;
+        if (!_rotations.containsKey(f.path)) {
+          _rotations[f.path] = 0;
+        }
+      }
     }
     if (_mode == 0) _mode = 1;
     notifyListeners();
@@ -65,6 +96,7 @@ class SelectionProvider extends ChangeNotifier {
   void clearVisible(Iterable<FileInfo> visible) {
     for (final f in visible) {
       _selected.remove(f.path);
+      _rotations.remove(f.path);
     }
     if (_mode == 0) _mode = 1;
     notifyListeners();
@@ -72,11 +104,11 @@ class SelectionProvider extends ChangeNotifier {
 
   void clearKeepEnabled() {
     _selected.clear();
+    _rotations.clear();
     _mode = 1;
     notifyListeners();
   }
 
-  // Page-scoped toggle: enable -> selectAllVisible -> clearVisible
   void cyclePage(Iterable<FileInfo> visible) {
     if (_mode == 0) {
       _mode = 1;
