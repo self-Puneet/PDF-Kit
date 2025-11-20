@@ -1,12 +1,13 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/presentation/pages/page_export.dart';
 import 'package:pdf_kit/presentation/provider/provider_export.dart';
 import 'package:pdf_kit/presentation/layouts/layout_export.dart';
 import 'package:pdf_kit/service/action_callback_manager.dart';
 
-
-ShellRoute buildSelectionShellRoute({required GlobalKey<NavigatorState> rootNavKey}) {
+ShellRoute buildSelectionShellRoute({
+  required GlobalKey<NavigatorState> rootNavKey,
+}) {
   return
   // One persistent SelectionScaffold across the fullscreen selection flow
   ShellRoute(
@@ -16,7 +17,6 @@ ShellRoute buildSelectionShellRoute({required GlobalKey<NavigatorState> rootNavK
       final actionText = state.uri.queryParameters['actionText'];
       final selectionId = state.uri.queryParameters['selectionId'];
 
-      // If a selectionId is present, reuse the cached provider from SelectionManager
       SelectionProvider? provided;
       if (selectionId != null) {
         try {
@@ -31,19 +31,21 @@ ShellRoute buildSelectionShellRoute({required GlobalKey<NavigatorState> rootNavK
         actionText: actionText,
         onAction: (files) {
           if (selectionId != null) {
-            Navigator.of(context).pop();
+            rootNavKey.currentContext!.pushNamed(
+              AppRouteName.mergePdf,
+              queryParameters: {'selectionId': selectionId},
+            );
             return;
           }
 
+          // No selectionId -> fall back to actionId-based callbacks.
           if (actionId != null) {
             final manager = Get.find<ActionCallbackManager>();
             final callback = manager.get(actionId);
-
             if (callback != null) {
               callback(files);
               manager.clear(); // cleanup after use
             } else {
-              // Fallback to default action
               rootNavKey.currentContext!.pushNamed(
                 AppRouteName.mergePdf,
                 extra: files,
@@ -58,34 +60,43 @@ ShellRoute buildSelectionShellRoute({required GlobalKey<NavigatorState> rootNavK
       GoRoute(
         name: AppRouteName.filesRootFullscreen,
         path: '/files-fullscreen',
-        builder: (context, state) => AndroidFilesScreen(
-          initialPath: state.uri.queryParameters['path'],
-          selectable: true,
-          isFullscreenRoute: true,
-          selectionId: state.uri.queryParameters['selectionId'],
-          selectionActionText: state.uri.queryParameters['actionText'],
+        pageBuilder: (context, state) => MaterialPage(
+          key: state.pageKey,
+          child: AndroidFilesScreen(
+            initialPath: state.uri.queryParameters['path'],
+            selectable: true,
+            isFullscreenRoute: true,
+            selectionId: state.uri.queryParameters['selectionId'],
+            selectionActionText: state.uri.queryParameters['actionText'],
+          ),
         ),
         routes: [
           GoRoute(
             name: AppRouteName.filesFolderFullScreen,
             path: 'folder',
-            builder: (context, state) => AndroidFilesScreen(
-              initialPath: state.uri.queryParameters['path'],
-              selectable: true,
-              isFullscreenRoute: true,
-              selectionId: state.uri.queryParameters['selectionId'],
-              selectionActionText: state.uri.queryParameters['actionText'],
+            pageBuilder: (context, state) => MaterialPage(
+              key: state.pageKey,
+              child: AndroidFilesScreen(
+                initialPath: state.uri.queryParameters['path'],
+                selectable: true,
+                isFullscreenRoute: true,
+                selectionId: state.uri.queryParameters['selectionId'],
+                selectionActionText: state.uri.queryParameters['actionText'],
+              ),
             ),
           ),
           GoRoute(
             name: AppRouteName.filesSearchFullscreen, // NEW
             path: 'search',
-            builder: (context, state) => SearchFilesScreen(
-              initialPath: state.uri.queryParameters['path'],
-              selectable: true, // NEW
-              isFullscreenRoute: true, // NEW
-              selectionId: state.uri.queryParameters['selectionId'],
-              selectionActionText: state.uri.queryParameters['actionText'],
+            pageBuilder: (context, state) => MaterialPage(
+              key: state.pageKey,
+              child: SearchFilesScreen(
+                initialPath: state.uri.queryParameters['path'],
+                selectable: true, // NEW
+                isFullscreenRoute: true, // NEW
+                selectionId: state.uri.queryParameters['selectionId'],
+                selectionActionText: state.uri.queryParameters['actionText'],
+              ),
             ),
           ),
         ],

@@ -41,8 +41,12 @@ final List<Functionality> actions = [
         // if DI not initialized, still continue with navigation
       }
 
+      await Future.delayed(const Duration(milliseconds: 150));
+
+      if (!context.mounted) return;
+
       final result = await context.pushNamed(
-        AppRouteName.mergePdf,
+        AppRouteName.filesRootFullscreen,
         queryParameters: {'selectionId': selectionId},
       );
 
@@ -57,7 +61,7 @@ final List<Functionality> actions = [
     label: 'Protect PDF',
     icon: Icons.lock_outline,
     color: Colors.green,
-        onPressed: (context) async {
+    onPressed: (context) async {
       // create a mapped selection provider and navigate to merge screen
       final selectionId = 'protect_${DateTime.now().microsecondsSinceEpoch}';
       // ensure SelectionManager is available and create provider in cache
@@ -78,7 +82,6 @@ final List<Functionality> actions = [
         RecentFilesSection.refreshNotifier.value++;
       }
     },
-
   ),
   Functionality(
     id: 'compress',

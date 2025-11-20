@@ -42,9 +42,3 @@ android {
 flutter {
     source = "../.."
 }
-
-// ✅ Add dependencies block here
-dependencies {
-    // iText7 for PDF encryption
-    implementation("com.itextpdf:itext7-core:7.2.5")
-}

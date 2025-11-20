@@ -24,9 +24,11 @@ class DocEntryCard extends StatefulWidget {
   final VoidCallback? onToggleSelected;
   final VoidCallback? onLongPress;
   final bool showActions;
-  final VoidCallback? onRotate;
+  final VoidCallback? onEdit;
   final VoidCallback? onRemove;
   final int rotation;
+  final bool reorderable;
+  final bool disabled;
 
   const DocEntryCard({
     super.key,
@@ -38,9 +40,11 @@ class DocEntryCard extends StatefulWidget {
     this.onToggleSelected,
     this.onLongPress,
     this.showActions = false,
-    this.onRotate,
+    this.onEdit,
     this.onRemove,
     this.rotation = 0,
+    this.reorderable = false,
+    this.disabled = false,
   });
 
   @override
@@ -129,12 +133,12 @@ class _DocEntryCardState extends State<DocEntryCard> {
   Widget build(BuildContext context) {
     return Material(
       borderRadius: BorderRadius.circular(12),
-      color: Colors.black.withAlpha(28),
+      color: Colors.black.withAlpha(widget.disabled ? 12 : 28),
       shadowColor: Colors.black.withAlpha(28),
       elevation: 2,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: widget.onOpen,
+        onTap: widget.disabled ? null : widget.onOpen,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
@@ -210,7 +214,13 @@ class _DocEntryCardState extends State<DocEntryCard> {
                       widget.info.name,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: widget.disabled
+                            ? Theme.of(
+                                context,
+                              ).textTheme.titleMedium?.color?.withOpacity(0.5)
+                            : null,
+                      ),
                     ),
                     Row(
                       children: [
@@ -253,18 +263,27 @@ class _DocEntryCardState extends State<DocEntryCard> {
                   ],
                 ),
               ),
-              if (widget.showActions)
+              if (widget.reorderable)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8, left: 8),
+                  child: Icon(
+                    Icons.drag_indicator,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant
+                        .withOpacity(widget.disabled ? 0.3 : 1.0),
+                  ),
+                )
+              else if (widget.showActions)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.rotate_right),
-                      onPressed: widget.onRotate,
-                      tooltip: 'Rotate',
+                      icon: const Icon(Icons.edit),
+                      onPressed: widget.disabled ? null : widget.onEdit,
+                      tooltip: 'Edit',
                     ),
                     IconButton(
                       icon: const Icon(Icons.close),
-                      onPressed: widget.onRemove,
+                      onPressed: widget.disabled ? null : widget.onRemove,
                       tooltip: 'Remove',
                       color: Theme.of(context).colorScheme.error,
                     ),
@@ -274,30 +293,49 @@ class _DocEntryCardState extends State<DocEntryCard> {
                 Padding(
                   padding: const EdgeInsets.only(left: 12, right: 8),
                   child: InkResponse(
-                    onTap: widget.onToggleSelected,
+                    onTap: widget.disabled ? null : widget.onToggleSelected,
                     child: Icon(
                       widget.selected
                           ? Icons.check_box
                           : Icons.check_box_outline_blank,
+                      color: widget.disabled
+                          ? Theme.of(context).iconTheme.color?.withOpacity(0.4)
+                          : null,
                     ),
                   ),
                 )
               else
-                PopupMenuButton<String>(
-                  onSelected: widget.onMenu,
-                  itemBuilder: (c) => [
-                    const PopupMenuItem(value: 'open', child: Text('Open')),
-                    const PopupMenuItem(value: 'rename', child: Text('Rename')),
-                    const PopupMenuItem(value: 'delete', child: Text('Delete')),
-                    PopupMenuItem(
-                      value: 'share',
-                      onTap: () {
-                        _share();
-                      },
-                      child: const Text('Share'),
-                    ),
-                  ],
-                ),
+                (widget.disabled
+                    ? Icon(
+                        Icons.more_vert,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant.withOpacity(0.3),
+                      )
+                    : PopupMenuButton<String>(
+                        onSelected: widget.onMenu,
+                        itemBuilder: (c) => [
+                          const PopupMenuItem(
+                            value: 'open',
+                            child: Text('Open'),
+                          ),
+                          const PopupMenuItem(
+                            value: 'rename',
+                            child: Text('Rename'),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Text('Delete'),
+                          ),
+                          PopupMenuItem(
+                            value: 'share',
+                            onTap: () {
+                              _share();
+                            },
+                            child: const Text('Share'),
+                          ),
+                        ],
+                      )),
             ],
           ),
         ),

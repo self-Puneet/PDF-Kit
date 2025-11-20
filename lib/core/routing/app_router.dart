@@ -19,6 +19,12 @@ final appRouter = GoRouter(
       NotFoundPage(routeName: state.uri.toString()),
   routes: [
     GoRoute(
+      name: AppRouteName.recentFiles,
+      path: '/recent-files',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) => const RecentFilesPage(),
+    ),
+    GoRoute(
       name: AppRouteName.onboarding,
       path: '/onboarding',
       builder: (context, state) => const OnboardingPage(),
@@ -114,6 +120,13 @@ final appRouter = GoRouter(
       parentNavigatorKey: _rootNavKey,
       builder: (context, state) => const CompressPdfPage(),
     ),
+
+    GoRoute(
+      name: AppRouteName.recentFilesSearch,
+      path: '/recent-files/search',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) => const RecentFilesSearchPage(),
+    ),
   ],
 );
 
@@ -179,13 +192,6 @@ class ShowPdfPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       Scaffold(body: Center(child: Text('Show PDF: ${path ?? 'no path'}')));
-}
-
-class RecentFilesPage extends StatelessWidget {
-  const RecentFilesPage({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Recent Files')));
 }
 
 class AddWatermarkPage extends StatelessWidget {

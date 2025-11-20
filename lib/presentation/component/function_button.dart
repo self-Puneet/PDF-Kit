@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:pdf_kit/models/functionality_model.dart';
 
@@ -11,35 +10,44 @@ class FunctionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tint = (data.color ?? Theme.of(context).colorScheme.primary);
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () => data.onPressed(context),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              color: tint.withAlpha((0.12*225).toInt()),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(data.icon, color: tint, size: 26),
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(
+          16,
+        ), // Rounded corners for the whole area
+        onTap: () => data.onPressed(context),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0), // Add padding for better tap area
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Ink(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  color: tint.withAlpha((0.12 * 255).toInt()),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(data.icon, color: tint, size: 26),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: 80,
+                child: Text(
+                  data.label,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: 80,
-            child: Text(
-              data.label,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -31,13 +31,13 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
     super.dispose();
   }
 
-  String _displayName(FileInfo f) {
-    try {
-      final dynamic maybeName = (f as dynamic).name;
-      if (maybeName is String && maybeName.trim().isNotEmpty) return maybeName;
-    } catch (_) {}
-    return p.basenameWithoutExtension(f.path);
-  }
+  // String _displayName(FileInfo f) {
+  //   try {
+  //     final dynamic maybeName = (f as dynamic).name;
+  //     if (maybeName is String && maybeName.trim().isNotEmpty) return maybeName;
+  //   } catch (_) {}
+  //   return p.basenameWithoutExtension(f.path);
+  // }
 
   /// 💾 Store protected file and source file to recent files
   Future<void> _storeRecentFiles(

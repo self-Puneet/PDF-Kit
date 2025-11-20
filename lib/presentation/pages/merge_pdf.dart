@@ -8,6 +8,7 @@ import 'package:pdf_kit/service/pdf_merge_service.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:pdf_kit/service/path_service.dart';
 import 'package:pdf_kit/core/app_export.dart';
+import 'package:pdf_kit/presentation/pages/home_page.dart';
 import 'package:path/path.dart' as p;
 import 'dart:ui';
 
@@ -25,6 +26,7 @@ class _MergePdfPageState extends State<MergePdfPage> {
   bool _isMerging = false;
   FileInfo? _selectedDestinationFolder;
   bool _isLoadingDefaultFolder = true;
+  bool _reorderMode = false; // toggles UI indication only
 
   @override
   void initState() {
@@ -45,7 +47,7 @@ class _MergePdfPageState extends State<MergePdfPage> {
 
     try {
       final publicDirsResult = await PathService.publicDirs();
-      
+
       publicDirsResult.fold(
         (error) {
           debugPrint('Failed to load default destination: $error');
@@ -77,38 +79,40 @@ class _MergePdfPageState extends State<MergePdfPage> {
   }
 
   /// Open folder picker and update destination
-// lib/presentation/pages/merge_pdf_page.dart
+  // lib/presentation/pages/merge_pdf_page.dart
 
-/// Open folder picker and update destination
-Future<void> _selectDestinationFolder() async {
-  // ✅ Option 1: Use pushNamed with the route name
-  final selectedPath = await context.pushNamed<String>(AppRouteName.folderPickScreen);
-  
-  // ✅ OR Option 2: Use push with the full path
-  // final selectedPath = await context.push<String>('/folder-picker');
+  /// Open folder picker and update destination
+  Future<void> _selectDestinationFolder() async {
+    // ✅ Option 1: Use pushNamed with the route name
+    final selectedPath = await context.pushNamed<String>(
+      AppRouteName.folderPickScreen,
+    );
 
-  if (selectedPath != null && mounted) {
-    setState(() {
-      _selectedDestinationFolder = FileInfo(
-        name: selectedPath.split('/').last,
-        path: selectedPath,
-        extension: '',
-        size: 0,
-        isDirectory: true,
-        lastModified: DateTime.now(),
-      );
-    });
+    // ✅ OR Option 2: Use push with the full path
+    // final selectedPath = await context.push<String>('/folder-picker');
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Destination: ${_selectedDestinationFolder!.name}'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+    if (selectedPath != null && mounted) {
+      setState(() {
+        _selectedDestinationFolder = FileInfo(
+          name: selectedPath.split('/').last,
+          path: selectedPath,
+          extension: '',
+          size: 0,
+          isDirectory: true,
+          lastModified: DateTime.now(),
+        );
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Destination: ${_selectedDestinationFolder!.name}'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
-}
 
   String _displayName(FileInfo f) {
     try {
@@ -142,77 +146,6 @@ Future<void> _selectDestinationFolder() async {
     );
   }
 
-  Future<void> _storeRecentFiles(
-    FileInfo mergedFile,
-    List<FileInfo> sourceFiles,
-  ) async {
-    debugPrint('');
-    debugPrint('═══════════════════════════════════════════════════════');
-    debugPrint('💾 [MergePDF] Starting storage of recent files');
-    debugPrint('═══════════════════════════════════════════════════════');
-
-    try {
-      debugPrint('📝 [MergePDF] Storing merged file: ${mergedFile.name}');
-      debugPrint('   Path: ${mergedFile.path}');
-      debugPrint('   Size: ${mergedFile.readableSize}');
-
-      final mergedResult = await RecentFilesService.addRecentFile(mergedFile);
-
-      mergedResult.fold(
-        (error) {
-          debugPrint('❌ [MergePDF] Failed to store merged file: $error');
-        },
-        (updatedFiles) {
-          debugPrint('✅ [MergePDF] Merged file stored successfully');
-          debugPrint('   Total files in storage: ${updatedFiles.length}');
-        },
-      );
-
-      debugPrint('');
-      debugPrint('📚 [MergePDF] Storing ${sourceFiles.length} source files:');
-
-      for (var i = 0; i < sourceFiles.length; i++) {
-        final sourceFile = sourceFiles[i];
-        debugPrint('   ${i + 1}. ${sourceFile.name}');
-
-        final result = await RecentFilesService.addRecentFile(sourceFile);
-
-        result.fold(
-          (error) {
-            debugPrint('      ❌ Failed: $error');
-          },
-          (updatedFiles) {
-            debugPrint('      ✅ Stored (Total: ${updatedFiles.length})');
-          },
-        );
-      }
-
-      debugPrint('');
-      debugPrint('🎉 [MergePDF] All files storage completed!');
-      debugPrint('═══════════════════════════════════════════════════════');
-      debugPrint('');
-
-      final verifyResult = await RecentFilesService.getRecentFiles();
-      verifyResult.fold(
-        (error) {
-          debugPrint('❌ [MergePDF] Verification failed: $error');
-        },
-        (files) {
-          debugPrint('✅ [MergePDF] Verification successful!');
-          debugPrint('   Files in storage: ${files.length}');
-          for (var i = 0; i < files.length; i++) {
-            debugPrint('   ${i + 1}. ${files[i].name}');
-          }
-        },
-      );
-      debugPrint('');
-    } catch (e) {
-      debugPrint('❌ [MergePDF] Error storing recent files: $e');
-      debugPrint('═══════════════════════════════════════════════════════');
-      debugPrint('');
-    }
-  }
-
   Future<void> _handleMerge(
     BuildContext context,
     SelectionProvider selection,
@@ -224,7 +157,6 @@ Future<void> _selectDestinationFolder() async {
         : _nameCtrl.text.trim();
 
     final filesWithRotation = selection.filesWithRotation;
-    final sourceFiles = selection.files;
 
     // Pass destination folder to merge service
     final result = await PdfMergeService.mergePdfs(
@@ -246,26 +178,43 @@ Future<void> _selectDestinationFolder() async {
         );
       },
       (mergedFile) async {
-        await _storeRecentFiles(mergedFile, sourceFiles);
+        // Only store the merged PDF in recent files, not the source files
+        debugPrint('📝 [MergePDF] Storing merged file: ${mergedFile.name}');
+        final storeResult = await RecentFilesService.addRecentFile(mergedFile);
+        storeResult.fold(
+          (error) => debugPrint('❌ [MergePDF] Failed to store: $error'),
+          (_) => debugPrint('✅ [MergePDF] Merged file stored successfully'),
+        );
 
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Successfully merged to ${mergedFile.name}'),
-            backgroundColor: Colors.green,
-            action: SnackBarAction(
-              label: 'Open',
-              onPressed: () {
-                context.pushNamed(
-                  AppRouteName.showPdf,
-                  queryParameters: {'path': mergedFile.path},
-                );
-              },
-            ),
-          ),
-        );
+
+        // Navigate to home and clear all routes, then reload home page
         selection.disable();
-        context.pop(true);
+        context.go('/');
+
+        // Trigger home page reload
+        RecentFilesSection.refreshNotifier.value++;
+
+        // Show success message after navigation
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Successfully merged to ${mergedFile.name}'),
+                backgroundColor: Colors.green,
+                action: SnackBarAction(
+                  label: 'Open',
+                  onPressed: () {
+                    context.pushNamed(
+                      AppRouteName.showPdf,
+                      queryParameters: {'path': mergedFile.path},
+                    );
+                  },
+                ),
+              ),
+            );
+          }
+        });
       },
     );
   }
@@ -292,8 +241,6 @@ Future<void> _selectDestinationFolder() async {
               icon: const Icon(Icons.arrow_back),
               onPressed: () => context.pop(),
             ),
-            title: const Text('Merge PDF'),
-            centerTitle: false,
           ),
           body: SafeArea(
             child: CustomScrollView(
@@ -305,12 +252,23 @@ Future<void> _selectDestinationFolder() async {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${files.length} selected files to be merged',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          'Merge PDF',
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
                           ),
                         ),
                         const SizedBox(height: 16),
+                        Text(
+                          'Merge PDFs and images together, drag to reorder, rename, choose where to save, and add or edit files anytime.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: 14,
+                            color: Colors.black87,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
 
                         // File Name section
                         Text('File Name', style: theme.textTheme.titleMedium),
@@ -318,12 +276,15 @@ Future<void> _selectDestinationFolder() async {
                         TextField(
                           controller: _nameCtrl,
                           textInputAction: TextInputAction.done,
+                          readOnly: _isMerging,
                           decoration: InputDecoration(
                             hintText: 'Type output file name',
                             border: const UnderlineInputBorder(),
                             enabledBorder: UnderlineInputBorder(
                               borderSide: BorderSide(
-                                color: theme.colorScheme.primary.withOpacity(0.3),
+                                color: theme.colorScheme.primary.withOpacity(
+                                  0.3,
+                                ),
                               ),
                             ),
                             focusedBorder: UnderlineInputBorder(
@@ -346,8 +307,30 @@ Future<void> _selectDestinationFolder() async {
                           selectedFolder: _selectedDestinationFolder,
                           isLoading: _isLoadingDefaultFolder,
                           onTap: _selectDestinationFolder,
+                          disabled: _isMerging,
                         ),
                         const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${files.length} Files Selected',
+                                style: theme.textTheme.titleMedium,
+                              ),
+                            ),
+                            FilledButton(
+                              onPressed: _isMerging
+                                  ? null
+                                  : () {
+                                      setState(
+                                        () => _reorderMode = !_reorderMode,
+                                      );
+                                    },
+                              child: Text(_reorderMode ? 'Done' : 'Reorder'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
                       ],
                     ),
                   ),
@@ -369,9 +352,11 @@ Future<void> _selectDestinationFolder() async {
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                         child: DocEntryCard(
                           info: f,
-                          showActions: true,
+                          showActions: !_reorderMode,
+                          reorderable: _reorderMode,
+                          disabled: _isMerging,
                           rotation: selection.getRotation(f.path),
-                          onRotate: () => selection.rotateFile(f.path),
+                          onEdit: () => null,
                           onRemove: () => selection.removeFile(f.path),
                           onOpen: () => context.pushNamed(
                             AppRouteName.showPdf,
@@ -382,49 +367,73 @@ Future<void> _selectDestinationFolder() async {
                     );
                   },
                 ),
-
-                // Add more files button
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  sliver: SliverToBoxAdapter(
-                    child: _AddMoreButton(
-                      onTap: () {
-                        final params = <String, String>{'actionText': 'Add'};
-                        if (widget.selectionId != null) {
-                          params['selectionId'] = widget.selectionId!;
-                        }
-                        context.pushNamed(
-                          AppRouteName.filesRootFullscreen,
-                          queryParameters: params,
-                        );
-                      },
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
-          bottomNavigationBar: SafeArea(
-            minimum: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: FilledButton(
-                onPressed: (files.length >= 2 && !_isMerging)
-                    ? () => _handleMerge(context, selection)
-                    : null,
-                child: _isMerging
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
+          bottomNavigationBar: Container(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  offset: const Offset(0, -2),
+                  blurRadius: 8,
+                ),
+              ],
+            ),
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Add More Files Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: OutlinedButton.icon(
+                      onPressed: _isMerging
+                          ? null
+                          : () {
+                              context.pop();
+                            },
+                      icon: const Icon(Icons.add_rounded),
+                      label: Text(
+                        'Add More Files',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: theme.colorScheme.primary,
                         ),
-                      )
-                    : const Text('Merge'),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.06),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Merge Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: FilledButton(
+                      onPressed: (files.length >= 2 && !_isMerging)
+                          ? () => _handleMerge(context, selection)
+                          : null,
+                      child: _isMerging
+                          ? const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : const Text('Merge PDF'),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -439,11 +448,13 @@ class _DestinationFolderSelector extends StatelessWidget {
   final FileInfo? selectedFolder;
   final bool isLoading;
   final VoidCallback onTap;
+  final bool disabled;
 
   const _DestinationFolderSelector({
     required this.selectedFolder,
     required this.isLoading,
     required this.onTap,
+    this.disabled = false,
   });
 
   @override
@@ -451,13 +462,15 @@ class _DestinationFolderSelector extends StatelessWidget {
     final theme = Theme.of(context);
 
     return InkWell(
-      onTap: onTap,
+      onTap: disabled ? null : onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           border: Border.all(
-            color: theme.colorScheme.primary.withOpacity(0.3),
+            color: disabled
+                ? theme.colorScheme.onSurfaceVariant.withOpacity(0.15)
+                : theme.colorScheme.primary.withOpacity(0.3),
             width: 1,
           ),
           borderRadius: BorderRadius.circular(12),
@@ -488,7 +501,9 @@ class _DestinationFolderSelector extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.folder,
-                    color: theme.colorScheme.primary,
+                    color: disabled
+                        ? theme.colorScheme.onSurfaceVariant.withOpacity(0.4)
+                        : theme.colorScheme.primary,
                     size: 24,
                   ),
                   const SizedBox(width: 12),
@@ -500,6 +515,10 @@ class _DestinationFolderSelector extends StatelessWidget {
                           selectedFolder?.name ?? 'Select Folder',
                           style: theme.textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.w500,
+                            color: disabled
+                                ? theme.colorScheme.onSurfaceVariant
+                                      .withOpacity(0.5)
+                                : null,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -509,7 +528,8 @@ class _DestinationFolderSelector extends StatelessWidget {
                           Text(
                             selectedFolder!.path,
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                              color: theme.colorScheme.onSurfaceVariant
+                                  .withOpacity(disabled ? 0.4 : 1.0),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -521,45 +541,12 @@ class _DestinationFolderSelector extends StatelessWidget {
                   const SizedBox(width: 8),
                   Icon(
                     Icons.chevron_right,
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: theme.colorScheme.onSurfaceVariant.withOpacity(
+                      disabled ? 0.3 : 1.0,
+                    ),
                   ),
                 ],
               ),
-      ),
-    );
-  }
-}
-
-class _AddMoreButton extends StatelessWidget {
-  const _AddMoreButton({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: double.infinity,
-        height: 56,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withOpacity(0.06),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.add_rounded, color: theme.colorScheme.primary),
-            const SizedBox(width: 8),
-            Text(
-              'Add More Files',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.primary,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

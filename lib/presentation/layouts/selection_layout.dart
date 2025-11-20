@@ -1,6 +1,7 @@
 // selection_layout.dart
 
 import 'package:flutter/material.dart';
+import 'package:pdf_kit/core/theme/app_theme.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/provider/selection_provider.dart';
 
@@ -56,19 +57,24 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return SelectionScope(
       provider: provider,
       child: Scaffold(
         body: SafeArea(child: widget.child),
         bottomNavigationBar: AnimatedBuilder(
           animation: provider,
-          builder: (_, __) => _bottomBar(context),
+          builder: (_, __) =>
+              Padding(padding: screenPadding, child: _bottomBar(context)),
         ),
       ),
     );
   }
 
   Widget _bottomBar(BuildContext context) {
+    final theme = Theme.of(context);
+
     if (!provider.isEnabled) return const SizedBox.shrink();
     final count = provider.count;
     return SafeArea(
@@ -87,7 +93,15 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
               child: ElevatedButton.icon(
                 onPressed: count > 0 ? () {} : null,
                 icon: const Icon(Icons.checklist),
-                label: Text('$count selected'),
+                label: Text(
+                  '$count selected',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary.withOpacity(0.06),
+                ),
               ),
             ),
             const SizedBox(width: 12),

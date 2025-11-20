@@ -214,7 +214,6 @@ class AppTheme {
         elevation: 2,
         shadowColor: shadowLight,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
         textStyle: GoogleFonts.roboto(
           fontSize: 14,
           fontWeight: FontWeight.w500,
@@ -228,9 +227,9 @@ class AppTheme {
         foregroundColor: primaryLight,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         side: BorderSide(color: outlineLight),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
         textStyle: GoogleFonts.roboto(
           fontSize: 14,
+          color: Colors.black,
           fontWeight: FontWeight.w500,
           letterSpacing: 0.1,
         ),
@@ -586,7 +585,6 @@ class AppTheme {
         elevation: 2,
         shadowColor: shadowDark,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
         textStyle: GoogleFonts.roboto(
           fontSize: 14,
           fontWeight: FontWeight.w500,
@@ -600,9 +598,9 @@ class AppTheme {
         foregroundColor: primaryDark,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         side: BorderSide(color: outlineDark),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
         textStyle: GoogleFonts.roboto(
           fontSize: 14,
+          color: primaryDark,
           fontWeight: FontWeight.w500,
           letterSpacing: 0.1,
         ),

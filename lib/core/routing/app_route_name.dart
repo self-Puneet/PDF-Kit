@@ -1,4 +1,5 @@
 class AppRouteName {
+  static const recentFiles = 'recentFiles';
   static const onboarding = 'onboarding';
   static const shell = 'hostel_shell';
   static const home = 'home';
@@ -16,4 +17,5 @@ class AppRouteName {
   static const filesFolderFullScreen = 'files.folder.fullscreen';
   static const filesSearchFullscreen = 'files.search.fullscreen'; // NEW
   static const folderPickScreen = 'folder.picker';
+  static const recentFilesSearch = 'recentFiles.search';
 }

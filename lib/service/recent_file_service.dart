@@ -4,13 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/models/file_model.dart';
 
-/// 🗂️ Service for managing recent files with LRU (Least Recently Used) policy.
-/// Stores up to 10 most recent files using SharedPreferences.
+/// 🗂️ Service for managing recent files.
+/// Stores all recent files using SharedPreferences.
 class RecentFilesService {
   RecentFilesService._();
 
   static const String _key = 'recent_files';
-  static const int _maxRecentFiles = 10;
 
   /// 📥 Add a file to recent files list.
   static Future<Either<String, List<FileInfo>>> addRecentFile(
@@ -47,15 +46,6 @@ class RecentFilesService {
       // Add to the beginning (most recent)
       currentFiles.insert(0, fileInfo);
       debugPrint('   ⬆️ File added to top');
-
-      // Keep only max recent files
-      if (currentFiles.length > _maxRecentFiles) {
-        final removed = currentFiles.length - _maxRecentFiles;
-        currentFiles = currentFiles.sublist(0, _maxRecentFiles);
-        debugPrint(
-          '   ✂️ Trimmed $removed old files (keeping $_maxRecentFiles)',
-        );
-      }
 
       // Save to preferences
       final jsonList = currentFiles.map((file) => file.toJson()).toList();

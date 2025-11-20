@@ -29,37 +29,23 @@ class _HomeTabState extends State<HomeTab> {
         children: [
           // Fixed header - stays at top
           Padding(padding: screenPadding, child: _buildHeader(context)),
-          // Scrollable content with bounce effect
+          // Fixed quick actions (non-scrollable)
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: screenPadding.left + 12),
+            child: QuickActionsGrid(items: _actions),
+          ),
+          const SizedBox(height: 16),
+
+          // Only the recent files section should be scrollable now.
           Expanded(
-            child: CustomScrollView(
-              physics:
-                  const AlwaysScrollableScrollPhysics(), // iOS-style bounce
-              slivers: [
-                const SliverToBoxAdapter(child: SizedBox(height: 8)),
-                SliverPadding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: screenPadding.left + 12,
-                  ),
-                  sliver: SliverToBoxAdapter(
-                    child: QuickActionsGrid(items: _actions),
-                  ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                SliverPadding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: screenPadding.left + 12,
-                  ),
-                  sliver: SliverToBoxAdapter(
-                    child: RecentFilesSection(
-                      onGetStartedPrimary: () =>
-                          _toast(context, 'Scan a document'),
-                      onGetStartedSecondary: () =>
-                          _toast(context, 'Import PDF'),
-                    ),
-                  ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
-              ],
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: screenPadding.left + 12,
+              ),
+              child: RecentFilesSection(
+                onGetStartedPrimary: () => _toast(context, 'Scan a document'),
+                onGetStartedSecondary: () => _toast(context, 'Import PDF'),
+              ),
             ),
           ),
         ],
@@ -91,27 +77,18 @@ class _HomeTabState extends State<HomeTab> {
           ),
           const SizedBox(width: 12),
           Text(
-            'Files',
+            'PDF Kit',
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
           const Spacer(),
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.settings),
             onPressed: () {
-              context.goNamed(AppRouteName.filesRoot);
-              context.pushNamed(
-                AppRouteName.filesSearch,
-                queryParameters: {'path': '/'},
-              );
+              context.go('/settings');
             },
-            tooltip: 'Search',
-          ),
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {},
-            tooltip: 'More',
+            tooltip: 'Settings',
           ),
         ],
       ),
@@ -325,9 +302,10 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
           );
         }
 
-        final files = snapshot.data ?? [];
+        final allFiles = snapshot.data ?? [];
+        final files = allFiles.take(5).toList(); // Only show top 5 files
         debugPrint(
-          '📊 [RecentFilesSection] Rendering with ${files.length} files',
+          '📊 [RecentFilesSection] Rendering with ${files.length} files (of ${allFiles.length} total)',
         );
 
         // Empty state - show Get Started card
@@ -359,46 +337,30 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 title,
-                TextButton(
-                  onPressed: () async {
-                    debugPrint('🧹 [RecentFilesSection] Clear All pressed');
-                    final result = await RecentFilesService.clearRecentFiles();
-                    result.fold(
-                      (error) {
-                        debugPrint(
-                          '❌ [RecentFilesSection] Clear All failed: $error',
-                        );
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error: $error')),
-                        );
-                      },
-                      (_) {
-                        debugPrint(
-                          '✅ [RecentFilesSection] Clear All successful',
-                        );
-                        setState(() => _loadRecentFiles());
-                      },
-                    );
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward_ios, size: 20),
+                  tooltip: 'View all recent files',
+                  onPressed: () {
+                    context.pushNamed(AppRouteName.recentFiles);
                   },
-                  child: const Text('Clear All'),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            // List of recent files
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 5,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final file = files[index];
-                return DocEntryCard(
-                  info: file,
-                  onOpen: () => _handleFileOpen(file),
-                  onMenu: (action) => _handleFileMenu(file, action),
-                );
-              },
+            // List of recent files - make this the scrollable area
+            Expanded(
+              child: ListView.separated(
+                itemCount: files.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final file = files[index];
+                  return DocEntryCard(
+                    info: file,
+                    onOpen: () => _handleFileOpen(file),
+                    onMenu: (action) => _handleFileMenu(file, action),
+                  );
+                },
+              ),
             ),
           ],
         );
