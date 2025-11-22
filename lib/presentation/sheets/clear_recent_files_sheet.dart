@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pdf_kit/core/localization/app_localizations.dart';
 
 /// Shows a confirmation sheet for clearing all recent files
 Future<void> showClearRecentFilesSheet({
@@ -87,7 +88,7 @@ class ClearRecentFilesSheet extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.only(bottom: 6),
               child: Text(
-                'Clear all recent files?',
+                AppLocalizations.of(context).t('clear_recent_files_title'),
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -101,7 +102,7 @@ class ClearRecentFilesSheet extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              'This will remove all files from your recent files list. This action cannot be undone.',
+              AppLocalizations.of(context).t('clear_recent_files_message'),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withOpacity(0.7),
               ),
@@ -123,7 +124,7 @@ class ClearRecentFilesSheet extends StatelessWidget {
                       color: theme.colorScheme.onSurface.withOpacity(0.12),
                     ),
                   ),
-                  child: const Text('Cancel'),
+                  child: Text(AppLocalizations.of(context).t('common_cancel')),
                 ),
               ),
               const SizedBox(width: 12),
@@ -137,7 +138,11 @@ class ClearRecentFilesSheet extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     backgroundColor: theme.colorScheme.error,
                   ),
-                  child: const Text('Clear All'),
+                  child: Text(
+                    AppLocalizations.of(
+                      context,
+                    ).t('clear_recent_files_confirm'),
+                  ),
                 ),
               ),
             ],

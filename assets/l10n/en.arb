@@ -252,4 +252,123 @@
   ,"selection_action_default": "Action"
   ,"selection_selected_label": "{count} selected"
   ,"@selection_selected_label": {"placeholders": {"count": {"type": "int"}}}
+  ,"settings_language_item_title": "Language"
+  ,"settings_language_item_subtitle": "Select any language you want"
+  ,"settings_default_save_location_title": "Default Save Location"
+  ,"settings_default_save_location_subtitle": "Choose where all PDFs will be saved"
+  ,"settings_dark_mode_title": "Dark Mode"
+  ,"settings_dark_mode_subtitle": "Switch between light and dark themes"
+  ,"settings_file_naming_title": "File Naming Scheme"
+  ,"settings_file_naming_subtitle": "Set how new files are named automatically"
+  ,"settings_pdf_compression_title": "PDF Compression"
+  ,"settings_pdf_compression_subtitle": "Set how new files are compressed automatically"
+  ,"settings_filter_options_title": "Filter Options"
+  ,"settings_filter_options_subtitle": "Choose which filters the app applies by default"
+  ,"settings_grid_view_layout_title": "Grid View Layout"
+  ,"settings_grid_view_layout_subtitle": "Control how files and folders appear"
+  ,"settings_pdf_content_fit_title": "PDF Content Fit Mode"
+  ,"settings_pdf_content_fit_subtitle": "Choose how images and PDFs should fit"
+  ,"settings_help_center_title": "Help Center"
+  ,"settings_help_center_subtitle": "Get help, FAQs, and answers"
+  ,"settings_about_pdf_kit_title": "About PDF-Kit"
+  ,"settings_about_pdf_kit_subtitle": "View details about this app"
+  ,"settings_about_us_title": "About Us"
+
+  ,"action_watermark_label": "Watermark"
+  ,"action_esign_label": "eSign PDF"
+  ,"action_split_label": "Split PDF"
+  ,"action_merge_label": "Merge PDF"
+  ,"action_protect_label": "Protect PDF"
+  ,"action_compress_label": "Compress PDF"
+  ,"action_all_tools_label": "All Tools"
+  ,"action_coming_soon_toast": "{feature} coming soon"
+  ,"@action_coming_soon_toast": {"placeholders": {"feature": {"type": "String"}}}
+  ,"settings_about_us_subtitle": "Discover our vision and how we work"
+  ,"language_settings_page_title": "Language Settings"
+  ,"language_settings_choose_label": "Choose App Language"
+  ,"language_option_english": "English (US)"
+  ,"language_option_hindi": "Hindi"
+  ,"language_settings_applied_snackbar": "Language updated"
+  ,"show_pdf_no_path": "no path"
+  ,"show_pdf_prefix": "Show PDF: {path}"
+  ,"@show_pdf_prefix": {"placeholders": {"path": {"type": "String"}}}
+  ,"onboarding_title": "Onboarding"
+  ,"all_files_title": "All Files & Folders"
+  ,"search_files_title": "Search Files"
+  ,"preferences_title": "Preferences"
+  ,"contact_us_title": "Contact Us"
+  ,"about_app_title": "About the App"
+  ,"take_image_title": "Take Image"
+  ,"add_watermark_title": "Add Watermark"
+  ,"add_signature_title": "Add Digital Signature"
+  ,"not_found_page_title": "Page not found"
+  ,"not_found_page_route_undefined": "No route defined for: {route}"
+  ,"@not_found_page_route_undefined": {"placeholders": {"route": {"type": "String"}}}
+  ,"not_found_go_home_button": "Go Home",
+  "selection_max_info": "Max: {count}",
+  "@selection_max_info": {
+    "description": "Info message in selection sheet showing the maximum selectable files.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+"selection_sheet_title": "Selected Files",
+"@selection_sheet_title": {
+  "description": "Title of the bottom sheet showing currently selected files."
+},
+
+"selection_sheet_empty": "No files selected",
+"@selection_sheet_empty": {
+  "description": "Message shown when there are no files selected in the sheet."
+},
+
+"selection_folder_items_single": "{count} item",
+"@selection_folder_items_single": {
+  "description": "Label for a folder group when it has exactly one selected item.",
+  "placeholders": {
+    "count": { "type": "int" }
+  }
+},
+
+"selection_folder_items_multiple": "{count} items",
+"@selection_folder_items_multiple": {
+  "description": "Label for a folder group when it has more than one selected item.",
+  "placeholders": {
+    "count": { "type": "int" }
+  }
+},
+
+"selection_folder_collapse_tooltip": "Collapse",
+"@selection_folder_collapse_tooltip": {
+  "description": "Tooltip for collapse button in selection folder group."
+},
+
+"selection_folder_expand_tooltip": "Expand",
+"@selection_folder_expand_tooltip": {
+  "description": "Tooltip for expand button in selection folder group."
+},
+
+"selection_max_info": "Max: {count}",
+"@selection_max_info": {
+  "description": "Info message in selection sheet showing the maximum selectable files.",
+  "placeholders": {
+    "count": { "type": "int" }
+  }
+},
+
+
+
+
+"selection_limit_error_single": "You can select at most {count} file.",
+"@selection_limit_error_single": {
+  "description": "Shown when user exceeds maximum selectable files (exactly 1 allowed).",
+  "placeholders": { "count": { "type": "int" } }
+},
+
+"selection_limit_error_multiple": "You can select at most {count} files.",
+"@selection_limit_error_multiple": {
+  "description": "Shown when user exceeds maximum selectable files (more than 1 allowed).",
+  "placeholders": { "count": { "type": "int" } }
+}
+
+
+  
 }

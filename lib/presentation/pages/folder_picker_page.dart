@@ -1,6 +1,7 @@
 // lib/presentation/pages/folder_picker_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:pdf_kit/core/localization/app_localizations.dart';
 import 'package:pdf_kit/presentation/component/folder_tree_item.dart';
 import 'package:pdf_kit/presentation/provider/folder_picker_provider.dart';
 import 'package:provider/provider.dart';
@@ -30,7 +31,7 @@ class _FolderPickerPageContentState extends State<_FolderPickerPageContent> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Select Folder'),
+        title: Text(AppLocalizations.of(context).t('folder_picker_title')),
         actions: [
           Consumer<FolderPickerProvider>(
             builder: (context, provider, _) {
@@ -39,7 +40,7 @@ class _FolderPickerPageContentState extends State<_FolderPickerPageContent> {
                     ? () => Navigator.pop(context, provider.selectedFolderPath)
                     : null,
                 child: Text(
-                  'SELECT',
+                  AppLocalizations.of(context).t('folder_picker_select_button'),
                   style: TextStyle(
                     color: provider.hasSelection
                         ? Theme.of(context).colorScheme.primary
@@ -55,9 +56,7 @@ class _FolderPickerPageContentState extends State<_FolderPickerPageContent> {
       body: Consumer<FolderPickerProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (provider.errorMessage != null) {
@@ -74,7 +73,9 @@ class _FolderPickerPageContentState extends State<_FolderPickerPageContent> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Unable to load folders',
+                      AppLocalizations.of(
+                        context,
+                      ).t('folder_picker_unable_to_load_title'),
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 8),
@@ -82,15 +83,16 @@ class _FolderPickerPageContentState extends State<_FolderPickerPageContent> {
                       provider.errorMessage!,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
                       onPressed: () => provider.refresh(),
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
+                      label: Text(
+                        AppLocalizations.of(context).t('folder_picker_retry'),
+                      ),
                     ),
                   ],
                 ),
@@ -110,7 +112,7 @@ class _FolderPickerPageContentState extends State<_FolderPickerPageContent> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No folders available',
+                    AppLocalizations.of(context).t('folder_picker_no_folders'),
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ],
@@ -151,11 +153,12 @@ class _FolderPickerPageContentState extends State<_FolderPickerPageContent> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Selected Folder',
+                      AppLocalizations.of(
+                        context,
+                      ).t('folder_picker_selected_folder_label'),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -169,12 +172,8 @@ class _FolderPickerPageContentState extends State<_FolderPickerPageContent> {
                         Expanded(
                           child: Text(
                             provider.selectedFolderPath!,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w500),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),

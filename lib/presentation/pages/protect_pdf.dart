@@ -119,10 +119,11 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
     BuildContext context,
     SelectionProvider selection,
   ) async {
+    final t = AppLocalizations.of(context);
     if (_passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please enter a password'),
+          content: Text(t.t('protect_pdf_error_enter_password')),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -132,7 +133,7 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Passwords do not match'),
+          content: Text(t.t('protect_pdf_error_passwords_mismatch')),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -153,9 +154,12 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
     result.fold(
       (failure) {
         if (!mounted) return;
+        final msg = t
+            .t('snackbar_error')
+            .replaceAll('{message}', failure.message);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${failure.message}'),
+            content: Text(msg),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -207,6 +211,7 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
       builder: (context, selection, _) {
         final files = selection.files;
         final hasFile = files.isNotEmpty;
+        final t = AppLocalizations.of(context);
 
         return Scaffold(
           backgroundColor: Colors.white,
@@ -226,7 +231,7 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Protect PDF',
+                    t.t('protect_pdf_title'),
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -235,7 +240,7 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Set a password to protect your scan. This password will be required if you or the person you provide the scanned document wants to access the file. If you forget the password, then this file will not be accessible forever.',
+                    t.t('protect_pdf_description'),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontSize: 14,
                       color: Colors.black87,
@@ -247,7 +252,7 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
                   // Selected PDF Section
                   if (hasFile) ...[
                     Text(
-                      'Selected File',
+                      t.t('protect_pdf_selected_file_label'),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -270,7 +275,7 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
                     _AddPdfButton(
                       onTap: () {
                         final params = <String, String>{
-                          'actionText': 'Select',
+                          'actionText': t.t('common_select'),
                           'singleSelection': 'true',
                         };
                         if (widget.selectionId != null) {
@@ -288,7 +293,7 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
                   // Password Fields (only show if file is selected)
                   if (hasFile) ...[
                     Text(
-                      'Password',
+                      t.t('protect_pdf_password_label'),
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -300,7 +305,7 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
                       controller: _passwordController,
                       obscureText: !_isPasswordVisible,
                       decoration: InputDecoration(
-                        hintText: '••••••••••',
+                        hintText: t.t('protect_pdf_password_hint_obscured'),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _isPasswordVisible
@@ -330,7 +335,7 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'Confirm Password',
+                      t.t('protect_pdf_confirm_password_label'),
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -342,7 +347,7 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
                       controller: _confirmPasswordController,
                       obscureText: !_isConfirmPasswordVisible,
                       decoration: InputDecoration(
-                        hintText: '••••••••••',
+                        hintText: t.t('protect_pdf_password_hint_obscured'),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _isConfirmPasswordVisible
@@ -403,9 +408,9 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
                                 ),
                               ),
                             )
-                          : const Text(
-                              'Protect',
-                              style: TextStyle(
+                          : Text(
+                              t.t('protect_pdf_button'),
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
@@ -428,6 +433,7 @@ class _AddPdfButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -460,7 +466,7 @@ class _AddPdfButton extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Add PDF File',
+              t.t('protect_pdf_add_pdf_file'),
               style: theme.textTheme.titleMedium?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w600,

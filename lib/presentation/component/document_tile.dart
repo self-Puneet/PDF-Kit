@@ -7,6 +7,7 @@ import 'package:pdf_kit/presentation/widget/shimmer.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pdf_kit/models/file_model.dart';
+import 'package:pdf_kit/core/app_export.dart';
 
 class _Thumb {
   final Uint8List bytes;
@@ -107,10 +108,24 @@ class _DocEntryCardState extends State<DocEntryCard> {
     // }
 
     if (_isPdf) {
+      debugPrint(
+        '📑 [DocEntryCard] Opening PDF to get page count and thumbnail: $key',
+      );
+
       final doc = await PdfDocument.openFile(widget.info.path);
+      debugPrint(
+        '✅ [DocEntryCard] PdfDocument opened: $key, pagesCount=${doc.pagesCount}',
+      );
+
       _pageCount = doc.pagesCount; // pdfx provides this
       // Trigger a rebuild so the page count row updates
-      if (mounted) setState(() {});
+      if (mounted) {
+        debugPrint(
+          '🔄 [DocEntryCard] setState after setting _pageCount=$_pageCount for: $key',
+        );
+
+        setState(() {});
+      }
       final page = await doc.getPage(1);
       final w = page.width.round();
       final h = page.height.round();
@@ -143,7 +158,8 @@ class _DocEntryCardState extends State<DocEntryCard> {
 
   String _recent() {
     final dt = widget.info.lastModified ?? DateTime.now();
-    return DateFormat('MM/dd/yyyy  HH:mm').format(dt);
+    // 12‑hour format with AM/PM, e.g. 11/23/2025  10:45 PM
+    return DateFormat('MM/dd/yyyy  hh:mm a').format(dt);
   }
 
   void _share() {
@@ -154,6 +170,12 @@ class _DocEntryCardState extends State<DocEntryCard> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    debugPrint(
+      '🎨 [DocEntryCard] build(): ${widget.info.name} '
+      '(path=${widget.info.path}, isPdf=$_isPdf, pageCount=$_pageCount)',
+    );
+
     return Material(
       borderRadius: BorderRadius.circular(12),
       color: Colors.black.withAlpha(widget.disabled ? 12 : 28),
@@ -303,7 +325,12 @@ class _DocEntryCardState extends State<DocEntryCard> {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              '${widget.rotation}°',
+                              t
+                                  .t('doc_rotation_degrees')
+                                  .replaceAll(
+                                    '{degrees}',
+                                    widget.rotation.toString(),
+                                  ),
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     color: Theme.of(
@@ -388,13 +415,13 @@ class _DocEntryCardState extends State<DocEntryCard> {
                       IconButton(
                         icon: const Icon(Icons.edit),
                         onPressed: widget.disabled ? null : widget.onEdit,
-                        tooltip: 'Edit',
+                        tooltip: t.t('doc_menu_edit'),
                       ),
                     if (widget.onRemove != null)
                       IconButton(
                         icon: const Icon(Icons.close),
                         onPressed: widget.disabled ? null : widget.onRemove,
-                        tooltip: 'Remove',
+                        tooltip: t.t('doc_menu_remove'),
                         color: Theme.of(context).colorScheme.error,
                       ),
                   ],
@@ -425,24 +452,24 @@ class _DocEntryCardState extends State<DocEntryCard> {
                     : PopupMenuButton<String>(
                         onSelected: widget.onMenu,
                         itemBuilder: (c) => [
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'open',
-                            child: Text('Open'),
+                            child: Text(t.t('doc_menu_open')),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'rename',
-                            child: Text('Rename'),
+                            child: Text(t.t('doc_menu_rename')),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'delete',
-                            child: Text('Delete'),
+                            child: Text(t.t('doc_menu_delete')),
                           ),
                           PopupMenuItem(
                             value: 'share',
                             onTap: () {
                               _share();
                             },
-                            child: const Text('Share'),
+                            child: Text(t.t('doc_menu_share')),
                           ),
                         ],
                       )),

@@ -16,11 +16,10 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  // Define the functionality shown at the top
-  late final List<Functionality> _actions = actions;
-
-  static void _toast(BuildContext c, String msg) =>
-      ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text(msg)));
+  static void _toast(BuildContext c, String key) {
+    final t = AppLocalizations.of(c);
+    ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text(t.t(key))));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +31,9 @@ class _HomeTabState extends State<HomeTab> {
           // Fixed quick actions (non-scrollable)
           Padding(
             padding: EdgeInsets.symmetric(horizontal: screenPadding.left + 12),
-            child: QuickActionsGrid(items: _actions),
+            child: QuickActionsGrid(items: getActions(context)),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 160),
 
           // Only the recent files section should be scrollable now.
           Expanded(
@@ -43,8 +42,10 @@ class _HomeTabState extends State<HomeTab> {
                 horizontal: screenPadding.left + 12,
               ),
               child: RecentFilesSection(
-                onGetStartedPrimary: () => _toast(context, 'Scan a document'),
-                onGetStartedSecondary: () => _toast(context, 'Import PDF'),
+                onGetStartedPrimary: () =>
+                    _toast(context, 'home_get_started_scan'),
+                onGetStartedSecondary: () =>
+                    _toast(context, 'home_get_started_import'),
               ),
             ),
           ),
@@ -77,7 +78,7 @@ class _HomeTabState extends State<HomeTab> {
           ),
           const SizedBox(width: 12),
           Text(
-            'PDF Kit',
+            AppLocalizations.of(context).t('home_brand_title'),
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -85,10 +86,8 @@ class _HomeTabState extends State<HomeTab> {
           const Spacer(),
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () {
-              context.go('/settings');
-            },
-            tooltip: 'Settings',
+            onPressed: () => context.go('/settings'),
+            tooltip: AppLocalizations.of(context).t('settings_title'),
           ),
         ],
       ),
@@ -115,9 +114,12 @@ class QuickActionsGrid extends StatelessWidget {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 8,
             mainAxisSpacing: 8,
-            mainAxisExtent: 108,
+            mainAxisExtent: 110,
           ),
-          itemBuilder: (_, i) => Center(child: FunctionButton(data: items[i])),
+          itemBuilder: (_, i) => Align(
+            alignment: Alignment.topCenter,
+            child: FunctionButton(data: items[i]),
+          ),
         );
       },
     );
@@ -252,8 +254,9 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
   @override
   Widget build(BuildContext context) {
     debugPrint('🎨 [RecentFilesSection] Building widget');
+    final t = AppLocalizations.of(context);
     final title = Text(
-      'Recent Files',
+      t.t('recent_files_title'),
       style: Theme.of(
         context,
       ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -266,7 +269,6 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
           '🔧 [RecentFilesSection] FutureBuilder state: ${snapshot.connectionState}',
         );
 
-        // Loading state
         if (snapshot.connectionState == ConnectionState.waiting) {
           debugPrint('⏳ [RecentFilesSection] Showing loading indicator');
           return Column(
@@ -284,7 +286,6 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
           );
         }
 
-        // Error state (show empty state)
         if (snapshot.hasError) {
           debugPrint(
             '⚠️ [RecentFilesSection] FutureBuilder error: ${snapshot.error}',
@@ -303,12 +304,11 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
         }
 
         final allFiles = snapshot.data ?? [];
-        final files = allFiles.take(5).toList(); // Only show top 5 files
+        final files = allFiles.take(5).toList();
         debugPrint(
           '📊 [RecentFilesSection] Rendering with ${files.length} files (of ${allFiles.length} total)',
         );
 
-        // Empty state - show Get Started card
         if (files.isEmpty) {
           debugPrint(
             '🎴 [RecentFilesSection] Showing Get Started card (empty state)',
@@ -326,7 +326,6 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
           );
         }
 
-        // Has files - show list
         debugPrint(
           '📋 [RecentFilesSection] Showing list of ${files.length} files',
         );
@@ -339,15 +338,12 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
                 title,
                 IconButton(
                   icon: const Icon(Icons.arrow_forward_ios, size: 20),
-                  tooltip: 'View all recent files',
-                  onPressed: () {
-                    context.pushNamed(AppRouteName.recentFiles);
-                  },
+                  tooltip: t.t('recent_files_view_all_tooltip'),
+                  onPressed: () => context.pushNamed(AppRouteName.recentFiles),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            // List of recent files - make this the scrollable area
             Expanded(
               child: ListView.separated(
                 itemCount: files.length,
@@ -409,14 +405,14 @@ class _GetStartedCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Get started with your PDFs',
+                  AppLocalizations.of(context).t('home_get_started_title'),
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Scan documents or import files to see them here.',
+                  AppLocalizations.of(context).t('home_get_started_message'),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 12),

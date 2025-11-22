@@ -31,7 +31,7 @@ class _MergePdfPageState extends State<MergePdfPage> {
   @override
   void initState() {
     super.initState();
-    _nameCtrl = TextEditingController(text: 'Merged Document');
+    _nameCtrl = TextEditingController();
     _loadDefaultDestination();
   }
 
@@ -104,11 +104,12 @@ class _MergePdfPageState extends State<MergePdfPage> {
       });
 
       if (mounted) {
+        final t = AppLocalizations.of(context);
+        final msg = t
+            .t('merge_pdf_destination_snackbar')
+            .replaceAll('{folderName}', _selectedDestinationFolder!.name);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Destination: ${_selectedDestinationFolder!.name}'),
-            duration: const Duration(seconds: 2),
-          ),
+          SnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
         );
       }
     }
@@ -152,8 +153,11 @@ class _MergePdfPageState extends State<MergePdfPage> {
   ) async {
     setState(() => _isMerging = true);
 
+    final t = AppLocalizations.of(context);
+    final defaultName = t.t('merge_pdf_default_file_name');
+
     final outName = _nameCtrl.text.trim().isEmpty
-        ? 'Merged Document'
+        ? defaultName
         : _nameCtrl.text.trim();
 
     final filesWithRotation = selection.filesWithRotation;
@@ -162,7 +166,7 @@ class _MergePdfPageState extends State<MergePdfPage> {
     final result = await PdfMergeService.mergePdfs(
       filesWithRotation: filesWithRotation,
       outputFileName: outName,
-      destinationPath: _selectedDestinationFolder?.path, // Pass destination
+      destinationPath: _selectedDestinationFolder?.path,
     );
 
     setState(() => _isMerging = false);
@@ -170,9 +174,13 @@ class _MergePdfPageState extends State<MergePdfPage> {
     result.fold(
       (error) {
         if (!mounted) return;
+        final t = AppLocalizations.of(context);
+        final msg = t
+            .t('snackbar_error')
+            .replaceAll('{message}', error.message);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${error.message}'),
+            content: Text(msg),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -198,12 +206,16 @@ class _MergePdfPageState extends State<MergePdfPage> {
         // Show success message after navigation
         Future.delayed(const Duration(milliseconds: 300), () {
           if (context.mounted) {
+            final t = AppLocalizations.of(context);
+            final msg = t
+                .t('snackbar_success_merge')
+                .replaceAll('{fileName}', mergedFile.name);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Successfully merged to ${mergedFile.name}'),
+                content: Text(msg),
                 backgroundColor: Colors.green,
                 action: SnackBarAction(
-                  label: 'Open',
+                  label: t.t('common_open_snackbar'),
                   onPressed: () {
                     context.pushNamed(
                       AppRouteName.showPdf,
@@ -221,13 +233,17 @@ class _MergePdfPageState extends State<MergePdfPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+
     final theme = Theme.of(context);
 
     return Consumer<SelectionProvider>(
       builder: (context, selection, _) {
         final files = selection.files;
 
-        if ((_nameCtrl.text.isEmpty || _nameCtrl.text == 'Merged Document') &&
+        final defaultName = t.t('merge_pdf_default_file_name');
+
+        if ((_nameCtrl.text.isEmpty || _nameCtrl.text == defaultName) &&
             files.isNotEmpty) {
           _nameCtrl.text = _suggestDefaultName(files);
           _nameCtrl.selection = TextSelection.fromPosition(
@@ -252,7 +268,7 @@ class _MergePdfPageState extends State<MergePdfPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Merge PDF',
+                          t.t('merge_pdf_title'), // "Merge PDF"
                           style: theme.textTheme.headlineMedium?.copyWith(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -261,7 +277,7 @@ class _MergePdfPageState extends State<MergePdfPage> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Merge PDFs and images together, drag to reorder, rename, choose where to save, and add or edit files anytime.',
+                          t.t('merge_pdf_description'),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontSize: 14,
                             color: Colors.black87,
@@ -271,14 +287,17 @@ class _MergePdfPageState extends State<MergePdfPage> {
                         const SizedBox(height: 24),
 
                         // File Name section
-                        Text('File Name', style: theme.textTheme.titleMedium),
+                        Text(
+                          t.t('merge_pdf_file_name_label'),
+                          style: theme.textTheme.titleMedium,
+                        ),
                         const SizedBox(height: 8),
                         TextField(
                           controller: _nameCtrl,
                           textInputAction: TextInputAction.done,
                           readOnly: _isMerging,
                           decoration: InputDecoration(
-                            hintText: 'Type output file name',
+                            hintText: t.t('merge_pdf_file_name_hint'),
                             border: const UnderlineInputBorder(),
                             enabledBorder: UnderlineInputBorder(
                               borderSide: BorderSide(
@@ -299,7 +318,7 @@ class _MergePdfPageState extends State<MergePdfPage> {
 
                         // 🆕 Destination Folder Section
                         Text(
-                          'Save to Folder',
+                          t.t('merge_pdf_save_to_folder_label'),
                           style: theme.textTheme.titleMedium,
                         ),
                         const SizedBox(height: 8),
@@ -314,7 +333,12 @@ class _MergePdfPageState extends State<MergePdfPage> {
                           children: [
                             Expanded(
                               child: Text(
-                                '${files.length} Files Selected',
+                                t
+                                    .t('merge_pdf_files_selected')
+                                    .replaceAll(
+                                      '{count}',
+                                      files.length.toString(),
+                                    ),
                                 style: theme.textTheme.titleMedium,
                               ),
                             ),
@@ -326,7 +350,11 @@ class _MergePdfPageState extends State<MergePdfPage> {
                                         () => _reorderMode = !_reorderMode,
                                       );
                                     },
-                              child: Text(_reorderMode ? 'Done' : 'Reorder'),
+                              child: Text(
+                                _reorderMode
+                                    ? t.t('merge_pdf_done')
+                                    : t.t('merge_pdf_reorder'),
+                              ),
                             ),
                           ],
                         ),
@@ -398,7 +426,7 @@ class _MergePdfPageState extends State<MergePdfPage> {
                             },
                       icon: const Icon(Icons.add_rounded),
                       label: Text(
-                        'Add More Files',
+                        t.t('merge_pdf_add_more_files'),
                         style: theme.textTheme.titleSmall?.copyWith(
                           color: theme.colorScheme.primary,
                         ),
@@ -430,7 +458,7 @@ class _MergePdfPageState extends State<MergePdfPage> {
                                 ),
                               ),
                             )
-                          : const Text('Merge PDF'),
+                          : Text(t.t('merge_pdf_button')),
                     ),
                   ),
                 ],
@@ -460,6 +488,7 @@ class _DestinationFolderSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(context);
 
     return InkWell(
       onTap: disabled ? null : onTap,
@@ -490,7 +519,7 @@ class _DestinationFolderSelector extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'Loading default folder...',
+                    t.t('merge_pdf_loading_default_folder'),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -512,7 +541,8 @@ class _DestinationFolderSelector extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          selectedFolder?.name ?? 'Select Folder',
+                          selectedFolder?.name ??
+                              t.t('merge_pdf_select_folder_placeholder'),
                           style: theme.textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.w500,
                             color: disabled

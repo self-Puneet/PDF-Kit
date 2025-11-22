@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pdf_kit/presentation/models/filter_models.dart';
+import 'package:pdf_kit/core/app_export.dart';
 
 class FilterSheet extends StatefulWidget {
   final SortOption currentSort;
@@ -30,7 +31,6 @@ class _FilterSheetState extends State<FilterSheet> {
     _sort = widget.currentSort;
     _types = Set.from(widget.currentTypes);
 
-    // Ensure at least one selected initially
     if (_types.isEmpty) {
       _types.addAll([TypeFilter.folder, TypeFilter.pdf, TypeFilter.image]);
     }
@@ -41,8 +41,29 @@ class _FilterSheetState extends State<FilterSheet> {
     widget.onTypeFiltersChanged(Set.from(_types));
   }
 
+  // NEW: localized type summary for subtitle
+  String _typeSummary(AppLocalizations t) {
+    if (_types.isEmpty) {
+      return t.t('filter_type_all');
+    }
+
+    final parts = <String>[];
+    if (_types.contains(TypeFilter.folder)) {
+      parts.add(t.t('filter_type_folders'));
+    }
+    if (_types.contains(TypeFilter.pdf)) {
+      parts.add(t.t('filter_type_pdfs'));
+    }
+    if (_types.contains(TypeFilter.image)) {
+      parts.add(t.t('filter_type_images'));
+    }
+    return parts.join(' + ');
+  }
+
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+
     final theme = Theme.of(context);
 
     return Container(
@@ -70,7 +91,7 @@ class _FilterSheetState extends State<FilterSheet> {
             child: Padding(
               padding: const EdgeInsets.only(bottom: 6.0),
               child: Text(
-                'Sort & Filter',
+                t.t('filter_sheet_title'), // was 'Sort & Filter'
                 style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
@@ -84,7 +105,7 @@ class _FilterSheetState extends State<FilterSheet> {
           // Sort Options
           SelectableTile(
             selected: _sort == SortOption.name,
-            label: 'By name',
+            label: t.t('filter_by_name'), // was 'By name'
             trailingIcon: Icons.sort_by_alpha,
             onTap: () {
               setState(() => _sort = SortOption.name);
@@ -93,7 +114,7 @@ class _FilterSheetState extends State<FilterSheet> {
           ),
           SelectableTile(
             selected: _sort == SortOption.modified,
-            label: 'By modified date',
+            label: t.t('filter_by_modified'), // was 'By modified date'
             trailingIcon: Icons.update,
             onTap: () {
               setState(() => _sort = SortOption.modified);
@@ -107,18 +128,12 @@ class _FilterSheetState extends State<FilterSheet> {
           ListTile(
             contentPadding: const EdgeInsets.only(left: 12),
             minVerticalPadding: 0,
-            title: const Text(
-              'Type',
-              style: TextStyle(fontWeight: FontWeight.w500),
+            title: Text(
+              t.t('filter_type_header'), // was 'Type'
+              style: const TextStyle(fontWeight: FontWeight.w500),
             ),
             subtitle: Text(
-              _types.isEmpty
-                  ? 'All'
-                  : _types
-                        .map(
-                          (e) => e.name[0].toUpperCase() + e.name.substring(1),
-                        )
-                        .join(' + '),
+              _typeSummary(t),
               style: TextStyle(fontSize: 13, color: theme.hintColor),
             ),
             leading: Icon(Icons.filter_list, color: theme.iconTheme.color),
@@ -139,7 +154,7 @@ class _FilterSheetState extends State<FilterSheet> {
                 children: [
                   SelectableTile(
                     selected: _types.contains(TypeFilter.folder),
-                    label: 'Folders',
+                    label: t.t('filter_type_folders'), // was 'Folders'
                     trailingIcon: Icons.folder_outlined,
                     onTap: () {
                       setState(() {
@@ -156,7 +171,7 @@ class _FilterSheetState extends State<FilterSheet> {
                   ),
                   SelectableTile(
                     selected: _types.contains(TypeFilter.pdf),
-                    label: 'PDFs',
+                    label: t.t('filter_type_pdfs'), // was 'PDFs'
                     trailingIcon: Icons.picture_as_pdf_outlined,
                     onTap: () {
                       setState(() {
@@ -173,7 +188,7 @@ class _FilterSheetState extends State<FilterSheet> {
                   ),
                   SelectableTile(
                     selected: _types.contains(TypeFilter.image),
-                    label: 'Images',
+                    label: t.t('filter_type_images'), // was 'Images'
                     trailingIcon: Icons.image_outlined,
                     onTap: () {
                       setState(() {
@@ -214,7 +229,7 @@ class SelectableTile extends StatelessWidget {
     required this.onTap,
     this.highlightColor,
   }) : super(key: key);
-// 
+  //
   @override
   Widget build(BuildContext context) {
     final Color resolvedHighlight =

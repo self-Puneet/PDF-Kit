@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pdf_kit/core/localization/app_localizations.dart';
 
 Future<void> showNewFolderSheet({
   required BuildContext context,
@@ -73,7 +74,9 @@ Future<void> showNewFolderSheet({
                           ),
                         ),
                         Text(
-                          'New Folder',
+                          AppLocalizations.of(
+                            context,
+                          ).t('new_folder_sheet_title'),
                           style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
@@ -89,7 +92,9 @@ Future<void> showNewFolderSheet({
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            'Folder Name',
+                            AppLocalizations.of(
+                              context,
+                            ).t('new_folder_field_label'),
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -99,9 +104,11 @@ Future<void> showNewFolderSheet({
                         TextField(
                           controller: controller,
                           textInputAction: TextInputAction.done,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             isDense: true,
-                            hintText: 'Enter folder name',
+                            hintText: AppLocalizations.of(
+                              context,
+                            ).t('new_folder_field_hint'),
                             border: UnderlineInputBorder(),
                             enabledBorder: UnderlineInputBorder(
                               borderSide: BorderSide(color: Color(0xFFE0E0E0)),
@@ -131,7 +138,11 @@ Future<void> showNewFolderSheet({
                                   ),
                                   shape: const StadiumBorder(),
                                 ),
-                                child: const Text('Cancel'),
+                                child: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  ).t('common_cancel'),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -149,7 +160,11 @@ Future<void> showNewFolderSheet({
                                   ),
                                   shape: const StadiumBorder(),
                                 ),
-                                child: const Text('Create'),
+                                child: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  ).t('new_folder_create_button'),
+                                ),
                               ),
                             ),
                           ],

@@ -1,6 +1,7 @@
 // search_files_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:pdf_kit/core/localization/app_localizations.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
 import 'package:pdf_kit/presentation/component/folder_tile.dart';
@@ -142,6 +143,7 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
   }
 
   Widget _searchBar(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       child: Row(
@@ -174,7 +176,7 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
                 style: Theme.of(context).textTheme.labelLarge,
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  hintText: 'Search files and folders...',
+                  hintText: t.t('files_search_hint'), // ← was hard‑coded
                   prefixIcon: const Icon(Icons.search, size: 18),
                   suffixIcon: (_controller.text.isNotEmpty)
                       ? IconButton(
@@ -184,7 +186,9 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
                           ),
                           iconSize: 18,
                           padding: const EdgeInsets.all(5),
-                          tooltip: 'Clear',
+                          tooltip: t.t(
+                            'files_previous_search_clear_all_tooltip',
+                          ),
                           icon: const Icon(Icons.close),
                           onPressed: () {
                             _controller.clear();
@@ -202,6 +206,8 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
   }
 
   Widget _previousSection(BuildContext context) {
+    final t = AppLocalizations.of(context);
+
     return Expanded(
       child: ListView(
         children: [
@@ -210,14 +216,14 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
             child: Row(
               children: [
                 Text(
-                  'Previous Search',
+                  t.t('recent_files_search_previous_header'),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const Spacer(),
                 IconButton(
                   onPressed: () {}, // optional: clear all later
                   icon: const Icon(Icons.close),
-                  tooltip: 'Clear all',
+                  tooltip: t.t('files_previous_search_clear_all_tooltip'),
                 ),
               ],
             ),

@@ -3,126 +3,154 @@ import 'package:pdf_kit/models/functionality_model.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/presentation/pages/home_page.dart';
 
-final List<Functionality> actions = [
-  Functionality(
-    id: 'watermark',
-    label: 'Watermark',
-    icon: Icons.water_drop_outlined,
-    color: Colors.brown,
-    onPressed: (context) => _toast(context, 'Watermark'),
-  ),
-  Functionality(
-    id: 'esign',
-    label: 'eSign PDF',
-    icon: Icons.edit_document, // if not available, use Icons.edit_note
-    color: Colors.pink,
-    onPressed: (context) => _toast(context, 'eSign PDF'),
-  ),
-  Functionality(
-    id: 'split',
-    label: 'Split PDF',
-    icon: Icons.content_cut,
-    color: Colors.deepPurple,
-    onPressed: (context) => _toast(context, 'Split PDF'),
-  ),
+List<Functionality> getActions(BuildContext context) {
+  final localizations = AppLocalizations.of(context);
+  final t = localizations.t;
 
-  // merge pdf
-  Functionality(
-    id: 'merge',
-    label: 'Merge PDF',
-    icon: Icons.merge_type,
-    color: Colors.indigo,
-    onPressed: (context) async {
-      // create a mapped selection provider and navigate to merge screen
-      final selectionId = 'merge_${DateTime.now().microsecondsSinceEpoch}';
-      // ensure SelectionManager is available and create provider in cache
-      try {
-        final mgr = Get.find<SelectionManager>();
-        mgr.of(selectionId);
-      } catch (_) {
-        // if DI not initialized, still continue with navigation
-      }
+  return [
+    Functionality(
+      id: 'watermark',
+      label: t('action_watermark_label'),
+      icon: Icons.water_drop_outlined,
+      color: Colors.brown,
+      onPressed: (ctx) => _toast(
+        ctx,
+        t(
+          'action_coming_soon_toast',
+        ).replaceAll('{feature}', t('action_watermark_label')),
+      ),
+    ),
+    Functionality(
+      id: 'esign',
+      label: t('action_esign_label'),
+      icon: Icons.edit_document, // if not available, use Icons.edit_note
+      color: Colors.pink,
+      onPressed: (ctx) => _toast(
+        ctx,
+        t(
+          'action_coming_soon_toast',
+        ).replaceAll('{feature}', t('action_esign_label')),
+      ),
+    ),
+    Functionality(
+      id: 'split',
+      label: t('action_split_label'),
+      icon: Icons.content_cut,
+      color: Colors.deepPurple,
+      onPressed: (ctx) => _toast(
+        ctx,
+        t(
+          'action_coming_soon_toast',
+        ).replaceAll('{feature}', t('action_split_label')),
+      ),
+    ),
 
-      await Future.delayed(const Duration(milliseconds: 150));
+    // merge pdf
+    Functionality(
+      id: 'merge',
+      label: t('action_merge_label'),
+      icon: Icons.merge_type,
+      color: Colors.indigo,
+      onPressed: (context) async {
+        // create a mapped selection provider and navigate to merge screen
+        final selectionId = 'merge_${DateTime.now().microsecondsSinceEpoch}';
+        // ensure SelectionManager is available and create provider in cache
+        try {
+          final mgr = Get.find<SelectionManager>();
+          mgr.of(selectionId);
+        } catch (_) {
+          // if DI not initialized, still continue with navigation
+        }
 
-      if (!context.mounted) return;
+        await Future.delayed(const Duration(milliseconds: 150));
 
-      final result = await context.pushNamed(
-        AppRouteName.filesRootFullscreen,
-        queryParameters: {'selectionId': selectionId, 'actionText': 'Merge'},
-      );
+        if (!context.mounted) return;
 
-      // If the merge screen returned `true`, request recent files to refresh.
-      if (result == true) {
-        RecentFilesSection.refreshNotifier.value++;
-      }
-    },
-  ),
+        final result = await context.pushNamed(
+          AppRouteName.filesRootFullscreen,
+          queryParameters: {
+            'selectionId': selectionId,
+            'actionText': t('merge_pdf_title'),
+          },
+        );
 
-  // potect pdf
-  Functionality(
-    id: 'protect',
-    label: 'Protect PDF',
-    icon: Icons.lock_outline,
-    color: Colors.green,
-    onPressed: (context) async {
-      // create a mapped selection provider and navigate to merge screen
-      final selectionId = 'protect_${DateTime.now().microsecondsSinceEpoch}';
-      // ensure SelectionManager is available and create provider in cache
-      try {
-        final mgr = Get.find<SelectionManager>();
-        mgr.of(selectionId);
-      } catch (_) {
-        // if DI not initialized, still continue with navigation
-      }
+        // If the merge screen returned `true`, request recent files to refresh.
+        if (result == true) {
+          RecentFilesSection.refreshNotifier.value++;
+        }
+      },
+    ),
 
-      final result = await context.pushNamed(
-        AppRouteName.protectPdf,
-        queryParameters: {'selectionId': selectionId},
-      );
+    // protect pdf
+    Functionality(
+      id: 'protect',
+      label: t('action_protect_label'),
+      icon: Icons.lock_outline,
+      color: Colors.green,
+      onPressed: (context) async {
+        // create a mapped selection provider and navigate to merge screen
+        final selectionId = 'protect_${DateTime.now().microsecondsSinceEpoch}';
+        // ensure SelectionManager is available and create provider in cache
+        try {
+          final mgr = Get.find<SelectionManager>();
+          mgr.of(selectionId);
+        } catch (_) {
+          // if DI not initialized, still continue with navigation
+        }
 
-      // If the merge screen returned `true`, request recent files to refresh.
-      if (result == true) {
-        RecentFilesSection.refreshNotifier.value++;
-      }
-    },
-  ),
+        final result = await context.pushNamed(
+          AppRouteName.protectPdf,
+          queryParameters: {'selectionId': selectionId},
+        );
 
-  // compress pdf
-  Functionality(
-    id: 'compress',
-    label: 'Compress PDF',
-    icon: Icons.data_saver_on, // "compress" substitute
-    color: Colors.orange,
-    onPressed: (context) async {
-      final selectionId = 'compress_${DateTime.now().microsecondsSinceEpoch}';
-      try {
-        final mgr = Get.find<SelectionManager>();
-        mgr.of(selectionId);
-      } catch (_) {}
+        // If the merge screen returned `true`, request recent files to refresh.
+        if (result == true) {
+          RecentFilesSection.refreshNotifier.value++;
+        }
+      },
+    ),
 
-      final result = await context.pushNamed(
-        AppRouteName.filesRootFullscreen,
-        queryParameters: {
-          'selectionId': selectionId,
-          'actionText': 'Compress',
-          'max': '1', // only one file for compression
-        },
-      );
+    // compress pdf
+    Functionality(
+      id: 'compress',
+      label: t('action_compress_label'),
+      icon: Icons.data_saver_on, // "compress" substitute
+      color: Colors.orange,
+      onPressed: (context) async {
+        final selectionId = 'compress_${DateTime.now().microsecondsSinceEpoch}';
+        try {
+          final mgr = Get.find<SelectionManager>();
+          mgr.of(selectionId);
+        } catch (_) {}
 
-      if (result == true) {
-        RecentFilesSection.refreshNotifier.value++;
-      }
-    },
-  ),
-  Functionality(
-    id: 'all',
-    label: 'All Tools',
-    icon: Icons.grid_view_rounded,
-    color: Colors.blueGrey,
-    onPressed: (context) => _toast(context, 'All Tools'),
-  ),
-];
+        final result = await context.pushNamed(
+          AppRouteName.filesRootFullscreen,
+          queryParameters: {
+            'selectionId': selectionId,
+            'actionText': t('compress_pdf_button'),
+            'max': '1', // only one file for compression
+          },
+        );
+
+        if (result == true) {
+          RecentFilesSection.refreshNotifier.value++;
+        }
+      },
+    ),
+    Functionality(
+      id: 'all',
+      label: t('action_all_tools_label'),
+      icon: Icons.grid_view_rounded,
+      color: Colors.blueGrey,
+      onPressed: (ctx) => _toast(
+        ctx,
+        t(
+          'action_coming_soon_toast',
+        ).replaceAll('{feature}', t('action_all_tools_label')),
+      ),
+    ),
+  ];
+}
 
 void _toast(BuildContext c, String msg) =>
     ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text(msg)));

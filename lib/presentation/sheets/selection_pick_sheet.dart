@@ -4,6 +4,7 @@ import 'package:path/path.dart' as p;
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/provider/selection_provider.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
+import 'package:pdf_kit/core/app_export.dart';
 
 /// Bottom sheet displaying selected files grouped by their parent folder.
 Future<void> showSelectionPickSheet({
@@ -43,6 +44,8 @@ class _SelectionPickSheet extends StatefulWidget {
 class _SelectionPickSheetState extends State<_SelectionPickSheet> {
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context); // NEW
+
     final theme = Theme.of(context);
     final files = widget.provider.files;
 
@@ -90,7 +93,7 @@ class _SelectionPickSheetState extends State<_SelectionPickSheet> {
                       padding: const EdgeInsets.only(bottom: 6.0),
                       child: Text(
                         // '${files.length} Selected',
-                        'Selected Files',
+                        t.t('selection_sheet_title'),
                         style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
@@ -165,7 +168,7 @@ class _SelectionPickSheetState extends State<_SelectionPickSheet> {
                     Padding(
                       padding: const EdgeInsets.all(24.0),
                       child: Text(
-                        'No files selected',
+                        t.t('selection_sheet_empty'),
                         style: theme.textTheme.bodyMedium,
                       ),
                     ),
@@ -206,6 +209,13 @@ class _FolderGroupState extends State<_FolderGroup> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context); // NEW
+
+    final count = widget.files.length;
+    final itemsKey = count == 1
+        ? 'selection_folder_items_single'
+        : 'selection_folder_items_multiple';
+    final itemsLabel = t.t(itemsKey).replaceAll('{count}', count.toString());
     final theme = Theme.of(context);
     final name = widget.folderPath.split(Platform.pathSeparator).last;
     return Container(
@@ -242,7 +252,7 @@ class _FolderGroupState extends State<_FolderGroup> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${widget.files.length} item${widget.files.length == 1 ? '' : 's'}',
+                        itemsLabel,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant.withOpacity(
                             0.7,
@@ -254,7 +264,9 @@ class _FolderGroupState extends State<_FolderGroup> {
                 ),
                 IconButton(
                   icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
-                  tooltip: _expanded ? 'Collapse' : 'Expand',
+                  tooltip: _expanded
+                      ? t.t('selection_folder_collapse_tooltip')
+                      : t.t('selection_folder_expand_tooltip'),
                   onPressed: () => setState(() => _expanded = !_expanded),
                 ),
               ],

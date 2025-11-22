@@ -8,6 +8,7 @@ import 'package:pdf_kit/service/pdf_compress_service.dart';
 import 'package:dartz/dartz.dart' show Either; // avoid State name clash
 import 'package:pdf_kit/service/pdf_merge_service.dart'
     show CustomException; // for Either left type
+import 'package:pdf_kit/core/localization/app_localizations.dart';
 
 class CompressPdfPage extends StatefulWidget {
   final String? selectionId;
@@ -21,10 +22,10 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
   int _level = 1; // 0=High,1=Medium,2=Low
   bool _isWorking = false;
 
-  String get _levelLabel => switch (_level) {
-    0 => 'High Compression',
-    1 => 'Medium Compression',
-    _ => 'Low Compression',
+  String _levelLabel(AppLocalizations t) => switch (_level) {
+    0 => t.t('compress_pdf_high'),
+    1 => t.t('compress_pdf_medium'),
+    _ => t.t('compress_pdf_low'),
   };
 
   // String get _levelSubtitle => switch (_level) {
@@ -37,10 +38,11 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
     BuildContext context,
     SelectionProvider sel,
   ) async {
+    final t = AppLocalizations.of(context);
     if (sel.files.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Select a PDF first'),
+          content: Text(t.t('compress_pdf_select_first_error')),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -62,16 +64,20 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
           );
         },
         (compressed) {
+          final originalName = p.basename(file.path);
+          final resultName = p.basename(compressed.path);
+          final levelName = _levelLabel(t);
+          final pattern = t
+              .t('compress_pdf_result_pattern')
+              .replaceFirst('{original}', originalName)
+              .replaceFirst('{level}', levelName)
+              .replaceFirst('{result}', resultName);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                'Compressed "${p.basename(file.path)}" ($_levelLabel) → ${p.basename(compressed.path)}',
-              ),
+              content: Text(pattern),
               action: SnackBarAction(
-                label: 'Open',
-                onPressed: () {
-                  // could implement open logic later
-                },
+                label: t.t('common_open_snackbar'),
+                onPressed: () {},
               ),
             ),
           );
@@ -86,15 +92,15 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
 
   @override
   Widget build(BuildContext context) {
+    print(AppLocalizations.of(context).t('compress_pdf_title'));
+
     final theme = Theme.of(context);
     return Consumer<SelectionProvider>(
       builder: (context, selection, _) {
         final hasFile = selection.files.isNotEmpty;
         final FileInfo? file = hasFile ? selection.files.first : null;
         return Scaffold(
-          backgroundColor: Colors.white,
           appBar: AppBar(
-            backgroundColor: Colors.white,
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new, size: 18),
@@ -110,16 +116,17 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Compress PDF',
+                      AppLocalizations.of(context).t('compress_pdf_title'),
                       style: theme.textTheme.headlineMedium?.copyWith(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
                       ),
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Reduce PDF size with smart compression, adjust quality, choose your save location, and rename the file. Add PDFs anytime and quickly create a lighter, optimized document.',
+                      AppLocalizations.of(
+                        context,
+                      ).t('compress_pdf_description'),
                       style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
@@ -142,7 +149,9 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  'No PDF selected. Go back and choose one.',
+                                  AppLocalizations.of(
+                                    context,
+                                  ).t('compress_pdf_no_pdf_selected'),
                                   style: theme.textTheme.bodyMedium,
                                 ),
                               ),
@@ -150,7 +159,9 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                           ),
                     const SizedBox(height: 28),
                     Text(
-                      'Select compression level:',
+                      AppLocalizations.of(
+                        context,
+                      ).t('compress_pdf_select_level_label'),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -159,20 +170,20 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                     _buildOption(
                       context,
                       0,
-                      'High Compression',
-                      'Smallest size, lower quality',
+                      AppLocalizations.of(context).t('compress_pdf_high'),
+                      AppLocalizations.of(context).t('compress_pdf_high_sub'),
                     ),
                     _buildOption(
                       context,
                       1,
-                      'Medium Compression',
-                      'Medium size, medium quality',
+                      AppLocalizations.of(context).t('compress_pdf_medium'),
+                      AppLocalizations.of(context).t('compress_pdf_medium_sub'),
                     ),
                     _buildOption(
                       context,
                       2,
-                      'Low Compression',
-                      'Largest size, better quality',
+                      AppLocalizations.of(context).t('compress_pdf_low'),
+                      AppLocalizations.of(context).t('compress_pdf_low_sub'),
                     ),
                   ],
                 ),
@@ -192,17 +203,23 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                   child: _isWorking
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
+                          children: [
                             SizedBox(
                               height: 20,
                               width: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             ),
                             SizedBox(width: 12),
-                            Text('Compressing...'),
+                            Text(
+                              AppLocalizations.of(
+                                context,
+                              ).t('compress_pdf_compressing'),
+                            ),
                           ],
                         )
-                      : const Text('Compress'),
+                      : Text(
+                          AppLocalizations.of(context).t('compress_pdf_button'),
+                        ),
                 ),
               ),
             ),

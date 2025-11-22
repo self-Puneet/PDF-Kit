@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:pdf_kit/core/theme/app_theme.dart';
 import 'package:pdf_kit/presentation/component/setting_tile.dart';
 import 'package:pdf_kit/presentation/models/setting_info_type.dart';
+import 'package:pdf_kit/core/localization/app_localizations.dart';
+import 'package:pdf_kit/providers/locale_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -12,7 +16,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool darkMode = false;
-  String language = "English (US)";
   String defaultSaveLocation = "Internal storage";
   String fileNamingScheme = "Auto-increment";
   String pdfCompression = "Balanced";
@@ -22,22 +25,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final localeCode =
+        context.watch<LocaleProvider>().locale?.languageCode ?? 'en';
+    final languageDisplay = localeCode == 'hi'
+        ? t.t('language_option_hindi')
+        : t.t('language_option_english');
+
     final items = <SettingsItem>[
       SettingsItem(
-        id: "language",
-        title: "Language",
-        subtitle: "Select any language you want",
+        id: 'language',
+        title: t.t('settings_language_item_title'),
+        subtitle: t.t('settings_language_item_subtitle'),
         type: SettingsItemType.value,
-        trailingText: language,
+        trailingText: languageDisplay,
         leadingIcon: Icons.language,
         onTap: () {
-          // open language screen / bottom sheet
+          context.push('/settings/language');
         },
       ),
       SettingsItem(
-        id: "default_save",
-        title: "Default Save Location",
-        subtitle: "Choose where all PDFs will be saved",
+        id: 'default_save',
+        title: t.t('settings_default_save_location_title'),
+        subtitle: t.t('settings_default_save_location_subtitle'),
         type: SettingsItemType.navigation,
         leadingIcon: Icons.folder,
         onTap: () {
@@ -45,9 +55,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         },
       ),
       SettingsItem(
-        id: "dark_mode",
-        title: "Dark Mode",
-        subtitle: "Switch between light and dark themes",
+        id: 'dark_mode',
+        title: t.t('settings_dark_mode_title'),
+        subtitle: t.t('settings_dark_mode_subtitle'),
         type: SettingsItemType.toggle,
         leadingIcon: Icons.dark_mode,
         switchValue: darkMode,
@@ -59,65 +69,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
         },
       ),
       SettingsItem(
-        id: "file_naming",
-        title: "File Naming Scheme",
-        subtitle: "Set how new files are named automatically",
+        id: 'file_naming',
+        title: t.t('settings_file_naming_title'),
+        subtitle: t.t('settings_file_naming_subtitle'),
         type: SettingsItemType.navigation,
         leadingIcon: Icons.text_fields,
         onTap: () {},
       ),
       SettingsItem(
-        id: "pdf_compression",
-        title: "PDF Compression",
-        subtitle: "Set how new files are compressed automatically",
+        id: 'pdf_compression',
+        title: t.t('settings_pdf_compression_title'),
+        subtitle: t.t('settings_pdf_compression_subtitle'),
         type: SettingsItemType.navigation,
         leadingIcon: Icons.compress,
         onTap: () {},
       ),
       SettingsItem(
-        id: "filter_options",
-        title: "Filter Options",
-        subtitle: "Choose which filters the app applies by default",
+        id: 'filter_options',
+        title: t.t('settings_filter_options_title'),
+        subtitle: t.t('settings_filter_options_subtitle'),
         type: SettingsItemType.navigation,
         leadingIcon: Icons.filter_list,
         onTap: () {},
       ),
       SettingsItem(
-        id: "grid_view_layout",
-        title: "Grid View Layout",
-        subtitle: "Control how files and folders appear",
+        id: 'grid_view_layout',
+        title: t.t('settings_grid_view_layout_title'),
+        subtitle: t.t('settings_grid_view_layout_subtitle'),
         type: SettingsItemType.navigation,
         leadingIcon: Icons.grid_view,
         onTap: () {},
       ),
       SettingsItem(
-        id: "pdf_content_fit",
-        title: "PDF Content Fit Mode",
-        subtitle: "Choose how images and PDFs should fit",
+        id: 'pdf_content_fit',
+        title: t.t('settings_pdf_content_fit_title'),
+        subtitle: t.t('settings_pdf_content_fit_subtitle'),
         type: SettingsItemType.navigation,
         leadingIcon: Icons.crop_landscape,
         onTap: () {},
       ),
       SettingsItem(
-        id: "help_center",
-        title: "Help Center",
-        subtitle: "Get help, FAQs, and answers",
+        id: 'help_center',
+        title: t.t('settings_help_center_title'),
+        subtitle: t.t('settings_help_center_subtitle'),
         type: SettingsItemType.navigation,
         leadingIcon: Icons.help_outline,
         onTap: () {},
       ),
       SettingsItem(
-        id: "about_pdfkit",
-        title: "About PDF-Kit",
-        subtitle: "View details about this app",
+        id: 'about_pdfkit',
+        title: t.t('settings_about_pdf_kit_title'),
+        subtitle: t.t('settings_about_pdf_kit_subtitle'),
         type: SettingsItemType.navigation,
         leadingIcon: Icons.info_outline,
         onTap: () {},
       ),
       SettingsItem(
-        id: "about_us",
-        title: "About Us",
-        subtitle: "Discover our vision and how we work",
+        id: 'about_us',
+        title: t.t('settings_about_us_title'),
+        subtitle: t.t('settings_about_us_subtitle'),
         type: SettingsItemType.navigation,
         leadingIcon: Icons.group_outlined,
         onTap: () {},
@@ -170,7 +180,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(width: 12),
           Text(
-            'PDF Kit',
+            AppLocalizations.of(context).t('home_brand_title'),
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),

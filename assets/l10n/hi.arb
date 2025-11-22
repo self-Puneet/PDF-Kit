@@ -272,5 +272,125 @@
   "selection_selected_label": "{count} चयनित",
   "@selection_selected_label": {
     "placeholders": {"count": {"type": "int"}}
+  },
+  "settings_language_item_title": "भाषा",
+  "settings_language_item_subtitle": "किसी भी भाषा का चयन करें",
+  "settings_default_save_location_title": "डिफ़ॉल्ट सेव स्थान",
+  "settings_default_save_location_subtitle": "जहाँ सभी PDF सेव होंगी चुनें",
+  "settings_dark_mode_title": "डार्क मोड",
+  "settings_dark_mode_subtitle": "लाइट और डार्क थीम के बीच स्विच करें",
+  "settings_file_naming_title": "फ़ाइल नामकरण योजना",
+  "settings_file_naming_subtitle": "नई फ़ाइलों का नाम स्वतः कैसे हो सेट करें",
+  "settings_pdf_compression_title": "PDF संपीड़न",
+  "settings_pdf_compression_subtitle": "नई फ़ाइलों को स्वतः कैसे संपीड़ित करें सेट करें",
+  "settings_filter_options_title": "फ़िल्टर विकल्प",
+  "settings_filter_options_subtitle": "डिफ़ॉल्ट रूप से ऐप कौन से फ़िल्टर लागू करे चुनें",
+  "settings_grid_view_layout_title": "ग्रिड लेआउट",
+  "settings_grid_view_layout_subtitle": "फ़ाइलें और फ़ोल्डर कैसे दिखें नियंत्रित करें",
+  "settings_pdf_content_fit_title": "PDF कंटेंट फिट मोड",
+  "settings_pdf_content_fit_subtitle": "चित्र और PDF कैसे फिट हों चुनें",
+  "settings_help_center_title": "सहायता केंद्र",
+  "settings_help_center_subtitle": "सहायता, अक्सर पूछे जाने वाले प्रश्न और उत्तर पाएँ",
+  "settings_about_pdf_kit_title": "PDF-Kit के बारे में",
+  "settings_about_pdf_kit_subtitle": "इस ऐप के विवरण देखें",
+  "settings_about_us_title": "हमारे बारे में",
+  "settings_about_us_subtitle": "हमारी दृष्टि और कार्य शैली जानें",
+  "language_settings_page_title": "भाषा सेटिंग्स",
+  "language_settings_choose_label": "ऐप भाषा चुनें",
+  "language_option_english": "अंग्रेज़ी (US)",
+  "language_option_hindi": "हिन्दी",
+  "language_settings_applied_snackbar": "भाषा अपडेट की गई",
+  "show_pdf_no_path": "कोई पथ नहीं",
+  "show_pdf_prefix": "PDF दिखाएँ: {path}",
+  "@show_pdf_prefix": {"placeholders": {"path": {"type": "String"}}},
+  "onboarding_title": "ऑनबोर्डिंग",
+  "all_files_title": "सभी फ़ाइलें और फ़ोल्डर",
+  "search_files_title": "फ़ाइलें खोजें",
+  "preferences_title": "प्राथमिकताएँ",
+  "contact_us_title": "संपर्क करें",
+  "about_app_title": "ऐप के बारे में",
+  "take_image_title": "चित्र लें",
+  "add_watermark_title": "वॉटरमार्क जोड़ें",
+  "add_signature_title": "डिजिटल हस्ताक्षर जोड़ें",
+  "not_found_page_title": "पृष्ठ नहीं मिला",
+  "not_found_page_route_undefined": "इसके लिए कोई रूट परिभाषित नहीं: {route}",
+  "@not_found_page_route_undefined": {"placeholders": {"route": {"type": "String"}}},
+  "not_found_go_home_button": "होम जाएँ",
+
+  "action_watermark_label": "वॉटरमार्क",
+  "action_esign_label": "eSign PDF",
+  "action_split_label": "PDF विभाजित करें",
+  "action_merge_label": "PDF मर्ज करें",
+  "action_protect_label": "PDF सुरक्षित करें",
+  "action_compress_label": "PDF संपीड़ित करें",
+  "action_all_tools_label": "सभी उपकरण",
+  "action_coming_soon_toast": "{feature} जल्द आ रहा है",
+  "@action_coming_soon_toast": {"placeholders": {"feature": {"type": "String"}}},
+
+  "selection_max_info": "अधिकतम: {count}",
+  "@selection_max_info": {
+    "description": "Info message in selection sheet showing the maximum selectable files.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+"selection_sheet_title": "चयनित फ़ाइलें",
+"@selection_sheet_title": {
+  "description": "Title of the bottom sheet showing currently selected files."
+},
+
+"selection_sheet_empty": "कोई फ़ाइल चयनित नहीं है",
+"@selection_sheet_empty": {
+  "description": "Message shown when there are no files selected in the sheet."
+},
+
+"selection_folder_items_single": "{count} आइटम",
+"@selection_folder_items_single": {
+  "description": "Label for a folder group when it has exactly one selected item.",
+  "placeholders": {
+    "count": { "type": "int" }
   }
+},
+
+"selection_folder_items_multiple": "{count} आइटम",
+"@selection_folder_items_multiple": {
+  "description": "Label for a folder group when it has more than one selected item.",
+  "placeholders": {
+    "count": { "type": "int" }
+  }
+},
+
+"selection_folder_collapse_tooltip": "संक्षिप्त करें",
+"@selection_folder_collapse_tooltip": {
+  "description": "Tooltip for collapse button in selection folder group."
+},
+
+"selection_folder_expand_tooltip": "विस्तृत करें",
+"@selection_folder_expand_tooltip": {
+  "description": "Tooltip for expand button in selection folder group."
+},
+
+"selection_max_info": "अधिकतम: {count}",
+"@selection_max_info": {
+  "description": "Info message in selection sheet showing the maximum selectable files.",
+  "placeholders": {
+    "count": { "type": "int" }
+  }
+},
+
+
+
+
+"selection_limit_error_single": "आप अधिकतम {count} फ़ाइल चुन सकते हैं.",
+"@selection_limit_error_single": {
+  "description": "Shown when user exceeds maximum selectable files (exactly 1 allowed).",
+  "placeholders": { "count": { "type": "int" } }
+},
+
+"selection_limit_error_multiple": "आप अधिकतम {count} फ़ाइलें चुन सकते हैं.",
+"@selection_limit_error_multiple": {
+  "description": "Shown when user exceeds maximum selectable files (more than 1 allowed).",
+  "placeholders": { "count": { "type": "int" } }
+}
+
+
 }

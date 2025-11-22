@@ -1,10 +1,10 @@
 // selection_layout.dart
 
 import 'package:flutter/material.dart';
-import 'package:pdf_kit/core/theme/app_theme.dart';
 import 'package:pdf_kit/presentation/sheets/selection_pick_sheet.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/provider/selection_provider.dart';
+import 'package:pdf_kit/core/app_export.dart';
 
 class SelectionScaffold extends StatefulWidget {
   final Widget child;
@@ -65,16 +65,24 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
   }
 
   void _handleProviderUpdate() {
-    // Show bottom sheet with current selection + error message if limit exceeded
-    if (provider.lastErrorMessage != null) {
-      // Clear error after sheet pops
-      showSelectionPickSheet(
-        context: context,
-        provider: provider,
-        infoMessage: provider.lastErrorMessage,
-        isError: true,
-      ).then((_) => provider.clearError());
-    }
+    // If no limit error, nothing to do
+    if (provider.lastLimitCount == null) return;
+
+    final t = AppLocalizations.of(context);
+    final count = provider.lastLimitCount!;
+
+    final key = count == 1
+        ? 'selection_limit_error_single'
+        : 'selection_limit_error_multiple';
+
+    final msg = t.t(key).replaceAll('{count}', count.toString());
+
+    showSelectionPickSheet(
+      context: context,
+      provider: provider,
+      infoMessage: msg,
+      isError: true,
+    ).then((_) => provider.clearError());
   }
 
   @override
@@ -94,8 +102,28 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
 
   Widget _bottomBar(BuildContext context) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(context); // NEW
+
     if (!provider.isEnabled) return const SizedBox.shrink();
     final count = provider.count;
+
+    // Localized "{count} selected"
+    final selectedLabel = t
+        .t('selection_count_label')
+        .replaceAll('{count}', count.toString());
+
+    // Localized default action label
+    final actionLabel = widget.actionText ?? t.t('selection_action_default');
+
+    // Optional: localized "Max: X" info, if you add this key to ARB:
+    // "selection_max_info": "Max: {count}"
+    String? maxInfo;
+    if (provider.maxSelectable != null) {
+      maxInfo = t
+          .t('selection_max_info')
+          .replaceAll('{count}', provider.maxSelectable.toString());
+    }
+
     return SafeArea(
       top: false,
       child: Container(
@@ -112,38 +140,38 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
               child: ElevatedButton.icon(
                 onPressed: (count > 0 && widget.onAction != null)
                     ? () => showSelectionPickSheet(
-                        context: context,
-                        provider: provider,
-                        infoMessage: provider.maxSelectable != null
-                            ? 'Max: ${provider.maxSelectable}'
-                            : null,
-                        isError: false,
-                      )
+                          context: context,
+                          provider: provider,
+                          infoMessage: maxInfo,
+                          isError: false,
+                        )
                     : null,
                 icon: const Icon(Icons.checklist),
-                label: Text('$count selected'),
+                label: Text(selectedLabel),
                 style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
-                  backgroundColor: WidgetStateProperty.resolveWith<Color?>((
-                    states,
-                  ) {
-                    if (states.contains(WidgetState.disabled)) {
-                      return null;
-                    }
-                    return Theme.of(context).colorScheme.primary.withAlpha(15);
-                  }),
-                  iconColor: WidgetStateProperty.resolveWith<Color?>((states) {
-                    if (states.contains(WidgetState.disabled)) {
-                      return null;
-                    }
-                    return Theme.of(context).colorScheme.primary;
-                  }),
-                  foregroundColor: WidgetStateProperty.resolveWith<Color?>((
-                    states,
-                  ) {
-                    if (states.contains(WidgetState.disabled)) return null;
-                    return theme.colorScheme.primary;
-                  }),
-                ),
+                      backgroundColor:
+                          WidgetStateProperty.resolveWith<Color?>((states) {
+                        if (states.contains(WidgetState.disabled)) {
+                          return null;
+                        }
+                        return Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withAlpha(15);
+                      }),
+                      iconColor:
+                          WidgetStateProperty.resolveWith<Color?>((states) {
+                        if (states.contains(WidgetState.disabled)) {
+                          return null;
+                        }
+                        return Theme.of(context).colorScheme.primary;
+                      }),
+                      foregroundColor:
+                          WidgetStateProperty.resolveWith<Color?>((states) {
+                        if (states.contains(WidgetState.disabled)) return null;
+                        return theme.colorScheme.primary;
+                      }),
+                    ),
               ),
             ),
             const SizedBox(width: 12),
@@ -152,7 +180,7 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
                 onPressed: (count > 0 && widget.onAction != null)
                     ? () => widget.onAction!(provider.files)
                     : null,
-                child: Text(widget.actionText ?? 'Action'),
+                child: Text(actionLabel),
               ),
             ),
           ],

@@ -8,7 +8,7 @@ class SelectionProvider extends ChangeNotifier {
   List<FileInfo> _orderedFiles = [];
   int _mode = 0;
   int? _maxSelectable; // optional upper limit
-  String? _lastErrorMessage; // surfaced when exceeding limit
+  // String? _lastErrorMessage; // surfaced when exceeding limit
 
   int get mode => _mode;
   bool get isEnabled => _mode != 0;
@@ -19,9 +19,10 @@ class SelectionProvider extends ChangeNotifier {
   List<FileInfo> get files => List.unmodifiable(_orderedFiles);
 
   int? get maxSelectable => _maxSelectable;
-  String? get lastErrorMessage => _lastErrorMessage;
+  int? _lastLimitCount; // instead of String? _lastErrorMessage
 
   int getRotation(String path) => _rotations[path] ?? 0;
+  int? get lastLimitCount => _lastLimitCount; // NEW
 
   List<MapEntry<FileInfo, int>> get filesWithRotation {
     return _orderedFiles
@@ -52,14 +53,14 @@ class SelectionProvider extends ChangeNotifier {
   }
 
   void clearError() {
-    if (_lastErrorMessage != null) {
-      _lastErrorMessage = null;
+    if (_lastLimitCount != null) {
+      _lastLimitCount = null;
       notifyListeners();
     }
   }
 
   void toggle(FileInfo f) {
-    // Remove existing selection
+    // If already selected -> unselect
     if (_selected.containsKey(f.path)) {
       _selected.remove(f.path);
       _rotations.remove(f.path);
@@ -70,8 +71,7 @@ class SelectionProvider extends ChangeNotifier {
 
     // Enforce max selectable limit if provided
     if (_maxSelectable != null && _selected.length >= _maxSelectable!) {
-      _lastErrorMessage =
-          'You can select at most $_maxSelectable file${_maxSelectable == 1 ? '' : 's'}.';
+      _lastLimitCount = _maxSelectable; // just store the number
       notifyListeners();
       return; // do not add
     }
@@ -154,7 +154,7 @@ class SelectionProvider extends ChangeNotifier {
     _rotations.clear();
     _orderedFiles.clear();
     _mode = 1;
-    _lastErrorMessage = null;
+    // _lastErrorMessage = null;
     notifyListeners();
   }
 

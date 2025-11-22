@@ -49,14 +49,18 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
   Future<void> _handleFileDelete(FileInfo file) async {
     debugPrint('🗑️ [RecentFilesPage] Deleting file: ${file.name}');
     final result = await RecentFilesService.removeRecentFile(file.path);
+    final t = AppLocalizations.of(context);
 
     result.fold(
       (error) {
         debugPrint('❌ [RecentFilesPage] Delete failed: $error');
         if (mounted) {
+          final msg = t
+              .t('snackbar_error')
+              .replaceAll('{message}', error.toString());
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error: $error'),
+              content: Text(msg),
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
@@ -69,7 +73,7 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
         if (mounted) {
           setState(() => _loadRecentFiles());
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Removed from recent files')),
+            SnackBar(content: Text(t.t('snackbar_removed_recent'))),
           );
         }
       },
@@ -87,8 +91,9 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
         break;
       case 'rename':
         debugPrint('ℹ️ [RecentFilesPage] Rename not implemented yet');
+        final t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Rename feature coming soon')),
+          SnackBar(content: Text(t.t('common_rename_coming_soon'))),
         );
         break;
       case 'share':
@@ -103,13 +108,18 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
       onClear: () async {
         debugPrint('🧹 [RecentFilesPage] Clear All pressed');
         final result = await RecentFilesService.clearRecentFiles();
+        final t = AppLocalizations.of(context);
+
         result.fold(
           (error) {
             debugPrint('❌ [RecentFilesPage] Clear All failed: $error');
             if (mounted) {
+              final msg = t
+                  .t('snackbar_error')
+                  .replaceAll('{message}', error.toString());
               ScaffoldMessenger.of(
                 context,
-              ).showSnackBar(SnackBar(content: Text('Error: $error')));
+              ).showSnackBar(SnackBar(content: Text(msg)));
             }
           },
           (_) {
@@ -149,9 +159,10 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
                       debugPrint(
                         '⚠️ [RecentFilesPage] Error: ${snapshot.error}',
                       );
+                      final t = AppLocalizations.of(context);
                       return Center(
                         child: Text(
-                          'Failed to load recent files.',
+                          t.t('errors_failed_to_load_recent'),
                           style: theme.textTheme.bodyLarge,
                         ),
                       );
@@ -163,6 +174,7 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
                     );
 
                     if (files.isEmpty) {
+                      final t = AppLocalizations.of(context);
                       return Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -176,14 +188,14 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'No recent files',
+                              t.t('recent_files_empty_title'),
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Your recently accessed files will appear here.',
+                              t.t('recent_files_empty_message'),
                               style: theme.textTheme.bodyMedium,
                               textAlign: TextAlign.center,
                             ),
@@ -216,6 +228,8 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final t = AppLocalizations.of(context);
+
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -237,7 +251,7 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
           ),
           const SizedBox(width: 12),
           Text(
-            'Recent Files',
+            t.t('recent_files_title'),
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -248,21 +262,21 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
             onPressed: () {
               context.pushNamed(AppRouteName.recentFilesSearch);
             },
-            tooltip: 'Search',
+            tooltip: t.t('common_search'),
           ),
           PopupMenuButton<String>(
             padding: EdgeInsets.zero,
             icon: const Icon(Icons.more_vert),
-            tooltip: 'More',
+            tooltip: t.t('files_more_tooltip'),
             onSelected: (value) {
               if (value == 'clear_all') {
                 _openClearRecentFilesSheet();
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'clear_all',
-                child: Text('Clear all recent files'),
+                child: Text(t.t('recent_files_clear_menu')),
               ),
             ],
           ),

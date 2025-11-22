@@ -1,5 +1,6 @@
 // app_router.dart
 import 'package:flutter/material.dart';
+import 'package:pdf_kit/providers/locale_provider.dart';
 import 'package:pdf_kit/core/routing/file_selection_shell.dart';
 import 'package:pdf_kit/core/routing/home_shell.dart';
 import 'package:pdf_kit/presentation/pages/page_export.dart';
@@ -28,6 +29,13 @@ final appRouter = GoRouter(
       name: AppRouteName.onboarding,
       path: '/onboarding',
       builder: (context, state) => const OnboardingPage(),
+    ),
+
+    GoRoute(
+      name: 'language-settings',
+      path: '/settings/language',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) => const LanguageSettingsPage(),
     ),
 
     buildHomeShellRoute(
@@ -148,79 +156,145 @@ final appRouter = GoRouter(
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Onboarding')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(body: Center(child: Text(t.t('onboarding_title'))));
+  }
 }
 
 class AllFilesPage extends StatelessWidget {
   const AllFilesPage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('All Files & Folders')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(body: Center(child: Text(t.t('all_files_title'))));
+  }
 }
 
 class SearchFilePage extends StatelessWidget {
   const SearchFilePage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Search Files')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(body: Center(child: Text(t.t('search_files_title'))));
+  }
 }
 
 class PreferencesPage extends StatelessWidget {
   const PreferencesPage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Preferences')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(body: Center(child: Text(t.t('preferences_title'))));
+  }
 }
 
 class LanguageSettingsPage extends StatelessWidget {
   const LanguageSettingsPage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Language Settings')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final provider = context.watch<LocaleProvider>();
+    final current = provider.locale?.languageCode ?? 'en';
+    return Scaffold(
+      appBar: AppBar(title: Text(t.t('language_settings_page_title'))),
+      body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              t.t('language_settings_choose_label'),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          RadioListTile<String>(
+            title: Text(t.t('language_option_english')),
+            value: 'en',
+            groupValue: current,
+            onChanged: (v) {
+              provider.setLocale('en');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(t.t('language_settings_applied_snackbar')),
+                ),
+              );
+            },
+          ),
+          RadioListTile<String>(
+            title: Text(t.t('language_option_hindi')),
+            value: 'hi',
+            groupValue: current,
+            onChanged: (v) {
+              provider.setLocale('hi');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(t.t('language_settings_applied_snackbar')),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class ContactUsPage extends StatelessWidget {
   const ContactUsPage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Contact Us')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(body: Center(child: Text(t.t('contact_us_title'))));
+  }
 }
 
 class AboutAppPage extends StatelessWidget {
   const AboutAppPage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('About the App')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(body: Center(child: Text(t.t('about_app_title'))));
+  }
 }
 
 class TakeImagePage extends StatelessWidget {
   const TakeImagePage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Take Image')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(body: Center(child: Text(t.t('take_image_title'))));
+  }
 }
 
 class ShowPdfPage extends StatelessWidget {
   final String? path; // optional argument example
   const ShowPdfPage({super.key, this.path});
   @override
-  Widget build(BuildContext context) =>
-      Scaffold(body: Center(child: Text('Show PDF: ${path ?? 'no path'}')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final safePath = path ?? t.t('show_pdf_no_path');
+    final text = t.t('show_pdf_prefix').replaceFirst('{path}', safePath);
+    return Scaffold(body: Center(child: Text(text)));
+  }
 }
 
 class AddWatermarkPage extends StatelessWidget {
   const AddWatermarkPage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Add Watermark')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(body: Center(child: Text(t.t('add_watermark_title'))));
+  }
 }
 
 class AddSignaturePage extends StatelessWidget {
   const AddSignaturePage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Add Digital Signature')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(body: Center(child: Text(t.t('add_signature_title'))));
+  }
 }
 
 // Removed placeholder CompressPdfPage; real implementation lives in pages/compress_pdf.dart
@@ -229,22 +303,28 @@ class NotFoundPage extends StatelessWidget {
   final String? routeName;
   const NotFoundPage({super.key, this.routeName});
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Page not found')),
-    body: Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('No route defined for: ${routeName ?? 'unknown'}'),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: () => Navigator.of(
-              context,
-            ).pushNamedAndRemoveUntil(AppRouteName.home, (r) => false),
-            child: const Text('Go Home'),
-          ),
-        ],
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final routeText = t
+        .t('not_found_page_route_undefined')
+        .replaceFirst('{route}', routeName ?? t.t('show_pdf_no_path'));
+    return Scaffold(
+      appBar: AppBar(title: Text(t.t('not_found_page_title'))),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(routeText),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: () => Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil(AppRouteName.home, (r) => false),
+              child: Text(t.t('not_found_go_home_button')),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

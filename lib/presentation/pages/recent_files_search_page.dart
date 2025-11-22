@@ -96,16 +96,19 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
   }
 
   Future<void> _handleFileDelete(FileInfo file) async {
-    debugPrint('🗑️ [RecentFilesSearch] Deleting file: ${file.name}');
     final result = await RecentFilesService.removeRecentFile(file.path);
+    final t = AppLocalizations.of(context);
 
     result.fold(
       (error) {
         debugPrint('❌ [RecentFilesSearch] Delete failed: $error');
         if (mounted) {
+          final msg = t
+              .t('snackbar_error')
+              .replaceAll('{message}', error.toString());
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error: $error'),
+              content: Text(msg),
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
@@ -118,7 +121,7 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
         if (mounted) {
           _loadRecentFiles();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Removed from recent files')),
+            SnackBar(content: Text(t.t('snackbar_removed_recent'))),
           );
         }
       },
@@ -138,8 +141,9 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
         break;
       case 'rename':
         debugPrint('ℹ️ [RecentFilesSearch] Rename not implemented yet');
+        final t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Rename feature coming soon')),
+          SnackBar(content: Text(t.t('common_rename_coming_soon'))),
         );
         break;
       case 'share':
@@ -168,6 +172,8 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
   }
 
   Widget _previousSection(BuildContext context) {
+    final t = AppLocalizations.of(context);
+
     return Expanded(
       child: ListView(
         children: [
@@ -176,14 +182,14 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
             child: Row(
               children: [
                 Text(
-                  'Previous Search',
+                  t.t('recent_files_search_previous_header'),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const Spacer(),
                 IconButton(
                   onPressed: () {}, // optional: clear all later
                   icon: const Icon(Icons.close),
-                  tooltip: 'Clear all',
+                  tooltip: t.t('recent_files_search_clear_all_tooltip'),
                 ),
               ],
             ),
@@ -207,6 +213,8 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
   }
 
   Widget _searchBar(BuildContext context) {
+    final t = AppLocalizations.of(context);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       child: Row(
@@ -237,7 +245,7 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
                 style: Theme.of(context).textTheme.labelLarge,
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  hintText: 'Search recent files...',
+                  hintText: t.t('recent_files_search_hint'),
                   prefixIcon: const Icon(Icons.search, size: 18),
                   suffixIcon: (_controller.text.isNotEmpty)
                       ? IconButton(
@@ -247,7 +255,7 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
                           ),
                           iconSize: 18,
                           padding: const EdgeInsets.all(5),
-                          tooltip: 'Clear',
+                          tooltip: t.t('common_clear'),
                           icon: const Icon(Icons.close),
                           onPressed: () {
                             _controller.clear();
@@ -263,48 +271,6 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
       ),
     );
   }
-
-  // Widget _recentFilesHint(BuildContext context) {
-  //   if (_isLoading) {
-  //     return const Expanded(child: Center(child: CircularProgressIndicator()));
-  //   }
-
-  //   return Expanded(
-  //     child: Center(
-  //       child: Padding(
-  //         padding: const EdgeInsets.symmetric(horizontal: 24),
-  //         child: Column(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             Icon(
-  //               Icons.search,
-  //               size: 64,
-  //               color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
-  //             ),
-  //             const SizedBox(height: 16),
-  //             Text(
-  //               'Search your recent files',
-  //               style: Theme.of(
-  //                 context,
-  //               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-  //               textAlign: TextAlign.center,
-  //             ),
-  //             const SizedBox(height: 8),
-  //             Text(
-  //               'Type to search through ${_allRecentFiles.length} recent ${_allRecentFiles.length == 1 ? 'file' : 'files'}.',
-  //               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-  //                 color: Theme.of(
-  //                   context,
-  //                 ).colorScheme.onSurface.withOpacity(0.7),
-  //               ),
-  //               textAlign: TextAlign.center,
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget _list() {
     return ListView.builder(
@@ -330,6 +296,8 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
   }
 
   Widget _emptyState(BuildContext context) {
+    final t = AppLocalizations.of(context);
+
     return Expanded(
       child: Center(
         child: Padding(
@@ -340,14 +308,14 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
               Image.asset('assets/not_found.png'),
               const SizedBox(height: 12),
               Text(
-                'No results found',
+                t.t('recent_files_search_no_results_title'),
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Text(
-                'Try searching with different keywords.',
+                t.t('recent_files_search_no_results_message'),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),

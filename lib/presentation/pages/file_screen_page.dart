@@ -278,13 +278,15 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
   }
 
   Widget _buildHeader(BuildContext context, List<FileInfo> visibleFiles) {
+    final t = AppLocalizations.of(context);
+
     final p = _maybeProvider();
     final enabled = widget.selectable && (p?.isEnabled ?? false);
-    final maxLimitActive =
-        p?.maxSelectable != null; // hide select-all when limit imposed
+    final maxLimitActive = p?.maxSelectable != null;
     final allOnPage = (!maxLimitActive && enabled)
         ? (p?.areAllSelected(visibleFiles) ?? false)
         : false;
+
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -306,7 +308,7 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
           ),
           const SizedBox(width: 12),
           Text(
-            'Files',
+            t.t('files_header_title'), // was 'Files'
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -327,7 +329,7 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
                 );
               }
             },
-            tooltip: 'Search',
+            tooltip: t.t('common_search'), // was 'Search'
           ),
           if (widget.selectable && !maxLimitActive)
             IconButton(
@@ -339,8 +341,10 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
                           : Icons.check_box_outline_blank),
               ),
               tooltip: !enabled
-                  ? 'Enable selection'
-                  : (allOnPage ? 'Clear this page' : 'Select all on page'),
+                  ? t.t('files_enable_selection_tooltip')
+                  : (allOnPage
+                        ? t.t('files_clear_page_tooltip')
+                        : t.t('files_select_all_page_tooltip')),
               onPressed: () {
                 final prov = _maybeProvider();
                 if (prov == null) return;
@@ -348,12 +352,12 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
               },
             )
           else if (widget.selectable && maxLimitActive)
-            SizedBox.shrink()
+            const SizedBox.shrink()
           else
             IconButton(
               icon: const Icon(Icons.more_vert),
               onPressed: () {},
-              tooltip: 'More',
+              tooltip: t.t('files_more_tooltip'), // was 'More'
             ),
         ],
       ),
@@ -374,6 +378,8 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
 
   Widget _buildEmptyState() {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(context);
+
     return RefreshIndicator(
       onRefresh: () => _open(_currentPath!),
       child: ListView(
@@ -384,7 +390,7 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
           Center(child: Image.asset('assets/not_found.png')),
           const SizedBox(height: 12),
           Text(
-            'This folder is empty',
+            t.t('files_empty_folder_title'), // was 'This folder is empty'
             textAlign: TextAlign.center,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
@@ -401,6 +407,7 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
     List<FileInfo> files,
     BuildContext context,
   ) {
+    final t = AppLocalizations.of(context);
     final isEmpty = folders.isEmpty && files.isEmpty;
 
     final String displayName;
@@ -413,7 +420,7 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
         orElse: () => Directory(''),
       );
       if (exactRoot.path.isNotEmpty) {
-        displayName = 'root';
+        displayName = "root"; // was 'root'
       } else {
         Directory? parentRoot;
         for (final r in _roots) {
@@ -453,7 +460,12 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Total: ${folders.length + files.length} items',
+                      t
+                          .t('files_total_items')
+                          .replaceAll(
+                            '{count}',
+                            (folders.length + files.length).toString(),
+                          ),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -461,7 +473,7 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
               ),
               IconButton(
                 padding: EdgeInsets.zero,
-                tooltip: 'Sort / Filter',
+                tooltip: t.t('files_sort_filter_tooltip'),
                 icon: const Icon(Icons.import_export_rounded),
                 onPressed: () => _openFilterDialog(),
               ),
@@ -475,8 +487,6 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
 
                       final base = _currentPath!;
 
-                      // Determine if this path is inside app-specific external storage.
-                      // If not, request "All files access" for public/shared folders.
                       final appBase = await FolderServiceAndroid.appFilesPath();
                       final requireAll = !p.isWithin(
                         appBase,

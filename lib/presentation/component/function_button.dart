@@ -14,14 +14,12 @@ class FunctionButton extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(
-          16,
-        ), // Rounded corners for the whole area
+        borderRadius: BorderRadius.circular(16),
         onTap: () => data.onPressed(context),
         child: Padding(
-          padding: const EdgeInsets.all(8.0), // Add padding for better tap area
+          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: MainAxisSize.min, // height = icon + dynamic text
             children: [
               Ink(
                 width: 58,
@@ -32,17 +30,19 @@ class FunctionButton extends StatelessWidget {
                 ),
                 child: Icon(data.icon, color: tint, size: 26),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
+              // Dynamic height (only width is constrained)
               SizedBox(
-                width: 80,
+                width: 80, // keep horizontal footprint stable
                 child: Text(
                   data.label,
                   textAlign: TextAlign.center,
-                  maxLines: 1,
+                  maxLines: 2, // or 3 if you want more
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    height: 1.2,
+                  ),
                 ),
               ),
             ],
