@@ -402,6 +402,7 @@
 "onboarding_button_get_started": "开始使用",
 "onboarding_button_back": "返回"
 , "onboarding_tagline": "满足所有 PDF 任务的完整工具包。"
-  
+, "selection_min_error": "请至少选择 {count} 个项目。"
+
 
 }

@@ -402,5 +402,6 @@
 "onboarding_button_get_started": "はじめる",
 "onboarding_button_back": "戻る"
 , "onboarding_tagline": "あらゆるPDF作業に対応する完全なツールキットです。"
+, "selection_min_error": "{count} 個以上の項目を選択してください。"
 
 }

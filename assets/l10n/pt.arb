@@ -402,5 +402,6 @@
 "onboarding_button_get_started": "Começar",
 "onboarding_button_back": "Voltar"
 , "onboarding_tagline": "Seu kit completo para qualquer tarefa em PDF."
+, "selection_min_error": "Selecione pelo menos {count} itens."
 
 }

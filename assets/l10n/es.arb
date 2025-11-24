@@ -397,5 +397,6 @@
 "onboarding_button_get_started": "Comenzar",
 "onboarding_button_back": "Atrás"
 , "onboarding_tagline": "Su kit completo para cada tarea de PDF."
+, "selection_min_error": "Seleccione al menos {count} elementos."
 
 }

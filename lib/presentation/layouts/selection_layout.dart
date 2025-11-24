@@ -13,6 +13,7 @@ class SelectionScaffold extends StatefulWidget {
   final bool autoEnable; // defaults true for fullscreen selection shell
   final SelectionProvider? provider; // optional externally provided provider
   final int? maxSelectable; // NEW limit provided via query parameter
+  final int? minSelectable; // NEW minimum required selection to perform action
 
   const SelectionScaffold({
     super.key,
@@ -22,6 +23,7 @@ class SelectionScaffold extends StatefulWidget {
     this.autoEnable = true,
     this.provider,
     this.maxSelectable,
+    this.minSelectable,
   });
 
   @override
@@ -50,6 +52,8 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
 
     // apply max selectable if provided
     provider.setMaxSelectable(widget.maxSelectable);
+    // apply min selectable if provided
+    provider.setMinSelectable(widget.minSelectable);
 
     // Listen for selection limit errors and surface them via sheet
     provider.addListener(_handleProviderUpdate);
@@ -138,47 +142,86 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: (count > 0 && widget.onAction != null)
-                    ? () => showSelectionPickSheet(
+                // Only allow opening the selection sheet when there's at least
+                // one selected item. If nothing is selected (count == 0)
+                // both buttons remain disabled.
+                onPressed: (widget.onAction != null && count > 0)
+                    ? () {
+                        final min = provider.minSelectable ?? 0;
+                        String? info = maxInfo;
+                        bool isError = false;
+
+                        if (min > 0 && count < min) {
+                          info = t
+                              .t('selection_min_error')
+                              .replaceAll('{count}', min.toString());
+                          isError = true;
+                        } else if (provider.lastLimitCount != null) {
+                          // if provider reported a max limit error, surface it
+                          final cnt = provider.lastLimitCount!;
+                          final key = cnt == 1
+                              ? 'selection_limit_error_single'
+                              : 'selection_limit_error_multiple';
+                          info = t.t(key).replaceAll('{count}', cnt.toString());
+                          isError = true;
+                        }
+
+                        showSelectionPickSheet(
                           context: context,
                           provider: provider,
-                          infoMessage: maxInfo,
-                          isError: false,
-                        )
+                          infoMessage: info,
+                          isError: isError,
+                        );
+                      }
                     : null,
                 icon: const Icon(Icons.checklist),
                 label: Text(selectedLabel),
                 style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
-                      backgroundColor:
-                          WidgetStateProperty.resolveWith<Color?>((states) {
-                        if (states.contains(WidgetState.disabled)) {
-                          return null;
-                        }
-                        return Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withAlpha(15);
-                      }),
-                      iconColor:
-                          WidgetStateProperty.resolveWith<Color?>((states) {
-                        if (states.contains(WidgetState.disabled)) {
-                          return null;
-                        }
-                        return Theme.of(context).colorScheme.primary;
-                      }),
-                      foregroundColor:
-                          WidgetStateProperty.resolveWith<Color?>((states) {
-                        if (states.contains(WidgetState.disabled)) return null;
-                        return theme.colorScheme.primary;
-                      }),
-                    ),
+                  backgroundColor: WidgetStateProperty.resolveWith<Color?>((
+                    states,
+                  ) {
+                    if (states.contains(WidgetState.disabled)) {
+                      return null;
+                    }
+                    return Theme.of(context).colorScheme.primary.withAlpha(15);
+                  }),
+                  iconColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                    if (states.contains(WidgetState.disabled)) {
+                      return null;
+                    }
+                    return Theme.of(context).colorScheme.primary;
+                  }),
+                  foregroundColor: WidgetStateProperty.resolveWith<Color?>((
+                    states,
+                  ) {
+                    if (states.contains(WidgetState.disabled)) return null;
+                    return theme.colorScheme.primary;
+                  }),
+                ),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton(
-                onPressed: (count > 0 && widget.onAction != null)
-                    ? () => widget.onAction!(provider.files)
+                onPressed: (widget.onAction != null && count > 0)
+                    ? () {
+                        final min = provider.minSelectable ?? 0;
+                        if (min > 0 && count < min) {
+                          final msg = t
+                              .t('selection_min_error')
+                              .replaceAll('{count}', min.toString());
+                          // Open selection pick sheet (same UX as max error)
+                          showSelectionPickSheet(
+                            context: context,
+                            provider: provider,
+                            infoMessage: msg,
+                            isError: true,
+                          );
+                          return;
+                        }
+
+                        widget.onAction!(provider.files);
+                      }
                     : null,
                 child: Text(actionLabel),
               ),

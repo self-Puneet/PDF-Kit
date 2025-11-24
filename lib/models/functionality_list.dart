@@ -42,6 +42,7 @@ List<Functionality> getActions(BuildContext context) {
             'selectionId': selectionId,
             'actionText': t('sign_pdf_title'),
             'max': '1', // Limit to 1 file (PDF or image)
+            'min': '1', // Require at least 1 selected to perform action
           },
         );
 
@@ -90,6 +91,7 @@ List<Functionality> getActions(BuildContext context) {
           queryParameters: {
             'selectionId': selectionId,
             'actionText': t('merge_pdf_title'),
+            'min': '2', // Merge requires at least 2 files
           },
         );
 
@@ -123,6 +125,7 @@ List<Functionality> getActions(BuildContext context) {
             'selectionId': selectionId,
             'actionText': t('protect_pdf_title'),
             'max': '1', // Limit to 1 PDF file
+            'min': '1', // Require at least 1 selected
           },
         );
 
@@ -156,6 +159,7 @@ List<Functionality> getActions(BuildContext context) {
             'selectionId': selectionId,
             'actionText': t('unlock_pdf_title'),
             'max': '1', // Limit to 1 PDF file
+            'min': '1', // Require at least 1 selected
           },
         );
 
@@ -185,6 +189,7 @@ List<Functionality> getActions(BuildContext context) {
             'selectionId': selectionId,
             'actionText': t('compress_pdf_button'),
             'max': '1', // only one file for compression
+            'min': '1', // Require at least 1 selected
           },
         );
 

@@ -402,6 +402,7 @@
 "onboarding_button_get_started": "Loslegen",
 "onboarding_button_back": "Zurück"
 , "onboarding_tagline": "Ihr komplettes Toolkit für jede PDF-Aufgabe."
+, "selection_min_error": "Wählen Sie mindestens {count} Elemente aus."
 
 
 }

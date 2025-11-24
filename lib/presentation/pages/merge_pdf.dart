@@ -8,6 +8,7 @@ import 'package:pdf_kit/service/pdf_merge_service.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:pdf_kit/service/path_service.dart';
 import 'package:pdf_kit/core/app_export.dart';
+import 'package:pdf_kit/presentation/layouts/selection_layout.dart';
 import 'package:pdf_kit/presentation/pages/home_page.dart';
 import 'package:path/path.dart' as p;
 import 'dart:ui';
@@ -33,6 +34,12 @@ class _MergePdfPageState extends State<MergePdfPage> {
     super.initState();
     _nameCtrl = TextEditingController();
     _loadDefaultDestination();
+    // Merge requires at least 2 selected files
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        SelectionScope.of(context).setMinSelectable(2);
+      } catch (_) {}
+    });
   }
 
   @override

@@ -8,3 +8,4 @@ export 'package:pdf_kit/dependency_injection.dart';
 export 'package:pdf_kit/core/utility/storage_utility.dart';
 export 'package:shared_preferences/shared_preferences.dart';
 export 'package:pdf_kit/core/localization/app_localizations.dart';
+export 'package:pdf_kit/core/constants.dart';

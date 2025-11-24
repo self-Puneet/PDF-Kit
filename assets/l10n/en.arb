@@ -208,6 +208,9 @@
   ,"selection_limit_error": "You can select at most {count, plural, one {# file} other {# files}}."
   ,"@selection_limit_error": {"description": "Shown when user exceeds maximum selectable files.", "placeholders": {"count": {"type": "int"}}}
 
+  ,"selection_min_error": "Select at least {count} items."
+  ,"@selection_min_error": {"description": "Shown when user presses action but has selected fewer than the required minimum.", "placeholders": {"count": {"type": "int"}}}
+
   ,"compress_pdf_title": "Compress PDF"
   ,"compress_pdf_description": "Reduce PDF size with smart compression, adjust quality, choose your save location, and rename the file. Add PDFs anytime and quickly create a lighter, optimized document."
   ,"compress_pdf_no_pdf_selected": "No PDF selected. Go back and choose one."

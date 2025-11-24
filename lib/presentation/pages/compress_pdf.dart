@@ -3,8 +3,10 @@ import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
 import 'package:pdf_kit/presentation/provider/selection_provider.dart';
+import 'package:pdf_kit/presentation/layouts/selection_layout.dart';
 import 'package:path/path.dart' as p;
 import 'package:pdf_kit/service/pdf_compress_service.dart';
+import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:dartz/dartz.dart' show Either; // avoid State name clash
 import 'package:pdf_kit/service/pdf_merge_service.dart'
     show CustomException; // for Either left type
@@ -18,6 +20,17 @@ class CompressPdfPage extends StatefulWidget {
 }
 
 class _CompressPdfPageState extends State<CompressPdfPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Ensure minimum required selection for compress is 1
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        SelectionScope.of(context).setMinSelectable(1);
+      } catch (_) {}
+    });
+  }
+
   int _level = 1; // 0=High,1=Medium,2=Low
   bool _isWorking = false;
 
@@ -62,7 +75,11 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
             ),
           );
         },
-        (compressed) {
+        (compressed) async {
+          // Store resulting compressed file to recent files
+          try {
+            await RecentFilesService.addRecentFile(compressed);
+          } catch (_) {}
           final originalName = p.basename(file.path);
           final resultName = p.basename(compressed.path);
           final levelName = _levelLabel(t);

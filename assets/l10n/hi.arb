@@ -397,6 +397,7 @@
 "onboarding_button_get_started": "प्रारंभ करें",
 "onboarding_button_back": "वापस"
 , "onboarding_tagline": "हर PDF कार्य के लिए आपका संपूर्ण टूलकिट।"
+, "selection_min_error": "कम से कम {count} आइटम चुनें।"
 
 
 }

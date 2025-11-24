@@ -8,6 +8,7 @@ class SelectionProvider extends ChangeNotifier {
   List<FileInfo> _orderedFiles = [];
   int _mode = 0;
   int? _maxSelectable; // optional upper limit
+  int? _minSelectable; // optional lower limit
   // String? _lastErrorMessage; // surfaced when exceeding limit
 
   int get mode => _mode;
@@ -19,6 +20,7 @@ class SelectionProvider extends ChangeNotifier {
   List<FileInfo> get files => List.unmodifiable(_orderedFiles);
 
   int? get maxSelectable => _maxSelectable;
+  int? get minSelectable => _minSelectable;
   int? _lastLimitCount; // instead of String? _lastErrorMessage
 
   int getRotation(String path) => _rotations[path] ?? 0;
@@ -49,6 +51,11 @@ class SelectionProvider extends ChangeNotifier {
 
   void setMaxSelectable(int? value) {
     _maxSelectable = value;
+    notifyListeners();
+  }
+
+  void setMinSelectable(int? value) {
+    _minSelectable = value;
     notifyListeners();
   }
 

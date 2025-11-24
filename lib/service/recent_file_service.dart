@@ -8,8 +8,7 @@ import 'package:pdf_kit/models/file_model.dart';
 /// Stores all recent files using SharedPreferences.
 class RecentFilesService {
   RecentFilesService._();
-
-  static const String _key = 'recent_files';
+  static const String _key = Constants.recentFilesKey;
 
   /// 📥 Add a file to recent files list.
   static Future<Either<String, List<FileInfo>>> addRecentFile(

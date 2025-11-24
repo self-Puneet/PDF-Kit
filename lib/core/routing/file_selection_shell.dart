@@ -17,7 +17,9 @@ ShellRoute buildSelectionShellRoute({
       final actionText = state.uri.queryParameters['actionText'];
       final selectionId = state.uri.queryParameters['selectionId'];
       final maxStr = state.uri.queryParameters['max'];
+      final minStr = state.uri.queryParameters['min'];
       final maxSelectable = int.tryParse(maxStr ?? '');
+      final minSelectable = int.tryParse(minStr ?? '');
 
       SelectionProvider? provided;
       if (selectionId != null) {
@@ -32,36 +34,52 @@ ShellRoute buildSelectionShellRoute({
         provider: provided,
         actionText: actionText,
         maxSelectable: maxSelectable,
+        minSelectable: minSelectable,
         onAction: (files) {
           if (selectionId != null) {
             // Decide target route based on actionText
             final action = actionText?.toLowerCase() ?? '';
-            
+
             // Check for specific actions in order (most specific first)
             if (action.contains('unlock')) {
               rootNavKey.currentContext!.pushNamed(
                 AppRouteName.unlockPdf,
-                queryParameters: {'selectionId': selectionId},
+                queryParameters: {
+                  'selectionId': selectionId,
+                  if (minSelectable != null) 'min': minSelectable.toString(),
+                },
               );
             } else if (action.contains('protect')) {
               rootNavKey.currentContext!.pushNamed(
                 AppRouteName.protectPdf,
-                queryParameters: {'selectionId': selectionId},
+                queryParameters: {
+                  'selectionId': selectionId,
+                  if (minSelectable != null) 'min': minSelectable.toString(),
+                },
               );
             } else if (action.contains('compress')) {
               rootNavKey.currentContext!.pushNamed(
                 AppRouteName.compressPdf,
-                queryParameters: {'selectionId': selectionId},
+                queryParameters: {
+                  'selectionId': selectionId,
+                  if (minSelectable != null) 'min': minSelectable.toString(),
+                },
               );
             } else if (action.contains('sign')) {
               rootNavKey.currentContext!.pushNamed(
                 AppRouteName.signPdf,
-                queryParameters: {'selectionId': selectionId},
+                queryParameters: {
+                  'selectionId': selectionId,
+                  if (minSelectable != null) 'min': minSelectable.toString(),
+                },
               );
             } else {
               rootNavKey.currentContext!.pushNamed(
                 AppRouteName.mergePdf,
-                queryParameters: {'selectionId': selectionId},
+                queryParameters: {
+                  'selectionId': selectionId,
+                  if (minSelectable != null) 'min': minSelectable.toString(),
+                },
               );
             }
             return;

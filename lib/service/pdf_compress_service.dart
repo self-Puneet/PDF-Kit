@@ -4,7 +4,9 @@ import 'package:dartz/dartz.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart' as sf;
+import 'dart:typed_data';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:pdf_kit/core/constants.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/service/pdf_merge_service.dart' show CustomException;
 
@@ -229,5 +231,37 @@ class PdfCompressService {
       idx++;
     }
     return candidate;
+  }
+
+  /// Compress raw image bytes using flutter_image_compress.
+  /// Returns compressed bytes (Uint8List).
+  static Future<Uint8List> compressImageBytes(
+    Uint8List input, {
+    int? quality,
+  }) async {
+    final q = quality ?? Constants.imageCompressQuality;
+    final List<int>? result = await FlutterImageCompress.compressWithList(
+      input,
+      quality: q,
+      format: CompressFormat.jpeg,
+    );
+    if (result == null) throw Exception('Image compression failed');
+    return Uint8List.fromList(result);
+  }
+
+  /// Compress a file and write the compressed bytes to a temporary file.
+  static Future<File> compressImageFile(File file, {int? quality}) async {
+    final input = await file.readAsBytes();
+    final compressed = await compressImageBytes(
+      Uint8List.fromList(input),
+      quality: quality,
+    );
+    final dir = await getTemporaryDirectory();
+    final outName =
+        '${p.basenameWithoutExtension(file.path)}_compressed.${p.extension(file.path).replaceFirst('.', '')}';
+    final outPath = p.join(dir.path, outName);
+    final outFile = File(outPath);
+    await outFile.writeAsBytes(compressed);
+    return outFile;
   }
 }

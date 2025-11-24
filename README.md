@@ -1,2 +1,12 @@
 # PDF-Kit
 It's an app for all your PDF needs, providing a robust toolkit to merge multiple PDFs, split single documents, convert images to PDF, compress file sizes, rotate pages, add passwords, and much more. Developed using Flutter and Dart.
+
+
+
+these are some things you have to do in this whole app at once.
+
+1. there should be some lower limit while for seelction of items while in selection screens when navigating through functionality button on home page. like we did for max number = n in compress and protect pdf functionality in functionlity_list similarily did another query parameter min and set every compress, protect, unlock to 1 and for merge this min should be 2. update the selection_provider and unless no of selection is more than this or equal to this the action button on the selection_layout should not work. and like you have shown the message for max selection similar message should be shown for this min too. but the diff is that this min message should not be shown everytime it should be shown only when action button is pressed  with selection number lesser than min. don't disable the action button. also update the en.arb with this new message with a new field.
+
+2. in the recent file service you have code snippet for saving the file in the shared preferences local storage. but I want you don't do it directly and do it using the storage_utility I have made and store inthe field name which is registered in the constants.dart file and also update the recent file on the home_page to use that string from constants only and also in the recent_file_page and recent_file_search_page. also when we are protecting a pdf or unlocking it or compressing a pdf then the resulting file (1 file i.e.) is not being stored in the local storage which should not be the case. update them too
+
+3. since I have this package in pubspec "flutter_image_compress: ^2.4.0" so I want you to make a service method in the pdf_compress_service using this service. and I want that you do compress the image if the merging of pf contains any image. for a while in constants file store the meta data for compressing image it asks like quality so it could be tweakable. also if the selected file while compressing functionality is found to be a image than same service shoudl be used to compress the file.

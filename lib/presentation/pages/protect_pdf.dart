@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
 import 'package:pdf_kit/presentation/provider/selection_provider.dart';
+import 'package:pdf_kit/presentation/layouts/selection_layout.dart';
 import 'package:pdf_kit/service/pdf_protect_service.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:pdf_kit/core/app_export.dart';
@@ -18,6 +19,17 @@ class ProtectPdfPage extends StatefulWidget {
 }
 
 class _ProtectPdfPageState extends State<ProtectPdfPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Protect requires at least 1 selected file
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        SelectionScope.of(context).setMinSelectable(1);
+      } catch (_) {}
+    });
+  }
+
   final TextEditingController _passwordController = TextEditingController();
   bool _isPasswordVisible = true;
   bool _isProtecting = false;

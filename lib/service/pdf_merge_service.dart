@@ -10,6 +10,7 @@ import 'package:pdfx/pdfx.dart' as pdfx;
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:path/path.dart' as p;
 import 'dart:ui' as ui;
+import 'package:pdf_kit/service/pdf_compress_service.dart';
 
 class PdfMergeService {
   PdfMergeService._();
@@ -95,24 +96,24 @@ class PdfMergeService {
       // Process each page
       for (int i = 1; i <= pageCount; i++) {
         final page = await document.getPage(i);
-        
+
         // Render page at higher resolution for better quality
         const scale = 2.0;
         final pageWidth = page.width * scale;
         final pageHeight = page.height * scale;
-        
+
         final pageImage = await page.render(
           width: pageWidth,
           height: pageHeight,
           format: pdfx.PdfPageImageFormat.png,
         );
-        
+
         await page.close();
-        
+
         if (pageImage != null) {
           // Convert to pw.Image
           final image = pw.MemoryImage(pageImage.bytes);
-          
+
           // Calculate page size based on rotation
           double pdfWidth, pdfHeight;
           if (rotation == 90 || rotation == 270) {
@@ -123,7 +124,7 @@ class PdfMergeService {
             pdfWidth = (page.width * 72 / 96);
             pdfHeight = (page.height * 72 / 96);
           }
-          
+
           // Add page with appropriate size
           pdf.addPage(
             pw.Page(
@@ -132,7 +133,7 @@ class PdfMergeService {
                 if (rotation == 0) {
                   return pw.Image(image, fit: pw.BoxFit.contain);
                 }
-                
+
                 return pw.Center(
                   child: pw.Transform.rotate(
                     angle: rotation * 3.14159 / 180,
@@ -144,7 +145,7 @@ class PdfMergeService {
           );
         }
       }
-      
+
       await document.close();
     } catch (e) {
       throw Exception('Error processing PDF pages: $e');
@@ -160,17 +161,24 @@ class PdfMergeService {
     try {
       // Read image bytes
       final File file = File(imageFile.path);
-      final Uint8List imageBytes = await file.readAsBytes();
+      final Uint8List rawBytes = await file.readAsBytes();
+
+      // Compress image bytes before embedding (uses configured quality)
+      final Uint8List imageBytes = await PdfCompressService.compressImageBytes(
+        rawBytes,
+      );
 
       // Get image dimensions
-      final ui.ImmutableBuffer buffer =
-          await ui.ImmutableBuffer.fromUint8List(imageBytes);
-      final ui.ImageDescriptor descriptor =
-          await ui.ImageDescriptor.encoded(buffer);
-      
+      final ui.ImmutableBuffer buffer = await ui.ImmutableBuffer.fromUint8List(
+        imageBytes,
+      );
+      final ui.ImageDescriptor descriptor = await ui.ImageDescriptor.encoded(
+        buffer,
+      );
+
       double imageWidth = descriptor.width.toDouble();
       double imageHeight = descriptor.height.toDouble();
-      
+
       descriptor.dispose();
       buffer.dispose();
 
@@ -195,7 +203,7 @@ class PdfMergeService {
             if (rotation == 0) {
               return pw.Image(image, fit: pw.BoxFit.contain);
             }
-            
+
             return pw.Center(
               child: pw.Transform.rotate(
                 angle: rotation * 3.14159 / 180,
@@ -212,14 +220,7 @@ class PdfMergeService {
 
   /// Check if file is an image
   static bool _isImageFile(FileInfo file) {
-    const imageExtensions = {
-      'jpg',
-      'jpeg',
-      'png',
-      'gif',
-      'webp',
-      'bmp',
-    };
+    const imageExtensions = {'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'};
     return imageExtensions.contains(file.extension.toLowerCase());
   }
 
@@ -235,19 +236,23 @@ class PdfMergeService {
       // 🆕 Use custom destination if provided
       if (customDestination != null && customDestination.isNotEmpty) {
         directory = Directory(customDestination);
-        
+
         // Verify directory exists and is accessible
         if (!await directory.exists()) {
-          throw Exception('Destination folder does not exist: $customDestination');
+          throw Exception(
+            'Destination folder does not exist: $customDestination',
+          );
         }
-        
+
         // Try to test write access
         try {
           final testFile = File(p.join(directory.path, '.test_write'));
           await testFile.writeAsString('test');
           await testFile.delete();
         } catch (e) {
-          throw Exception('No write permission for destination: $customDestination');
+          throw Exception(
+            'No write permission for destination: $customDestination',
+          );
         }
       } else {
         // Fall back to default Downloads directory
@@ -293,11 +298,7 @@ class CustomException implements Exception {
   final String code;
   final dynamic details;
 
-  CustomException({
-    required this.message,
-    required this.code,
-    this.details,
-  });
+  CustomException({required this.message, required this.code, this.details});
 
   @override
   String toString() => 'CustomException($code): $message';

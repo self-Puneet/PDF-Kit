@@ -401,6 +401,7 @@
 "onboarding_button_next": "التالي",
 "onboarding_button_get_started": "البدء",
 "onboarding_button_back": "رجوع",
-"onboarding_tagline": "مجموعة الأدوات الكاملة لكل مهمة PDF."
+"onboarding_tagline": "مجموعة الأدوات الكاملة لكل مهمة PDF.",
+"selection_min_error": "يجب تحديد ما لا يقل عن {count} عناصر."
 
 }
