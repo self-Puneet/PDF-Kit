@@ -126,6 +126,7 @@ List<Functionality> getActions(BuildContext context) {
             'actionText': t('protect_pdf_title'),
             'max': '1', // Limit to 1 PDF file
             'min': '1', // Require at least 1 selected
+            'allowed': 'unprotected', // Only allow unprotected PDFs
           },
         );
 
@@ -160,6 +161,7 @@ List<Functionality> getActions(BuildContext context) {
             'actionText': t('unlock_pdf_title'),
             'max': '1', // Limit to 1 PDF file
             'min': '1', // Require at least 1 selected
+            'allowed': 'protected', // Only allow protected PDFs
           },
         );
 

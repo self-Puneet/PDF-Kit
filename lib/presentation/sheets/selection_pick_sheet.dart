@@ -280,7 +280,7 @@ class _FolderGroupState extends State<_FolderGroup> {
                 margin: const EdgeInsets.fromLTRB(4, 0, 4, 4),
                 child: DocEntryCard(
                   info: f,
-                  showActions: true,
+                  showRemove: true,
                   reorderable: false,
                   selectable: false,
                   onEdit: null, // disable edit

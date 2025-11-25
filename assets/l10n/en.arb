@@ -265,6 +265,10 @@
   ,"clear_recent_files_message": "This will remove all files from your recent files list. This action cannot be undone."
   ,"clear_recent_files_confirm": "Clear All"
 
+  ,"delete_file_title": "Delete File?"
+  ,"delete_file_message": "Are you sure you want to delete"
+  ,"delete_file_confirm": "Delete"
+
   ,"common_edit": "Edit"
   ,"common_remove": "Remove"
   ,"common_open_snackbar": "Open"

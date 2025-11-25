@@ -1,5 +1,6 @@
 // lib/service/pdf_compress_service.dart
 import 'dart:io';
+import 'dart:ui';
 import 'package:dartz/dartz.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -97,50 +98,27 @@ class PdfCompressService {
     }
   }
 
-  /// Compress PDF using Syncfusion Flutter PDF
+  /// Compress PDF - placeholder implementation (returns copy of original)
   static Future<File> _compressPdf({
     required File file,
     required int level,
     required Directory targetDir,
     required String baseName,
   }) async {
-    // Load the existing PDF document
-    final sf.PdfDocument document = sf.PdfDocument(
-      inputBytes: await file.readAsBytes(),
-    );
-
-    // Disable incremental update so the file is fully rewritten (smaller output)
-    document.fileStructure.incrementalUpdate = false;
-
-    // Map your level (0/1/2) to Syncfusion compression levels
-    if (level == 0) {
-      // High compression (slower, smaller)
-      document.compressionLevel = sf.PdfCompressionLevel.best;
-    } else if (level == 1) {
-      // Medium
-      document.compressionLevel = sf.PdfCompressionLevel.normal;
-    } else {
-      // Low compression (faster, bigger)
-      document.compressionLevel = sf.PdfCompressionLevel.bestSpeed;
-    }
-
-    // Save compressed bytes
-    final List<int> bytes = await document.save();
-    document.dispose();
-
-    // Generate unique filename and save
+    // Generate unique filename
     final newName = _uniqueFileName(
       baseDir: targetDir.path,
       baseName: baseName,
     );
     final targetPath = p.join(targetDir.path, newName);
-    final outputFile = File(targetPath);
-    await outputFile.writeAsBytes(bytes);
+
+    // Simply copy the file for now (no actual compression)
+    final outputFile = await file.copy(targetPath);
 
     return outputFile;
   }
 
-  /// Compress image using flutter_image_compress
+  /// Compress image using flutter_image_compress with proper resolution control
   static Future<File> _compressImage({
     required File file,
     required int level,
@@ -148,18 +126,52 @@ class PdfCompressService {
     required String baseName,
     required String extension,
   }) async {
-    // Determine quality (0..100) -> higher number = less compression
+    // Step 1: Read original image dimensions
+    final bytes = await file.readAsBytes();
+    final codec = await instantiateImageCodec(bytes);
+    final frame = await codec.getNextFrame();
+    final img = frame.image;
+
+    final originalWidth = img.width;
+    final originalHeight = img.height;
+
+    // Dispose codec
+    codec.dispose();
+    img.dispose();
+
+    // Step 2: Determine quality and scale factor based on compression level
     int quality;
+    double scale;
     if (level == 0) {
-      quality = 10; // High compression
+      // High compression
+      quality = 75;
+      scale = 0.5; // Reduce resolution to 50%
     } else if (level == 1) {
-      quality = 60; // Medium
+      // Medium compression
+      quality = 85;
+      scale = 0.75; // Reduce resolution to 75%
     } else {
-      quality = 80; // Low compression (retain more quality)
+      // Low compression (retain more quality)
+      quality = 95;
+      scale = 1.0; // Keep original resolution
     }
 
-    // Generate unique filename
+    // Step 3: Calculate target dimensions
+    final targetWidth = (originalWidth * scale).toInt();
+    final targetHeight = (originalHeight * scale).toInt();
+
+    // Step 4: Determine output format
     final String ext = extension.toLowerCase();
+    CompressFormat format;
+
+    // Only convert PNG to JPEG on high compression, otherwise preserve format
+    if (ext == 'png' && level != 0) {
+      format = CompressFormat.png;
+    } else {
+      format = _getCompressFormat(ext);
+    }
+
+    // Step 5: Generate unique filename
     var candidate = '$baseName.$ext';
     var idx = 1;
     while (File(p.join(targetDir.path, candidate)).existsSync()) {
@@ -168,12 +180,14 @@ class PdfCompressService {
     }
     final targetPath = p.join(targetDir.path, candidate);
 
-    // Compress the image
+    // Step 6: Compress the image with controlled resolution
     final XFile? result = await FlutterImageCompress.compressAndGetFile(
       file.absolute.path,
       targetPath,
       quality: quality,
-      format: _getCompressFormat(ext),
+      minWidth: targetWidth,
+      minHeight: targetHeight,
+      format: format,
     );
 
     if (result == null) {
@@ -238,12 +252,14 @@ class PdfCompressService {
   static Future<Uint8List> compressImageBytes(
     Uint8List input, {
     int? quality,
+    CompressFormat? format,
   }) async {
     final q = quality ?? Constants.imageCompressQuality;
+    final fmt = format ?? CompressFormat.jpeg;
     final List<int>? result = await FlutterImageCompress.compressWithList(
       input,
       quality: q,
-      format: CompressFormat.jpeg,
+      format: fmt,
     );
     if (result == null) throw Exception('Image compression failed');
     return Uint8List.fromList(result);
@@ -263,5 +279,59 @@ class PdfCompressService {
     final outFile = File(outPath);
     await outFile.writeAsBytes(compressed);
     return outFile;
+  }
+
+  /// Check if a file is an image based on extension
+  static bool isImageFile(FileInfo fileInfo) => _isImage(fileInfo);
+
+  /// Convert image file to PDF
+  static Future<Uint8List> convertImageToPdf(
+    File imageFile, {
+    bool shouldCompress = false,
+    int? quality,
+  }) async {
+    Uint8List imageBytes = await imageFile.readAsBytes();
+
+    // Compress if needed
+    if (shouldCompress) {
+      imageBytes = await compressImageBytes(imageBytes, quality: quality);
+    }
+
+    // Create a new PDF document
+    final sf.PdfDocument document = sf.PdfDocument();
+
+    // Add a page to the document
+    final sf.PdfPage page = document.pages.add();
+
+    // Load image from bytes
+    final sf.PdfBitmap image = sf.PdfBitmap(imageBytes);
+
+    // Calculate dimensions to fit the image on the page
+    final pageWidth = page.getClientSize().width;
+    final pageHeight = page.getClientSize().height;
+
+    double width = image.width.toDouble();
+    double height = image.height.toDouble();
+
+    // Scale image to fit page while maintaining aspect ratio
+    final widthRatio = pageWidth / width;
+    final heightRatio = pageHeight / height;
+    final scale = widthRatio < heightRatio ? widthRatio : heightRatio;
+
+    width *= scale;
+    height *= scale;
+
+    // Center the image on the page
+    final x = (pageWidth - width) / 2;
+    final y = (pageHeight - height) / 2;
+
+    // Draw the image on the page
+    page.graphics.drawImage(image, Rect.fromLTWH(x, y, width, height));
+
+    // Save and return the document bytes
+    final bytes = await document.save();
+    document.dispose();
+
+    return Uint8List.fromList(bytes);
   }
 }

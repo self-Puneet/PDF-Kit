@@ -167,11 +167,11 @@ class _MergePdfPageState extends State<MergePdfPage> {
         ? defaultName
         : _nameCtrl.text.trim();
 
-    final filesWithRotation = selection.filesWithRotation;
+    final files = selection.files;
 
     // Pass destination folder to merge service
     final result = await PdfMergeService.mergePdfs(
-      filesWithRotation: filesWithRotation,
+      files: files,
       outputFileName: outName,
       destinationPath: _selectedDestinationFolder?.path,
     );
@@ -385,10 +385,10 @@ class _MergePdfPageState extends State<MergePdfPage> {
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                         child: DocEntryCard(
                           info: f,
-                          showActions: !_reorderMode,
+                          showEdit: true,
+                          showRemove: true,
                           reorderable: _reorderMode,
                           disabled: _isMerging,
-                          rotation: selection.getRotation(f.path),
                           onEdit: () => null,
                           onRemove: () => selection.removeFile(f.path),
                           onOpen: () => context.pushNamed(

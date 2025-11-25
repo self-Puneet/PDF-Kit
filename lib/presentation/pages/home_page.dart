@@ -6,6 +6,7 @@ import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/function_button.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
+import 'package:pdf_kit/service/open_service.dart';
 
 /// HOME TAB
 class HomeTab extends StatefulWidget {
@@ -33,7 +34,7 @@ class _HomeTabState extends State<HomeTab> {
             padding: EdgeInsets.symmetric(horizontal: screenPadding.left + 12),
             child: QuickActionsGrid(items: getActions(context)),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
 
           // Only the recent files section should be scrollable now.
           Expanded(
@@ -364,7 +365,7 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
                   final file = files[index];
                   return DocEntryCard(
                     info: file,
-                    onOpen: () => _handleFileOpen(file),
+                    onOpen: () => OpenService.open(file.path),
                     onMenu: (action) => _handleFileMenu(file, action),
                   );
                 },
@@ -414,7 +415,7 @@ class _GetStartedCard extends StatelessWidget {
           const SizedBox(width: 16),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   AppLocalizations.of(context).t('home_get_started_title'),

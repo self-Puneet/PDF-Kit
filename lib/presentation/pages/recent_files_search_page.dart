@@ -5,6 +5,7 @@ import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:pdf_kit/core/app_export.dart';
+import 'package:pdf_kit/presentation/pages/home_page.dart';
 
 class RecentFilesSearchPage extends StatefulWidget {
   const RecentFilesSearchPage({super.key});
@@ -118,6 +119,8 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
         debugPrint(
           '✅ [RecentFilesSearch] Delete successful. Remaining: ${updatedFiles.length}',
         );
+        // Notify home page to refresh
+        RecentFilesSection.refreshNotifier.value++;
         if (mounted) {
           _loadRecentFiles();
           ScaffoldMessenger.of(context).showSnackBar(
@@ -288,6 +291,7 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
               info: f,
               onOpen: () => _handleFileOpen(f),
               onMenu: (action) => _handleFileMenu(f, action),
+              onRemove: () => _handleFileDelete(f),
             ),
           ),
         );

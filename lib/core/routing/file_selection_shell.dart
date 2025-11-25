@@ -18,6 +18,7 @@ ShellRoute buildSelectionShellRoute({
       final selectionId = state.uri.queryParameters['selectionId'];
       final maxStr = state.uri.queryParameters['max'];
       final minStr = state.uri.queryParameters['min'];
+      final allowed = state.uri.queryParameters['allowed'];
       final maxSelectable = int.tryParse(maxStr ?? '');
       final minSelectable = int.tryParse(minStr ?? '');
 
@@ -35,6 +36,7 @@ ShellRoute buildSelectionShellRoute({
         actionText: actionText,
         maxSelectable: maxSelectable,
         minSelectable: minSelectable,
+        allowed: allowed,
         onAction: (files) {
           if (selectionId != null) {
             // Decide target route based on actionText

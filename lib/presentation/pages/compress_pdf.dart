@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
 import 'package:pdf_kit/presentation/provider/selection_provider.dart';
 import 'package:pdf_kit/presentation/layouts/selection_layout.dart';
+import 'package:pdf_kit/presentation/pages/home_page.dart';
 import 'package:path/path.dart' as p;
 import 'package:pdf_kit/service/pdf_compress_service.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
@@ -31,20 +33,38 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
     });
   }
 
-  int _level = 1; // 0=High,1=Medium,2=Low
+  double _compressionQuality = 60.0; // 0-100, where 100 is best quality
   bool _isWorking = false;
+  int? _originalFileSize;
+  int? _estimatedSize;
 
-  String _levelLabel(AppLocalizations t) => switch (_level) {
-    0 => t.t('compress_pdf_high'),
-    1 => t.t('compress_pdf_medium'),
-    _ => t.t('compress_pdf_low'),
-  };
+  void _updateEstimatedSize() {
+    if (_originalFileSize == null) {
+      _estimatedSize = null;
+      return;
+    }
+    // Estimate compressed size based on quality slider
+    // Higher quality (closer to 100) = less compression = larger size
+    // Lower quality (closer to 0) = more compression = smaller size
+    final compressionFactor = 0.2 + (_compressionQuality / 100) * 0.7;
+    _estimatedSize = (_originalFileSize! * compressionFactor).round();
+  }
 
-  // String get _levelSubtitle => switch (_level) {
-  //   0 => 'Smallest size, lower quality',
-  //   1 => 'Medium size, medium quality',
-  //   _ => 'Largest size, better quality',
-  // };
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
+  int _qualityToLevel(double quality) {
+    // Convert 0-100 quality to 0-2 level (inverted)
+    // 0-33 quality -> level 0 (high compression)
+    // 34-66 quality -> level 1 (medium)
+    // 67-100 quality -> level 2 (low compression)
+    if (quality <= 33) return 0;
+    if (quality <= 66) return 1;
+    return 2;
+  }
 
   Future<void> _handleCompress(
     BuildContext context,
@@ -63,8 +83,9 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
     setState(() => _isWorking = true);
     final file = sel.files.first;
     try {
+      final level = _qualityToLevel(_compressionQuality);
       final Either<CustomException, FileInfo> result =
-          await PdfCompressService.compressFile(fileInfo: file, level: _level);
+          await PdfCompressService.compressFile(fileInfo: file, level: level);
       if (!mounted) return;
       result.fold(
         (err) {
@@ -77,28 +98,52 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
         },
         (compressed) async {
           // Store resulting compressed file to recent files
-          try {
-            await RecentFilesService.addRecentFile(compressed);
-          } catch (_) {}
-          final originalName = p.basename(file.path);
-          final resultName = p.basename(compressed.path);
-          final levelName = _levelLabel(t);
-          final pattern = t
-              .t('compress_pdf_result_pattern')
-              .replaceFirst('{original}', originalName)
-              .replaceFirst('{level}', levelName)
-              .replaceFirst('{result}', resultName);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(pattern),
-              action: SnackBarAction(
-                label: t.t('common_open_snackbar'),
-                onPressed: () {},
-              ),
+          debugPrint(
+            '📝 [CompressPDF] Storing compressed file: ${compressed.name}',
+          );
+          final storeResult = await RecentFilesService.addRecentFile(
+            compressed,
+          );
+          storeResult.fold(
+            (error) => debugPrint('❌ [CompressPDF] Failed to store: $error'),
+            (_) => debugPrint(
+              '✅ [CompressPDF] Compressed file stored successfully',
             ),
           );
+
+          if (!mounted) return;
+
+          // Navigate to home and clear all routes
           sel.disable();
-          context.pop(true); // signal refresh
+          context.go('/');
+
+          // Trigger home page reload
+          RecentFilesSection.refreshNotifier.value++;
+
+          // Show success message after navigation
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (context.mounted) {
+              final originalName = p.basename(file.path);
+              final resultName = p.basename(compressed.path);
+              final pattern = t
+                  .t('compress_pdf_result_pattern')
+                  .replaceFirst('{original}', originalName)
+                  .replaceFirst(
+                    '{level}',
+                    '${_compressionQuality.round()}% quality',
+                  )
+                  .replaceFirst('{result}', resultName);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(pattern),
+                  action: SnackBarAction(
+                    label: t.t('common_open_snackbar'),
+                    onPressed: () {},
+                  ),
+                ),
+              );
+            }
+          });
         },
       );
     } finally {
@@ -149,12 +194,28 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                     ),
                     const SizedBox(height: 20),
                     hasFile
-                        ? DocEntryCard(
-                            info: file!,
-                            showActions: false,
-                            selectable: false,
-                            reorderable: false,
-                            onOpen: null,
+                        ? Builder(
+                            builder: (context) {
+                              // Update original file size when file changes
+                              if (_originalFileSize != file!.size) {
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  setState(() {
+                                    _originalFileSize = file.size;
+                                    _updateEstimatedSize();
+                                  });
+                                });
+                              }
+                              return DocEntryCard(
+                                info: file,
+                                showEdit: false,
+                                showRemove: true,
+                                selectable: false,
+                                reorderable: false,
+                                onOpen: null,
+                              );
+                            },
                           )
                         : Row(
                             children: [
@@ -182,25 +243,104 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    _buildOption(
-                      context,
-                      0,
-                      AppLocalizations.of(context).t('compress_pdf_high'),
-                      AppLocalizations.of(context).t('compress_pdf_high_sub'),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Quality: ${_compressionQuality.round()}%',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
-                    _buildOption(
-                      context,
-                      1,
-                      AppLocalizations.of(context).t('compress_pdf_medium'),
-                      AppLocalizations.of(context).t('compress_pdf_medium_sub'),
+                    const SizedBox(height: 8),
+                    Slider(
+                      value: _compressionQuality,
+                      min: 0,
+                      max: 100,
+                      divisions: 100,
+                      label: '${_compressionQuality.round()}%',
+                      onChanged: _isWorking
+                          ? null
+                          : (value) {
+                              setState(() {
+                                _compressionQuality = value;
+                                _updateEstimatedSize();
+                              });
+                            },
                     ),
-                    _buildOption(
-                      context,
-                      2,
-                      AppLocalizations.of(context).t('compress_pdf_low'),
-                      AppLocalizations.of(context).t('compress_pdf_low_sub'),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Smallest', style: theme.textTheme.bodySmall),
+                        Text('Best Quality', style: theme.textTheme.bodySmall),
+                      ],
                     ),
+                    const SizedBox(height: 20),
+                    if (hasFile && _originalFileSize != null) ...[
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerHighest
+                              .withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: theme.colorScheme.outline.withOpacity(0.2),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Original Size:',
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                                Text(
+                                  _formatFileSize(_originalFileSize!),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Estimated Size:',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                                Text(
+                                  _estimatedSize != null
+                                      ? _formatFileSize(_estimatedSize!)
+                                      : '--',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (_estimatedSize != null &&
+                                _originalFileSize != null) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Savings: ${((1 - _estimatedSize! / _originalFileSize!) * 100).toStringAsFixed(0)}%',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.secondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -242,47 +382,6 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildOption(
-    BuildContext context,
-    int value,
-    String title,
-    String subtitle,
-  ) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: _isWorking ? null : () => setState(() => _level = value),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Radio<int>(
-              value: value,
-              groupValue: _level,
-              onChanged: _isWorking ? null : (v) => setState(() => _level = v!),
-            ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(subtitle, style: theme.textTheme.bodySmall),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -12,9 +12,13 @@ import 'package:pdf_kit/service/folder_service.dart';
 import 'package:pdf_kit/service/open_service.dart';
 import 'package:pdf_kit/service/path_service.dart';
 import 'package:pdf_kit/service/permission_service.dart';
+import 'package:pdf_kit/service/recent_file_service.dart';
+import 'package:pdf_kit/presentation/pages/home_page.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/presentation/sheets/new_folder_sheet.dart';
 import 'package:pdf_kit/presentation/sheets/filter_sheet.dart';
+import 'package:pdf_kit/presentation/sheets/delete_file_sheet.dart';
+import 'package:pdf_kit/service/file_service.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:pdf_kit/presentation/models/filter_models.dart';
@@ -45,6 +49,7 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
   String? _currentPath;
   List<FileInfo> _entries = [];
   StreamSubscription? _searchSub;
+  bool _fileDeleted = false; // Track if any file was deleted
   // Sorting and filtering state
   SortOption _sortOption = SortOption.name;
   final Set<TypeFilter> _typeFilters = {}; // empty = all
@@ -86,6 +91,10 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
   void dispose() {
     _searchSub?.cancel();
     _listingScrollController.dispose();
+    // Trigger home page refresh if any file was deleted
+    if (_fileDeleted) {
+      RecentFilesSection.refreshNotifier.value++;
+    }
     super.dispose();
   }
 
@@ -237,15 +246,20 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
       if (widget.selectionActionText != null)
         params['actionText'] = widget.selectionActionText!;
 
-      context.pushNamed(
+      await context.pushNamed(
         AppRouteName.filesFolderFullScreen,
         queryParameters: params,
       );
     } else {
-      context.pushNamed(
+      await context.pushNamed(
         AppRouteName.filesFolder,
         queryParameters: {'path': path},
       );
+    }
+
+    // Refresh the current folder when returning from navigation
+    if (_currentPath != null && mounted) {
+      await _open(_currentPath!);
     }
   }
 
@@ -492,7 +506,7 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
               IconButton(
                 padding: EdgeInsets.zero,
                 tooltip: t.t('files_sort_filter_tooltip'),
-                icon: const Icon(Icons.import_export_rounded),
+                icon: const Icon(Icons.tune),
                 onPressed: () => _openFilterDialog(),
               ),
               IconButton(
@@ -600,7 +614,7 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
     }
   }
 
-  void _handleFileMenu(String v, FileInfo f) {
+  Future<void> _handleFileMenu(String v, FileInfo f) async {
     switch (v) {
       case 'open':
         OpenService.open(f.path);
@@ -608,6 +622,45 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
       case 'rename':
         break;
       case 'delete':
+        await showDeleteFileSheet(
+          context: context,
+          fileName: f.name,
+          onDelete: () async {
+            // Optimistically remove from UI
+            setState(() {
+              _entries.removeWhere((e) => e.path == f.path);
+            });
+
+            // Perform actual deletion
+            final result = await FileService.deleteFile(f);
+
+            if (!mounted) return;
+
+            result.fold(
+              (error) {
+                // Restore item on error
+                setState(() {
+                  _entries.add(f);
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(error.message),
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                );
+              },
+              (success) async {
+                // Also remove from recent files if present
+                await RecentFilesService.removeRecentFile(f.path);
+                // Mark that a file was deleted
+                _fileDeleted = true;
+                // ScaffoldMessenger.of(context).showSnackBar(
+                //   SnackBar(content: Text('${f.name} deleted successfully')),
+                // );
+              },
+            );
+          },
+        );
         break;
     }
   }

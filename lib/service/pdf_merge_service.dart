@@ -1,77 +1,233 @@
-// lib/services/pdf_merge_service.dart
-
+// lib/service/pdf_merge_service.dart
 import 'dart:io';
-import 'dart:typed_data';
+import 'dart:ui';
+
 import 'package:dartz/dartz.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:pdfx/pdfx.dart' as pdfx;
-import 'package:pdf_kit/models/file_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
-import 'dart:ui' as ui;
+import 'package:path_provider/path_provider.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart' as sf;
+
+import 'package:pdf_kit/models/file_model.dart';
+import 'package:pdf_kit/core/constants.dart';
 import 'package:pdf_kit/service/pdf_compress_service.dart';
 
+/// Size analysis result for merge operation
+class _SizeAnalysis {
+  final int totalInputSize;
+  final int estimatedOutputSize;
+  final int pdfTotalSize;
+  final int imageTotalSize;
+
+  _SizeAnalysis({
+    required this.totalInputSize,
+    required this.estimatedOutputSize,
+    required this.pdfTotalSize,
+    required this.imageTotalSize,
+  });
+}
+
+/// Custom exception for PDF merge operations
+class CustomException {
+  final String message;
+  final String code;
+
+  const CustomException({required this.message, required this.code});
+
+  @override
+  String toString() => 'CustomException($code): $message';
+}
+
+/// Service for merging multiple PDF files using Syncfusion Flutter PDF
 class PdfMergeService {
   PdfMergeService._();
 
-  /// Merges multiple PDFs and images with optional rotation
-  /// [destinationPath] - Optional custom destination folder path. If null, uses Downloads.
+  /// Merges multiple PDF files and/or images into a single PDF document.
+  /// Images are compressed based on size requirements.
+  ///
+  /// [files] - List of PDF files and/or images to merge
+  /// [outputFileName] - Name for the merged PDF file (without extension)
+  /// [destinationPath] - Optional destination folder path. If null, uses app's documents directory
+  ///
+  /// **Size Management:**
+  /// - Dynamically adjusts image compression if estimated size exceeds target
+  /// - Target max size: [Constants.mergedPdfTargetSizeMB] MB (configurable)
+  /// - Compression factor ranges from [Constants.minCompressionFactor] to [Constants.maxCompressionFactor]
+  ///
+  /// Supported image formats: jpg, jpeg, png, gif, webp, bmp
+  ///
+  /// Returns [FileInfo] of the merged PDF on success, or [CustomException] on failure
   static Future<Either<CustomException, FileInfo>> mergePdfs({
-    required List<MapEntry<FileInfo, int>> filesWithRotation,
+    required List<FileInfo> files,
     required String outputFileName,
-    String? destinationPath, // 🆕 Optional destination parameter
+    String? destinationPath,
   }) async {
     try {
-      if (filesWithRotation.isEmpty) {
+      // Validate input
+      if (files.isEmpty) {
         return Left(
-          CustomException(
+          const CustomException(
             message: 'No files provided for merging',
             code: 'NO_FILES',
           ),
         );
       }
 
-      // Create a new PDF document
-      final pdf = pw.Document();
+      if (files.length < 2) {
+        return Left(
+          const CustomException(
+            message: 'At least 2 files are required for merging',
+            code: 'INSUFFICIENT_FILES',
+          ),
+        );
+      }
 
-      for (final entry in filesWithRotation) {
-        final fileInfo = entry.key;
-        final rotation = entry.value;
+      // Validate all files exist and are PDFs or images
+      for (final fileInfo in files) {
+        final file = File(fileInfo.path);
+        if (!await file.exists()) {
+          return Left(
+            CustomException(
+              message: 'File not found: ${fileInfo.name}',
+              code: 'FILE_NOT_FOUND',
+            ),
+          );
+        }
 
-        if (fileInfo.extension.toLowerCase() == 'pdf') {
-          // Handle PDF files - render each page as image
-          await _addPdfPagesAsImages(pdf, fileInfo, rotation);
-        } else if (_isImageFile(fileInfo)) {
-          // Handle image files
-          await _addImagePage(pdf, fileInfo, rotation);
+        final isPdf = fileInfo.extension.toLowerCase() == 'pdf';
+        final isImage = PdfCompressService.isImageFile(fileInfo);
+
+        if (!isPdf && !isImage) {
+          return Left(
+            CustomException(
+              message:
+                  'Only PDF files and images can be merged: ${fileInfo.name}',
+              code: 'INVALID_FILE_TYPE',
+            ),
+          );
         }
       }
 
-      // Get output path using custom destination or default Downloads
-      final outputPath = await _getOutputPath(
-        outputFileName,
-        customDestination: destinationPath, // Pass custom destination
+      // Step 1: Analyze sizes and calculate compression factor
+      final sizeAnalysis = _analyzeSizes(files);
+      final compressionFactor = _calculateCompressionFactor(sizeAnalysis);
+
+      debugPrint(
+        '📊 [MergeService] Total input: ${_formatBytes(sizeAnalysis.totalInputSize)}',
+      );
+      debugPrint(
+        '📊 [MergeService] Estimated output: ${_formatBytes(sizeAnalysis.estimatedOutputSize)}',
+      );
+      debugPrint(
+        '📊 [MergeService] Target max: ${Constants.mergedPdfTargetSizeMB}MB',
+      );
+      debugPrint(
+        '📊 [MergeService] Compression factor: ${(compressionFactor * 100).toStringAsFixed(1)}%',
       );
 
-      // Save the PDF
-      final File outputFile = File(outputPath);
-      final bytes = await pdf.save();
-      await outputFile.writeAsBytes(bytes);
+      // Determine destination directory
+      final Directory targetDir = await _resolveDestination(destinationPath);
 
-      // Create FileInfo for the merged PDF
-      final fileStats = await outputFile.stat();
-      final mergedFileInfo = FileInfo(
-        name: p.basename(outputPath),
-        path: outputPath,
-        extension: 'pdf',
-        size: fileStats.size,
-        lastModified: fileStats.modified,
-        mimeType: 'application/pdf',
-        parentDirectory: p.dirname(outputPath),
-      );
+      // Create merged PDF document
+      final sf.PdfDocument mergedDocument = sf.PdfDocument();
 
-      return Right(mergedFileInfo);
+      // Remove default margins to avoid extra padding around content.
+      mergedDocument.pageSettings.margins.all = 0;
+
+      try {
+        // Merge each PDF or image
+        for (final fileInfo in files) {
+          final file = File(fileInfo.path);
+          final isPdf = fileInfo.extension.toLowerCase() == 'pdf';
+          final isImage = PdfCompressService.isImageFile(fileInfo);
+
+          if (isPdf) {
+            // Handle PDF file - merge as-is without compression
+            final bytes = await file.readAsBytes();
+            final sf.PdfDocument sourceDocument = sf.PdfDocument(
+              inputBytes: bytes,
+            );
+
+            try {
+              // Import all pages from source document WITHOUT forcing orientation
+              for (int i = 0; i < sourceDocument.pages.count; i++) {
+                _importPdfPageAsIs(sourceDocument, i, mergedDocument);
+              }
+            } finally {
+              sourceDocument.dispose();
+            }
+          } else if (isImage) {
+            // Handle image file with dynamic quality adjustment
+            final quality = _calculateImageQuality(compressionFactor);
+
+            // Convert image to PDF with compression
+            final Uint8List pdfBytes =
+                await PdfCompressService.convertImageToPdf(
+                  File(file.path),
+                  shouldCompress: true,
+                  quality: quality,
+                );
+
+            // Load the converted PDF and merge it
+            final sf.PdfDocument sourceDocument = sf.PdfDocument(
+              inputBytes: pdfBytes,
+            );
+
+            try {
+              // Import pages from the image-PDF onto PORTRAIT pages, scaled to fit
+              for (int i = 0; i < sourceDocument.pages.count; i++) {
+                _importImagePagePortraitFit(sourceDocument, i, mergedDocument);
+              }
+            } finally {
+              sourceDocument.dispose();
+            }
+          }
+        }
+
+        // Ensure output filename has .pdf extension
+        String finalFileName = outputFileName.trim();
+        if (!finalFileName.toLowerCase().endsWith('.pdf')) {
+          finalFileName = '$finalFileName.pdf';
+        }
+
+        // Create output file path
+        final outputPath = p.join(targetDir.path, finalFileName);
+        final outputFile = File(outputPath);
+
+        // Save merged document
+        final bytes = await mergedDocument.save();
+        await outputFile.writeAsBytes(bytes);
+
+        // Get file stats
+        final stats = await outputFile.stat();
+        final actualSize = stats.size;
+        final targetSize = Constants.mergedPdfTargetSizeMB * 1024 * 1024;
+
+        debugPrint(
+          '✅ [MergeService] Final PDF size: ${_formatBytes(actualSize)}',
+        );
+        if (actualSize > targetSize) {
+          debugPrint(
+            '⚠️ [MergeService] WARNING: Exceeded target size by ${_formatBytes(actualSize - targetSize)}',
+          );
+        }
+
+        // Create FileInfo for merged PDF
+        final mergedFileInfo = FileInfo(
+          name: p.basename(outputPath),
+          path: outputPath,
+          extension: 'pdf',
+          size: actualSize,
+          lastModified: stats.modified,
+          mimeType: 'application/pdf',
+          parentDirectory: p.dirname(outputPath),
+          isDirectory: false,
+        );
+
+        return Right(mergedFileInfo);
+      } finally {
+        mergedDocument.dispose();
+      }
     } catch (e) {
       return Left(
         CustomException(
@@ -82,224 +238,164 @@ class PdfMergeService {
     }
   }
 
-  /// Convert PDF pages to images and add to the new PDF with rotation
-  static Future<void> _addPdfPagesAsImages(
-    pw.Document pdf,
-    FileInfo pdfFile,
-    int rotation,
-  ) async {
-    try {
-      // Open the PDF using pdfx (note the prefix)
-      final document = await pdfx.PdfDocument.openFile(pdfFile.path);
-      final pageCount = document.pagesCount;
+  /// Resolves the destination directory for the merged PDF
+  static Future<Directory> _resolveDestination(String? destinationPath) async {
+    if (destinationPath != null && destinationPath.isNotEmpty) {
+      final dir = Directory(destinationPath);
+      if (await dir.exists()) {
+        return dir;
+      }
+      // Create if doesn't exist
+      await dir.create(recursive: true);
+      return dir;
+    }
 
-      // Process each page
-      for (int i = 1; i <= pageCount; i++) {
-        final page = await document.getPage(i);
+    // Fallback to app's documents directory
+    final appDocDir = await getApplicationDocumentsDirectory();
+    final mergedDir = Directory(p.join(appDocDir.path, 'MergedPDFs'));
+    if (!await mergedDir.exists()) {
+      await mergedDir.create(recursive: true);
+    }
+    return mergedDir;
+  }
 
-        // Render page at higher resolution for better quality
-        const scale = 2.0;
-        final pageWidth = page.width * scale;
-        final pageHeight = page.height * scale;
+  /// Analyzes input files and estimates output size
+  static _SizeAnalysis _analyzeSizes(List<FileInfo> files) {
+    int totalInputSize = 0;
+    int pdfTotalSize = 0;
+    int imageTotalSize = 0;
 
-        final pageImage = await page.render(
-          width: pageWidth,
-          height: pageHeight,
-          format: pdfx.PdfPageImageFormat.png,
+    for (final file in files) {
+      totalInputSize += file.size;
+
+      if (file.extension.toLowerCase() == 'pdf') {
+        pdfTotalSize += file.size;
+      } else if (PdfCompressService.isImageFile(file)) {
+        imageTotalSize += file.size;
+      }
+    }
+
+    // Estimate output size based on compression ratios from Constants
+    final estimatedPdfSize = (pdfTotalSize * Constants.pdfCompressionRatio)
+        .toInt();
+    final estimatedImageSize =
+        (imageTotalSize * Constants.imageCompressionRatio).toInt();
+    final estimatedOutputSize = estimatedPdfSize + estimatedImageSize;
+
+    return _SizeAnalysis(
+      totalInputSize: totalInputSize,
+      estimatedOutputSize: estimatedOutputSize,
+      pdfTotalSize: pdfTotalSize,
+      imageTotalSize: imageTotalSize,
+    );
+  }
+
+  /// Calculates compression factor based on size analysis
+  /// Returns a value between [Constants.minCompressionFactor] and [Constants.maxCompressionFactor]
+  static double _calculateCompressionFactor(_SizeAnalysis analysis) {
+    final targetSize = Constants.mergedPdfTargetSizeMB * 1024 * 1024;
+
+    // If estimated size is within target, no additional compression needed
+    if (analysis.estimatedOutputSize <= targetSize) {
+      return Constants.maxCompressionFactor; // 1.0 - no extra compression
+    }
+
+    // Calculate how much we need to compress
+    final compressionFactor =
+        (targetSize.toDouble() / analysis.estimatedOutputSize).clamp(
+          Constants.minCompressionFactor,
+          Constants.maxCompressionFactor,
         );
 
-        await page.close();
+    return compressionFactor;
+  }
 
-        if (pageImage != null) {
-          // Convert to pw.Image
-          final image = pw.MemoryImage(pageImage.bytes);
+  /// Calculates image quality based on compression factor
+  /// Maps compression factor (0.3-1.0) to quality (20-95)
+  static int _calculateImageQuality(double compressionFactor) {
+    final quality = (Constants.baseImageQuality * compressionFactor)
+        .toInt()
+        .clamp(Constants.minImageQuality, Constants.baseImageQuality);
 
-          // Calculate page size based on rotation
-          double pdfWidth, pdfHeight;
-          if (rotation == 90 || rotation == 270) {
-            // Swap dimensions for 90/270 rotation
-            pdfWidth = (page.height * 72 / 96); // Convert pixels to points
-            pdfHeight = (page.width * 72 / 96);
-          } else {
-            pdfWidth = (page.width * 72 / 96);
-            pdfHeight = (page.height * 72 / 96);
-          }
+    debugPrint(
+      '🎨 [MergeService] Image quality: $quality (factor: ${(compressionFactor * 100).toStringAsFixed(1)}%)',
+    );
+    return quality;
+  }
 
-          // Add page with appropriate size
-          pdf.addPage(
-            pw.Page(
-              pageFormat: PdfPageFormat(pdfWidth, pdfHeight),
-              build: (context) {
-                if (rotation == 0) {
-                  return pw.Image(image, fit: pw.BoxFit.contain);
-                }
+  /// Imports a page from a *PDF* source document into the target document
+  /// preserving the original page size, without forcing orientation/rotation.
+  static void _importPdfPageAsIs(
+    sf.PdfDocument sourceDoc,
+    int sourcePageIndex,
+    sf.PdfDocument targetDoc,
+  ) {
+    final srcPage = sourceDoc.pages[sourcePageIndex];
+    final Size pageSize = srcPage.size;
+    final double w = pageSize.width;
+    final double h = pageSize.height;
 
-                return pw.Center(
-                  child: pw.Transform.rotate(
-                    angle: rotation * 3.14159 / 180,
-                    child: pw.Image(image, fit: pw.BoxFit.contain),
-                  ),
-                );
-              },
-            ),
-          );
-        }
-      }
+    // Match the source page size and remove margins.
+    targetDoc.pageSettings.size = Size(w, h);
+    targetDoc.pageSettings.margins.all = 0;
 
-      await document.close();
-    } catch (e) {
-      throw Exception('Error processing PDF pages: $e');
+    // Add destination page and draw template 1:1.
+    final destPage = targetDoc.pages.add();
+    final template = srcPage.createTemplate();
+
+    destPage.graphics.drawPdfTemplate(template, const Offset(0, 0), Size(w, h));
+  }
+
+  /// Imports a page from an image-converted PDF into the target document
+  /// using a PORTRAIT page and scaling the content so nothing is cropped.
+  static void _importImagePagePortraitFit(
+    sf.PdfDocument sourceDoc,
+    int sourcePageIndex,
+    sf.PdfDocument targetDoc,
+  ) {
+    final srcPage = sourceDoc.pages[sourcePageIndex];
+    final Size srcSize = srcPage.size;
+    final double srcW = srcSize.width;
+    final double srcH = srcSize.height;
+
+    // Force the next page to be portrait A4 with no margins.
+    targetDoc.pageSettings.size = sf.PdfPageSize.a4;
+    targetDoc.pageSettings.orientation = sf.PdfPageOrientation.portrait;
+    targetDoc.pageSettings.margins.all = 0;
+
+    final destPage = targetDoc.pages.add();
+    final Size destSize = destPage.getClientSize();
+    final double destW = destSize.width;
+    final double destH = destSize.height;
+
+    final template = srcPage.createTemplate();
+
+    // Compute uniform scale so the entire source fits inside the portrait page.
+    final double scale = [
+      destW / srcW,
+      destH / srcH,
+    ].reduce((a, b) => a < b ? a : b);
+
+    final double drawW = srcW * scale;
+    final double drawH = srcH * scale;
+
+    // Center the image content on the page.
+    final double dx = (destW - drawW) / 2;
+    final double dy = (destH - drawH) / 2;
+
+    destPage.graphics.drawPdfTemplate(
+      template,
+      Offset(dx, dy),
+      Size(drawW, drawH),
+    );
+  }
+
+  /// Formats bytes to human-readable string
+  static String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(2)} KB';
     }
+    return '${(bytes / 1024 / 1024).toStringAsFixed(2)} MB';
   }
-
-  /// Add image page to PDF with rotation
-  static Future<void> _addImagePage(
-    pw.Document pdf,
-    FileInfo imageFile,
-    int rotation,
-  ) async {
-    try {
-      // Read image bytes
-      final File file = File(imageFile.path);
-      final Uint8List rawBytes = await file.readAsBytes();
-
-      // Compress image bytes before embedding (uses configured quality)
-      final Uint8List imageBytes = await PdfCompressService.compressImageBytes(
-        rawBytes,
-      );
-
-      // Get image dimensions
-      final ui.ImmutableBuffer buffer = await ui.ImmutableBuffer.fromUint8List(
-        imageBytes,
-      );
-      final ui.ImageDescriptor descriptor = await ui.ImageDescriptor.encoded(
-        buffer,
-      );
-
-      double imageWidth = descriptor.width.toDouble();
-      double imageHeight = descriptor.height.toDouble();
-
-      descriptor.dispose();
-      buffer.dispose();
-
-      // Convert to pw.Image
-      final image = pw.MemoryImage(imageBytes);
-
-      // Calculate page size based on rotation (convert pixels to points)
-      double pdfWidth, pdfHeight;
-      if (rotation == 90 || rotation == 270) {
-        pdfWidth = (imageHeight * 72 / 96);
-        pdfHeight = (imageWidth * 72 / 96);
-      } else {
-        pdfWidth = (imageWidth * 72 / 96);
-        pdfHeight = (imageHeight * 72 / 96);
-      }
-
-      // Add page with image and rotation
-      pdf.addPage(
-        pw.Page(
-          pageFormat: PdfPageFormat(pdfWidth, pdfHeight),
-          build: (context) {
-            if (rotation == 0) {
-              return pw.Image(image, fit: pw.BoxFit.contain);
-            }
-
-            return pw.Center(
-              child: pw.Transform.rotate(
-                angle: rotation * 3.14159 / 180,
-                child: pw.Image(image, fit: pw.BoxFit.contain),
-              ),
-            );
-          },
-        ),
-      );
-    } catch (e) {
-      throw Exception('Error adding image page: $e');
-    }
-  }
-
-  /// Check if file is an image
-  static bool _isImageFile(FileInfo file) {
-    const imageExtensions = {'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'};
-    return imageExtensions.contains(file.extension.toLowerCase());
-  }
-
-  /// Get output path in specified destination or Downloads directory
-  /// [customDestination] - Optional custom folder path. If null, uses Downloads.
-  static Future<String> _getOutputPath(
-    String fileName, {
-    String? customDestination,
-  }) async {
-    try {
-      Directory? directory;
-
-      // 🆕 Use custom destination if provided
-      if (customDestination != null && customDestination.isNotEmpty) {
-        directory = Directory(customDestination);
-
-        // Verify directory exists and is accessible
-        if (!await directory.exists()) {
-          throw Exception(
-            'Destination folder does not exist: $customDestination',
-          );
-        }
-
-        // Try to test write access
-        try {
-          final testFile = File(p.join(directory.path, '.test_write'));
-          await testFile.writeAsString('test');
-          await testFile.delete();
-        } catch (e) {
-          throw Exception(
-            'No write permission for destination: $customDestination',
-          );
-        }
-      } else {
-        // Fall back to default Downloads directory
-        if (Platform.isAndroid) {
-          directory = Directory('/storage/emulated/0/Download');
-          if (!await directory.exists()) {
-            directory = await getExternalStorageDirectory();
-          }
-        } else {
-          directory = await getApplicationDocumentsDirectory();
-        }
-      }
-
-      if (directory == null) {
-        throw Exception('Could not access storage directory');
-      }
-
-      // Ensure .pdf extension
-      String finalFileName = fileName.endsWith('.pdf')
-          ? fileName
-          : '$fileName.pdf';
-
-      // Handle duplicate names
-      String outputPath = p.join(directory.path, finalFileName);
-      int counter = 1;
-      while (await File(outputPath).exists()) {
-        final nameWithoutExt = p.basenameWithoutExtension(finalFileName);
-        finalFileName = '${nameWithoutExt}_$counter.pdf';
-        outputPath = p.join(directory.path, finalFileName);
-        counter++;
-      }
-
-      return outputPath;
-    } catch (e) {
-      throw Exception('Error getting output path: $e');
-    }
-  }
-}
-
-// lib/core/exceptions/custom_exception.dart
-class CustomException implements Exception {
-  final String message;
-  final String code;
-  final dynamic details;
-
-  CustomException({required this.message, required this.code, this.details});
-
-  @override
-  String toString() => 'CustomException($code): $message';
 }

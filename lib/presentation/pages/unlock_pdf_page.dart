@@ -8,6 +8,7 @@ import 'package:pdf_kit/service/pdf_protect_service.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:path/path.dart' as p;
+import 'package:pdf_kit/presentation/pages/home_page.dart';
 
 class UnlockPdfPage extends StatefulWidget {
   final String? selectionId;
@@ -116,8 +117,9 @@ class _UnlockPdfPageState extends State<UnlockPdfPage> {
         );
         selection.disable();
 
-        // ✅ Pass true to indicate success and trigger refresh
-        context.pop(true);
+        // ✅ Navigate to home and trigger refresh
+        context.go('/');
+        RecentFilesSection.refreshNotifier.value++;
       },
     );
   }
@@ -179,7 +181,7 @@ class _UnlockPdfPageState extends State<UnlockPdfPage> {
                     const SizedBox(height: 12),
                     DocEntryCard(
                       info: files.first,
-                      showActions: false,
+                      showRemove: true,
                       selectable: false,
                       reorderable: false,
                       onOpen: null,
@@ -251,40 +253,53 @@ class _UnlockPdfPageState extends State<UnlockPdfPage> {
             ),
           ),
           bottomNavigationBar: hasFile
-              ? SafeArea(
-                  minimum: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: FilledButton(
-                      onPressed: !_isUnlocking
-                          ? () => _handleUnlock(context, selection)
-                          : null,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF5B7FFF),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28),
-                        ),
+              ? Container(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        offset: const Offset(0, -2),
+                        blurRadius: 8,
                       ),
-                      child: _isUnlocking
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+                    ],
+                  ),
+                  child: SafeArea(
+                    minimum: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: FilledButton(
+                        onPressed: !_isUnlocking
+                            ? () => _handleUnlock(context, selection)
+                            : null,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF5B7FFF),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                        ),
+                        child: _isUnlocking
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : Text(
+                                t.t('unlock_pdf_button'),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
                                 ),
                               ),
-                            )
-                          : Text(
-                              t.t('unlock_pdf_button'),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
+                      ),
                     ),
                   ),
                 )

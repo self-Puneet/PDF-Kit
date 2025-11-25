@@ -1,6 +1,7 @@
 // selection_provider.dart - same implementation as before
 import 'package:flutter/foundation.dart';
 import 'package:pdf_kit/models/file_model.dart';
+import 'package:pdf_kit/service/pdf_protect_service.dart';
 
 class SelectionProvider extends ChangeNotifier {
   final Map<String, FileInfo> _selected = {};
@@ -9,7 +10,11 @@ class SelectionProvider extends ChangeNotifier {
   int _mode = 0;
   int? _maxSelectable; // optional upper limit
   int? _minSelectable; // optional lower limit
+  String? _allowedFilter; // 'protected', 'unprotected', or null for all
   // String? _lastErrorMessage; // surfaced when exceeding limit
+
+  // Callback for custom file validation (returns error message if invalid, null if valid)
+  Future<String?> Function(FileInfo)? validateFileForSelection;
 
   int get mode => _mode;
   bool get isEnabled => _mode != 0;
@@ -59,6 +64,11 @@ class SelectionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setAllowedFilter(String? value) {
+    _allowedFilter = value;
+    notifyListeners();
+  }
+
   void clearError() {
     if (_lastLimitCount != null) {
       _lastLimitCount = null;
@@ -66,7 +76,45 @@ class SelectionProvider extends ChangeNotifier {
     }
   }
 
-  void toggle(FileInfo f) {
+  String? _lastValidationError;
+  String? get lastValidationError => _lastValidationError;
+
+  void clearValidationError() {
+    if (_lastValidationError != null) {
+      _lastValidationError = null;
+      notifyListeners();
+    }
+  }
+
+  Future<String?> _validateFileWithFilter(FileInfo file) async {
+    // Check if file is PDF
+    if (file.extension.toLowerCase() != 'pdf') {
+      return 'Only PDF files can be selected.';
+    }
+
+    // Check protection status
+    try {
+      final result = await PdfProtectionService.isPdfProtected(
+        pdfPath: file.path,
+      );
+
+      return result.fold(
+        (failure) => null, // If check fails, allow selection
+        (isProtected) {
+          if (_allowedFilter == 'protected' && !isProtected) {
+            return 'This PDF is not protected with a password.';
+          } else if (_allowedFilter == 'unprotected' && isProtected) {
+            return 'This PDF is already protected with a password.';
+          }
+          return null;
+        },
+      );
+    } catch (e) {
+      return null; // If service unavailable, allow selection
+    }
+  }
+
+  Future<void> toggle(FileInfo f) async {
     // If already selected -> unselect
     if (_selected.containsKey(f.path)) {
       _selected.remove(f.path);
@@ -74,6 +122,26 @@ class SelectionProvider extends ChangeNotifier {
       _orderedFiles.removeWhere((file) => file.path == f.path);
       notifyListeners();
       return;
+    }
+
+    // Validate based on allowed filter
+    if (_allowedFilter != null) {
+      final error = await _validateFileWithFilter(f);
+      if (error != null) {
+        _lastValidationError = error;
+        notifyListeners();
+        return; // do not add
+      }
+    }
+
+    // Run custom validation if provided
+    if (validateFileForSelection != null) {
+      final error = await validateFileForSelection!(f);
+      if (error != null) {
+        _lastValidationError = error;
+        notifyListeners();
+        return; // do not add
+      }
     }
 
     // Enforce max selectable limit if provided

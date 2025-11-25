@@ -4,6 +4,7 @@ import 'package:pdf_kit/presentation/component/document_tile.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/presentation/sheets/clear_recent_files_sheet.dart';
+import 'package:pdf_kit/presentation/pages/home_page.dart';
 
 class RecentFilesPage extends StatefulWidget {
   const RecentFilesPage({Key? key}) : super(key: key);
@@ -13,7 +14,8 @@ class RecentFilesPage extends StatefulWidget {
 }
 
 class _RecentFilesPageState extends State<RecentFilesPage> {
-  late Future<List<FileInfo>> _recentFilesFuture;
+  List<FileInfo> _files = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -22,20 +24,31 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
     _loadRecentFiles();
   }
 
-  void _loadRecentFiles() {
+  Future<void> _loadRecentFiles() async {
     debugPrint('🔄 [RecentFilesPage] Loading recent files...');
-    _recentFilesFuture = RecentFilesService.getRecentFiles().then((result) {
-      return result.fold(
-        (error) {
-          debugPrint('❌ [RecentFilesPage] Error loading: $error');
-          return <FileInfo>[];
-        },
-        (files) {
-          debugPrint('✅ [RecentFilesPage] Loaded ${files.length} files');
-          return files;
-        },
-      );
-    });
+    setState(() => _isLoading = true);
+
+    final result = await RecentFilesService.getRecentFiles();
+    result.fold(
+      (error) {
+        debugPrint('❌ [RecentFilesPage] Error loading: $error');
+        if (mounted) {
+          setState(() {
+            _files = [];
+            _isLoading = false;
+          });
+        }
+      },
+      (files) {
+        debugPrint('✅ [RecentFilesPage] Loaded ${files.length} files');
+        if (mounted) {
+          setState(() {
+            _files = files;
+            _isLoading = false;
+          });
+        }
+      },
+    );
   }
 
   void _handleFileOpen(FileInfo file) {
@@ -48,30 +61,45 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
 
   Future<void> _handleFileDelete(FileInfo file) async {
     debugPrint('🗑️ [RecentFilesPage] Deleting file: ${file.name}');
-    final result = await RecentFilesService.removeRecentFile(file.path);
     final t = AppLocalizations.of(context);
+
+    // Optimistically remove from UI immediately
+    final index = _files.indexWhere((f) => f.path == file.path);
+    if (index == -1) return;
+
+    setState(() {
+      _files.removeAt(index);
+    });
+
+    // Then update storage
+    final result = await RecentFilesService.removeRecentFile(file.path);
 
     result.fold(
       (error) {
         debugPrint('❌ [RecentFilesPage] Delete failed: $error');
+        // Restore the file on error
         if (mounted) {
-          final msg = t
-              .t('snackbar_error')
-              .replaceAll('{message}', error.toString());
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(msg),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
+          setState(() {
+            _files.insert(index, file);
+          });
+          // final msg = t
+          //     .t('snackbar_error')
+          //     .replaceAll('{message}', error.toString());
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(
+          //     content: Text(msg),
+          //     backgroundColor: Theme.of(context).colorScheme.error,
+          //   ),
+          // );
         }
       },
       (updatedFiles) {
         debugPrint(
           '✅ [RecentFilesPage] Delete successful. Remaining: ${updatedFiles.length}',
         );
+        // Notify home page to refresh
+        RecentFilesSection.refreshNotifier.value++;
         if (mounted) {
-          setState(() => _loadRecentFiles());
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(t.t('snackbar_removed_recent'))),
           );
@@ -124,12 +152,45 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
           },
           (_) {
             debugPrint('✅ [RecentFilesPage] Clear All successful');
+            // Notify home page to refresh
+            RecentFilesSection.refreshNotifier.value++;
             if (mounted) {
-              setState(() => _loadRecentFiles());
+              setState(() {
+                _files.clear();
+              });
             }
           },
         );
       },
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context, ThemeData theme) {
+    final t = AppLocalizations.of(context);
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.history,
+            size: 64,
+            color: theme.colorScheme.onSurface.withOpacity(0.3),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            t.t('recent_files_empty_title'),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            t.t('recent_files_empty_message'),
+            style: theme.textTheme.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
@@ -145,80 +206,47 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
               _buildHeader(context),
               const SizedBox(height: 8),
               Expanded(
-                child: FutureBuilder<List<FileInfo>>(
-                  future: _recentFilesFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      debugPrint(
-                        '⏳ [RecentFilesPage] Showing loading indicator',
-                      );
-                      return const Center(child: CircularProgressIndicator());
-                    }
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _files.isEmpty
+                    ? _buildEmptyState(context, theme)
+                    : AnimatedList(
+                        key: GlobalKey<AnimatedListState>(),
+                        padding: const EdgeInsets.only(bottom: 16),
+                        initialItemCount: _files.length,
+                        itemBuilder: (context, i, animation) {
+                          if (i >= _files.length)
+                            return const SizedBox.shrink();
 
-                    if (snapshot.hasError) {
-                      debugPrint(
-                        '⚠️ [RecentFilesPage] Error: ${snapshot.error}',
-                      );
-                      final t = AppLocalizations.of(context);
-                      return Center(
-                        child: Text(
-                          t.t('errors_failed_to_load_recent'),
-                          style: theme.textTheme.bodyLarge,
-                        ),
-                      );
-                    }
-
-                    final files = snapshot.data ?? [];
-                    debugPrint(
-                      '📊 [RecentFilesPage] Rendering ${files.length} files',
-                    );
-
-                    if (files.isEmpty) {
-                      final t = AppLocalizations.of(context);
-                      return Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.history,
-                              size: 64,
-                              color: theme.colorScheme.onSurface.withOpacity(
-                                0.3,
+                          return SlideTransition(
+                            position: animation.drive(
+                              Tween<Offset>(
+                                begin: const Offset(1, 0),
+                                end: Offset.zero,
+                              ).chain(CurveTween(curve: Curves.easeOut)),
+                            ),
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: 8,
+                                  left: 4,
+                                  right: 4,
+                                ),
+                                child: DocEntryCard(
+                                  info: _files[i],
+                                  onOpen: () => _handleFileOpen(_files[i]),
+                                  onMenu: (action) =>
+                                      _handleFileMenu(_files[i], action),
+                                  onRemove: () => _handleFileDelete(_files[i]),
+                                  showRemove: true,
+                                  showEdit: false,
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              t.t('recent_files_empty_title'),
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              t.t('recent_files_empty_message'),
-                              style: theme.textTheme.bodyMedium,
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    return ListView.separated(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      itemCount: files.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
-                      itemBuilder: (context, i) => Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: DocEntryCard(
-                          info: files[i],
-                          onOpen: () => _handleFileOpen(files[i]),
-                          onMenu: (action) => _handleFileMenu(files[i], action),
-                        ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ],
           ),
@@ -237,19 +265,32 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
       child: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.history,
-              size: 20,
-              color: Theme.of(context).colorScheme.primary,
+            child: ClipOval(
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: Image.asset(
+                  'assets/app_icon1.png',
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.cover,
+                  errorBuilder: (c, e, s) => Icon(
+                    Icons.widgets_rounded,
+                    size: 40,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 12),
+
           Text(
             t.t('recent_files_title'),
             style: Theme.of(

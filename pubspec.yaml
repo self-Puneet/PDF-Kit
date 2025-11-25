@@ -29,7 +29,6 @@ dependencies:
   pdf: ^3.11.3
   path: ^1.9.1
   signature: ^6.3.0
-  simple_pdf_compression: ^0.0.2
   image_picker: ^1.1.2
   syncfusion_flutter_pdf: ^31.2.12
   flutter_image_compress: ^2.4.0

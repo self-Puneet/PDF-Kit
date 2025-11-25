@@ -24,10 +24,11 @@ class DocEntryCard extends StatefulWidget {
   final bool selected;
   final VoidCallback? onToggleSelected;
   final VoidCallback? onLongPress;
-  final bool showActions;
+  final bool showRemove;
+  final bool showEdit;
+  final bool showVertOption;
   final VoidCallback? onEdit;
   final VoidCallback? onRemove;
-  final int rotation;
   final bool reorderable;
   final bool disabled;
 
@@ -40,10 +41,11 @@ class DocEntryCard extends StatefulWidget {
     this.selected = false,
     this.onToggleSelected,
     this.onLongPress,
-    this.showActions = false,
+    this.showRemove = false,
+    this.showEdit = false,
+    this.showVertOption = true,
     this.onEdit,
     this.onRemove,
-    this.rotation = 0,
     this.reorderable = false,
     this.disabled = false,
   });
@@ -185,7 +187,7 @@ class _DocEntryCardState extends State<DocEntryCard> {
         borderRadius: BorderRadius.circular(12),
         onTap: widget.disabled ? null : widget.onOpen,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 8, ),
           child: Row(
             children: [
               Padding(
@@ -214,51 +216,48 @@ class _DocEntryCardState extends State<DocEntryCard> {
                           ? BoxFit.fitWidth
                           : BoxFit.fitHeight;
 
-                      child = Transform.rotate(
-                        angle: widget.rotation * 3.14159 / 180,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: SizedBox.square(
-                            dimension: 70,
-                            child: Stack(
-                              children: [
-                                // Thumbnail
-                                Positioned.fill(
-                                  child: Image.memory(
-                                    t.bytes,
-                                    fit: fit,
-                                    cacheWidth: 140,
-                                    cacheHeight: 140,
-                                  ),
+                      child = ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: SizedBox.square(
+                          dimension: 70,
+                          child: Stack(
+                            children: [
+                              // Thumbnail
+                              Positioned.fill(
+                                child: Image.memory(
+                                  t.bytes,
+                                  fit: fit,
+                                  cacheWidth: 140,
+                                  cacheHeight: 140,
                                 ),
+                              ),
 
-                                // Extension badge (top‑left)
-                                Positioned(
-                                  top: 4,
-                                  left: 4,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 3,
-                                      vertical: 1,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(
-                                        0.6,
-                                      ), // not pure black
-                                      borderRadius: BorderRadius.circular(2),
-                                    ),
-                                    child: Text(
-                                      widget.info.extension.toUpperCase(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                              // Extension badge (top‑left)
+                              Positioned(
+                                top: 4,
+                                left: 4,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 3,
+                                    vertical: 1,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(
+                                      0.6,
+                                    ), // not pure black
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                  child: Text(
+                                    widget.info.extension.toUpperCase(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       );
@@ -300,48 +299,13 @@ class _DocEntryCardState extends State<DocEntryCard> {
                             : null,
                       ),
                     ),
-                    Row(
-                      children: [
-                        Text(
-                          _recent(),
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withAlpha(153),
-                              ),
-                        ),
-                        if (widget.rotation != 0) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              t
-                                  .t('doc_rotation_degrees')
-                                  .replaceAll(
-                                    '{degrees}',
-                                    widget.rotation.toString(),
-                                  ),
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                          ),
-                        ],
-                      ],
+                    Text(
+                      _recent(),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withAlpha(153),
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Row(
@@ -407,25 +371,6 @@ class _DocEntryCardState extends State<DocEntryCard> {
                         .withOpacity(widget.disabled ? 0.3 : 1.0),
                   ),
                 )
-              else if (widget.showActions)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (widget.onEdit != null)
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: widget.disabled ? null : widget.onEdit,
-                        tooltip: t.t('doc_menu_edit'),
-                      ),
-                    if (widget.onRemove != null)
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: widget.disabled ? null : widget.onRemove,
-                        tooltip: t.t('doc_menu_remove'),
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                  ],
-                )
               else if (widget.selectable)
                 Padding(
                   padding: const EdgeInsets.only(left: 12, right: 8),
@@ -441,7 +386,26 @@ class _DocEntryCardState extends State<DocEntryCard> {
                     ),
                   ),
                 )
-              else
+              else if (widget.showEdit || widget.showRemove)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (widget.showEdit && widget.onEdit != null)
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: widget.disabled ? null : widget.onEdit,
+                        tooltip: t.t('doc_menu_edit'),
+                      ),
+                    if (widget.showRemove && widget.onRemove != null)
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: widget.disabled ? null : widget.onRemove,
+                        tooltip: t.t('doc_menu_remove'),
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                  ],
+                )
+              else if (widget.showVertOption)
                 (widget.disabled
                     ? Icon(
                         Icons.more_vert,

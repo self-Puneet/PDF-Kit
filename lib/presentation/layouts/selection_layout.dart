@@ -14,6 +14,7 @@ class SelectionScaffold extends StatefulWidget {
   final SelectionProvider? provider; // optional externally provided provider
   final int? maxSelectable; // NEW limit provided via query parameter
   final int? minSelectable; // NEW minimum required selection to perform action
+  final String? allowed; // Filter: 'protected', 'unprotected', or null for all
 
   const SelectionScaffold({
     super.key,
@@ -24,6 +25,7 @@ class SelectionScaffold extends StatefulWidget {
     this.provider,
     this.maxSelectable,
     this.minSelectable,
+    this.allowed,
   });
 
   @override
@@ -54,6 +56,8 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
     provider.setMaxSelectable(widget.maxSelectable);
     // apply min selectable if provided
     provider.setMinSelectable(widget.minSelectable);
+    // apply allowed filter if provided
+    provider.setAllowedFilter(widget.allowed);
 
     // Listen for selection limit errors and surface them via sheet
     provider.addListener(_handleProviderUpdate);
@@ -69,7 +73,20 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
   }
 
   void _handleProviderUpdate() {
-    // If no limit error, nothing to do
+    // Handle validation errors first (show snackbar)
+    if (provider.lastValidationError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.lastValidationError!),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      provider.clearValidationError();
+      return;
+    }
+
+    // Handle limit errors (show sheet)
     if (provider.lastLimitCount == null) return;
 
     final t = AppLocalizations.of(context);
