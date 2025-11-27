@@ -18,6 +18,7 @@ import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/presentation/sheets/new_folder_sheet.dart';
 import 'package:pdf_kit/presentation/sheets/filter_sheet.dart';
 import 'package:pdf_kit/presentation/sheets/delete_file_sheet.dart';
+import 'package:pdf_kit/presentation/sheets/rename_file_sheet.dart';
 import 'package:pdf_kit/service/file_service.dart';
 import 'package:path/path.dart' as p;
 
@@ -614,12 +615,55 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
     }
   }
 
+  Future<void> _handleFileRename(FileInfo file) async {
+    debugPrint('✏️ [AndroidFilesScreen] Renaming file: ${file.name}');
+    await showRenameFileSheet(
+      context: context,
+      initialName: file.name,
+      onRename: (newName) async {
+        final result = await FileService.renameFile(file, newName);
+        result.fold(
+          (exception) {
+            debugPrint(
+              '❌ [AndroidFilesScreen] Rename failed: ${exception.message}',
+            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(exception.message),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
+            }
+          },
+          (renamedFileInfo) {
+            debugPrint(
+              '✅ [AndroidFilesScreen] Rename successful: ${renamedFileInfo.name}',
+            );
+            if (mounted) {
+              // Refresh current folder to show renamed file
+              if (_currentPath != null) {
+                _open(_currentPath!);
+              }
+              // Trigger home page refresh
+              RecentFilesSection.refreshNotifier.value++;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('File renamed successfully')),
+              );
+            }
+          },
+        );
+      },
+    );
+  }
+
   Future<void> _handleFileMenu(String v, FileInfo f) async {
     switch (v) {
       case 'open':
         OpenService.open(f.path);
         break;
       case 'rename':
+        await _handleFileRename(f);
         break;
       case 'delete':
         await showDeleteFileSheet(

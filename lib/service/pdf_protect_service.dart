@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:dartz/dartz.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart' as sf;
+import 'package:ares_defence_labs_lock_smith_pdf/ares_defence_labs_lock_smith_pdf.dart';
 import 'package:pdf_kit/core/exception/failures.dart';
 
 class PdfProtectionService {
@@ -22,40 +22,36 @@ class PdfProtectionService {
       if (!await pdfFile.exists()) {
         return const Left(FileNotFoundFailure());
       }
+      // Use ares_defence_labs_lock_smith_pdf to protect the PDF.
+      final String outputPath = _outputPathFor(pdfPath, '_protected');
 
-      // Load the PDF document
-      final sf.PdfDocument document = sf.PdfDocument(
-        inputBytes: await pdfFile.readAsBytes(),
+      await AresDefenceLabsLocksmithPdf.protectPdf(
+        inputPath: pdfPath,
+        outputPath: outputPath,
+        password: password,
       );
 
-      // Create security instance and set password
-      final sf.PdfSecurity security = document.security;
-      security.userPassword = password;
-      security.ownerPassword = password;
+      // Replace original with protected output
+      final File outFile = File(outputPath);
+      if (!await outFile.exists()) {
+        return const Left(
+          PdfProtectionFailure('Failed to create protected PDF'),
+        );
+      }
 
-      // Set permissions (allow all operations with password)
-      security.permissions.addAll([
-        sf.PdfPermissionsFlags.print,
-        sf.PdfPermissionsFlags.editContent,
-        sf.PdfPermissionsFlags.copyContent,
-        sf.PdfPermissionsFlags.editAnnotations,
-        sf.PdfPermissionsFlags.fillFields,
-        sf.PdfPermissionsFlags.accessibilityCopyContent,
-        sf.PdfPermissionsFlags.assembleDocument,
-        sf.PdfPermissionsFlags.fullQualityPrint,
-      ]);
-
-      // Save the protected PDF
-      final List<int> bytes = await document.save();
-      document.dispose();
-
-      // Overwrite the original file with the protected version
+      final List<int> bytes = await outFile.readAsBytes();
       await pdfFile.writeAsBytes(bytes);
+
+      // Clean up temporary file
+      try {
+        await outFile.delete();
+      } catch (_) {}
 
       return Right(pdfPath);
     } on FileSystemException catch (e) {
       return Left(FileReadWriteFailure('File error: ${e.message}'));
     } catch (e) {
+      print('Error protecting PDF: $e');
       return Left(
         PdfProtectionFailure('Failed to protect PDF: ${e.toString()}'),
       );
@@ -71,29 +67,12 @@ class PdfProtectionService {
       if (!await pdfFile.exists()) {
         return const Left(FileNotFoundFailure());
       }
+      // Use plugin API to check encryption status
+      final bool isEncrypted = await AresDefenceLabsLocksmithPdf.isPdfEncrypted(
+        inputPath: pdfPath,
+      );
 
-      // Try to load the PDF without password
-      try {
-        final sf.PdfDocument document = sf.PdfDocument(
-          inputBytes: await pdfFile.readAsBytes(),
-        );
-
-        // Check if document has security
-        final bool isProtected =
-            document.security.userPassword.isNotEmpty ||
-            document.security.ownerPassword.isNotEmpty;
-
-        document.dispose();
-        return Right(isProtected);
-      } catch (e) {
-        // If loading fails, it might be encrypted
-        if (e.toString().contains('password') ||
-            e.toString().contains('encrypted') ||
-            e.toString().contains('security')) {
-          return const Right(true);
-        }
-        rethrow;
-      }
+      return Right(isEncrypted);
     } catch (e) {
       return Left(PdfProtectionFailure('Failed to check PDF: ${e.toString()}'));
     }
@@ -118,29 +97,34 @@ class PdfProtectionService {
 
       // Try to load the PDF with password
       try {
-        final sf.PdfDocument document = sf.PdfDocument(
-          inputBytes: await pdfFile.readAsBytes(),
+        final String outputPath = _outputPathFor(pdfPath, '_unlocked');
+
+        await AresDefenceLabsLocksmithPdf.decryptPdf(
+          inputPath: pdfPath,
+          outputPath: outputPath,
           password: password,
         );
 
-        // Remove security by creating a new document without password
-        final sf.PdfSecurity security = document.security;
-        security.userPassword = '';
-        security.ownerPassword = '';
+        final File outFile = File(outputPath);
+        if (!await outFile.exists()) {
+          return const Left(
+            PdfProtectionFailure('Failed to create unlocked PDF'),
+          );
+        }
 
-        // Save the unlocked PDF
-        final List<int> bytes = await document.save();
-        document.dispose();
-
-        // Overwrite the original file with the unlocked version
+        final List<int> bytes = await outFile.readAsBytes();
         await pdfFile.writeAsBytes(bytes);
+
+        try {
+          await outFile.delete();
+        } catch (_) {}
 
         return Right(pdfPath);
       } catch (e) {
         // Handle incorrect password or loading errors
-        if (e.toString().contains('password') ||
-            e.toString().contains('Invalid') ||
-            e.toString().contains('encrypted')) {
+        if (e.toString().toLowerCase().contains('password') ||
+            e.toString().toLowerCase().contains('invalid') ||
+            e.toString().toLowerCase().contains('encrypted')) {
           return const Left(
             PdfProtectionFailure('Incorrect password. Please try again.'),
           );
@@ -154,5 +138,13 @@ class PdfProtectionService {
         PdfProtectionFailure('Failed to unlock PDF: ${e.toString()}'),
       );
     }
+  }
+
+  static String _outputPathFor(String inputPath, String suffix) {
+    final lower = inputPath.toLowerCase();
+    if (lower.endsWith('.pdf')) {
+      return inputPath.substring(0, inputPath.length - 4) + suffix + '.pdf';
+    }
+    return inputPath + suffix + '.pdf';
   }
 }

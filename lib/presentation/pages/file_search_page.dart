@@ -9,6 +9,7 @@ import 'package:pdf_kit/presentation/provider/selection_provider.dart';
 import 'package:pdf_kit/service/file_system_serevice.dart';
 import 'package:pdf_kit/service/open_service.dart';
 import 'package:pdf_kit/presentation/sheets/delete_file_sheet.dart';
+import 'package:pdf_kit/presentation/sheets/rename_file_sheet.dart';
 import 'package:pdf_kit/service/file_service.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:pdf_kit/presentation/pages/home_page.dart';
@@ -313,12 +314,61 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
     );
   }
 
+  Future<void> _handleFileRename(FileInfo file) async {
+    debugPrint('✏️ [SearchFilesScreen] Renaming file: ${file.name}');
+    await showRenameFileSheet(
+      context: context,
+      initialName: file.name,
+      onRename: (newName) async {
+        final result = await FileService.renameFile(file, newName);
+        result.fold(
+          (exception) {
+            debugPrint(
+              '❌ [SearchFilesScreen] Rename failed: ${exception.message}',
+            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(exception.message),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
+            }
+          },
+          (renamedFileInfo) {
+            debugPrint(
+              '✅ [SearchFilesScreen] Rename successful: ${renamedFileInfo.name}',
+            );
+            if (mounted) {
+              // Update the search results to reflect the renamed file
+              setState(() {
+                final index = _results.indexWhere((e) => e.path == file.path);
+                if (index != -1) {
+                  _results[index] = renamedFileInfo;
+                  // Update the seen set
+                  _seen.remove(file.path);
+                  _seen.add(renamedFileInfo.path);
+                }
+              });
+              // Trigger home page refresh
+              RecentFilesSection.refreshNotifier.value++;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('File renamed successfully')),
+              );
+            }
+          },
+        );
+      },
+    );
+  }
+
   Future<void> _handleFileMenu(String action, FileInfo f) async {
     switch (action) {
       case 'open':
         OpenService.open(f.path);
         break;
       case 'rename':
+        await _handleFileRename(f);
         break;
       case 'delete':
         await showDeleteFileSheet(

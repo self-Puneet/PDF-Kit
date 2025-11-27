@@ -13,12 +13,34 @@ List<Functionality> getActions(BuildContext context) {
       label: t('action_watermark_label'),
       icon: Icons.water_drop_outlined,
       color: Colors.brown,
-      onPressed: (ctx) => _toast(
-        ctx,
-        t(
-          'action_coming_soon_toast',
-        ).replaceAll('{feature}', t('action_watermark_label')),
-      ),
+      onPressed: (context) async {
+        // create a mapped selection provider and navigate to file selection
+        final selectionId =
+            'watermark_${DateTime.now().microsecondsSinceEpoch}';
+        // ensure SelectionManager is available and create provider in cache
+        try {
+          final mgr = Get.find<SelectionManager>();
+          mgr.of(selectionId);
+        } catch (_) {
+          // if DI not initialized, still continue with navigation
+        }
+
+        final result = await context.pushNamed(
+          AppRouteName.filesRootFullscreen,
+          queryParameters: {
+            'selectionId': selectionId,
+            'actionText': t('watermark_pdf_title'),
+            'max': '1', // Limit to 1 PDF file
+            'min': '1', // Require at least 1 selected
+            'allowed': 'pdf-only', // Only allow PDF files
+          },
+        );
+
+        // If the watermark screen returned `true`, request recent files to refresh.
+        if (result == true) {
+          RecentFilesSection.refreshNotifier.value++;
+        }
+      },
     ),
     Functionality(
       id: 'esign',

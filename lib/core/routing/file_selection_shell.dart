@@ -43,7 +43,15 @@ ShellRoute buildSelectionShellRoute({
             final action = actionText?.toLowerCase() ?? '';
 
             // Check for specific actions in order (most specific first)
-            if (action.contains('unlock')) {
+            if (action.contains('watermark')) {
+              rootNavKey.currentContext!.pushReplacementNamed(
+                AppRouteName.addWatermark,
+                queryParameters: {
+                  'selectionId': selectionId,
+                  if (minSelectable != null) 'min': minSelectable.toString(),
+                },
+              );
+            } else if (action.contains('unlock')) {
               rootNavKey.currentContext!.pushNamed(
                 AppRouteName.unlockPdf,
                 queryParameters: {

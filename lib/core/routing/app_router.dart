@@ -77,7 +77,10 @@ final appRouter = GoRouter(
       name: AppRouteName.addWatermark,
       path: '/pdf/watermark',
       parentNavigatorKey: _rootNavKey,
-      builder: (context, state) => const AddWatermarkPage(),
+      builder: (context, state) {
+        final selectionId = state.uri.queryParameters['selectionId'];
+        return AddWatermarkPage(selectionId: selectionId);
+      },
     ),
     GoRoute(
       name: AppRouteName.addSignature,
@@ -349,19 +352,6 @@ class ShowPdfPage extends StatelessWidget {
     return Scaffold(body: Center(child: Text(text)));
   }
 }
-
-class AddWatermarkPage extends StatelessWidget {
-  const AddWatermarkPage({super.key});
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
-    return Scaffold(body: Center(child: Text(t.t('add_watermark_title'))));
-  }
-}
-
-// Removed placeholder AddSignaturePage; real implementation lives in pages/add_signature_page.dart
-// Removed placeholder CompressPdfPage; real implementation lives in pages/compress_pdf.dart
-// Removed placeholder SignPdfPage; real implementation lives in pages/sign_pdf_page.dart
 
 class NotFoundPage extends StatelessWidget {
   final String? routeName;

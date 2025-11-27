@@ -69,6 +69,32 @@ class SelectionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<String?> _validatePdfOnly(FileInfo file) async {
+    if (file.extension.toLowerCase() != 'pdf') {
+      return 'Only PDF files can be selected for this operation.';
+    }
+    return null;
+  }
+
+  Future<String?> _validateImageOnly(FileInfo file) async {
+    const imageExtensions = {
+      'jpg',
+      'jpeg',
+      'png',
+      'gif',
+      'webp',
+      'bmp',
+      'tif',
+      'tiff',
+      'heic',
+      'heif',
+    };
+    if (!imageExtensions.contains(file.extension.toLowerCase())) {
+      return 'Only image files can be selected for this operation.';
+    }
+    return null;
+  }
+
   void clearError() {
     if (_lastLimitCount != null) {
       _lastLimitCount = null;
@@ -87,7 +113,17 @@ class SelectionProvider extends ChangeNotifier {
   }
 
   Future<String?> _validateFileWithFilter(FileInfo file) async {
-    // Check if file is PDF
+    // Check for pdf-only filter
+    if (_allowedFilter == 'pdf-only') {
+      return await _validatePdfOnly(file);
+    }
+
+    // Check for image-only filter
+    if (_allowedFilter == 'image-only') {
+      return await _validateImageOnly(file);
+    }
+
+    // Check if file is PDF for protection filters
     if (file.extension.toLowerCase() != 'pdf') {
       return 'Only PDF files can be selected.';
     }

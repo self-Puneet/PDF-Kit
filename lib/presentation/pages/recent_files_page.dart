@@ -4,6 +4,8 @@ import 'package:pdf_kit/presentation/component/document_tile.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/presentation/sheets/clear_recent_files_sheet.dart';
+import 'package:pdf_kit/presentation/sheets/rename_file_sheet.dart';
+import 'package:pdf_kit/service/file_service.dart';
 import 'package:pdf_kit/presentation/pages/home_page.dart';
 
 class RecentFilesPage extends StatefulWidget {
@@ -108,6 +110,46 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
     );
   }
 
+  Future<void> _handleFileRename(FileInfo file) async {
+    debugPrint('✏️ [RecentFilesPage] Renaming file: ${file.name}');
+    await showRenameFileSheet(
+      context: context,
+      initialName: file.name,
+      onRename: (newName) async {
+        final result = await FileService.renameFile(file, newName);
+        result.fold(
+          (exception) {
+            debugPrint(
+              '❌ [RecentFilesPage] Rename failed: ${exception.message}',
+            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(exception.message),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
+            }
+          },
+          (renamedFileInfo) {
+            debugPrint(
+              '✅ [RecentFilesPage] Rename successful: ${renamedFileInfo.name}',
+            );
+            if (mounted) {
+              // Reload recent files
+              _loadRecentFiles();
+              // Trigger home page refresh
+              RecentFilesSection.refreshNotifier.value++;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('File renamed successfully')),
+              );
+            }
+          },
+        );
+      },
+    );
+  }
+
   void _handleFileMenu(FileInfo file, String action) {
     debugPrint('📋 [RecentFilesPage] Menu action "$action" for: ${file.name}');
     switch (action) {
@@ -118,11 +160,7 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
         _handleFileDelete(file);
         break;
       case 'rename':
-        debugPrint('ℹ️ [RecentFilesPage] Rename not implemented yet');
-        final t = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.t('common_rename_coming_soon'))),
-        );
+        _handleFileRename(file);
         break;
       case 'share':
         debugPrint('📤 [RecentFilesPage] Share handled by DocEntryCard');

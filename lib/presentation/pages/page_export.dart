@@ -13,3 +13,4 @@ export 'recent_files_search_page.dart';
 export 'unlock_pdf_page.dart';
 export 'splash_scren.dart';
 export 'onboarding_shell_page.dart';
+export 'add_watermark_page.dart';

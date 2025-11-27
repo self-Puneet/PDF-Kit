@@ -313,8 +313,10 @@
   ,"action_merge_label": "Merge PDF"
   ,"action_protect_label": "Protect PDF"
   ,"action_compress_label": "Compress PDF"
+  ,"action_unlock_label": "Unlock PDF"
   ,"action_all_tools_label": "All Tools"
   ,"action_coming_soon_toast": "{feature} coming soon"
+  ,"watermark_pdf_title": "Add Watermark"
   ,"@action_coming_soon_toast": {"placeholders": {"feature": {"type": "String"}}}
   ,"settings_about_us_subtitle": "Discover our vision and how we work"
   ,"language_settings_page_title": "Language Settings"

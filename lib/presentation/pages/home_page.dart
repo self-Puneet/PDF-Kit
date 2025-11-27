@@ -7,6 +7,8 @@ import 'package:pdf_kit/presentation/component/function_button.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:pdf_kit/service/open_service.dart';
+import 'package:pdf_kit/presentation/sheets/rename_file_sheet.dart';
+import 'package:pdf_kit/service/file_service.dart';
 
 /// HOME TAB
 class HomeTab extends StatefulWidget {
@@ -235,6 +237,43 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
     );
   }
 
+  Future<void> _handleFileRename(FileInfo file) async {
+    debugPrint('✏️ [RecentFilesSection] Renaming file: ${file.name}');
+    await showRenameFileSheet(
+      context: context,
+      initialName: file.name,
+      onRename: (newName) async {
+        final result = await FileService.renameFile(file, newName);
+        result.fold(
+          (exception) {
+            debugPrint(
+              '❌ [RecentFilesSection] Rename failed: ${exception.message}',
+            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(exception.message),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
+            }
+          },
+          (renamedFileInfo) {
+            debugPrint(
+              '✅ [RecentFilesSection] Rename successful: ${renamedFileInfo.name}',
+            );
+            if (mounted) {
+              setState(() => _loadRecentFiles());
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('File renamed successfully')),
+              );
+            }
+          },
+        );
+      },
+    );
+  }
+
   void _handleFileMenu(FileInfo file, String action) {
     debugPrint(
       '📋 [RecentFilesSection] Menu action "$action" for: ${file.name}',
@@ -247,10 +286,7 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
         _handleFileDelete(file);
         break;
       case 'rename':
-        debugPrint('ℹ️ [RecentFilesSection] Rename not implemented yet');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Rename feature coming soon')),
-        );
+        _handleFileRename(file);
         break;
       case 'share':
         debugPrint('📤 [RecentFilesSection] Share handled by DocEntryCard');

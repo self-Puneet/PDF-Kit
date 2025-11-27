@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
+import 'package:pdf_kit/presentation/sheets/rename_file_sheet.dart';
+import 'package:pdf_kit/service/file_service.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/presentation/pages/home_page.dart';
 
@@ -131,6 +133,50 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
     );
   }
 
+  Future<void> _handleFileRename(FileInfo file) async {
+    debugPrint('✏️ [RecentFilesSearch] Renaming file: ${file.name}');
+    await showRenameFileSheet(
+      context: context,
+      initialName: file.name,
+      onRename: (newName) async {
+        final result = await FileService.renameFile(file, newName);
+        result.fold(
+          (exception) {
+            debugPrint(
+              '❌ [RecentFilesSearch] Rename failed: ${exception.message}',
+            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(exception.message),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
+            }
+          },
+          (renamedFileInfo) {
+            debugPrint(
+              '✅ [RecentFilesSearch] Rename successful: ${renamedFileInfo.name}',
+            );
+            if (mounted) {
+              // Reload all recent files and re-apply search filter
+              _loadRecentFiles().then((_) {
+                if (_query.isNotEmpty) {
+                  _search(_query);
+                }
+              });
+              // Trigger home page refresh
+              RecentFilesSection.refreshNotifier.value++;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('File renamed successfully')),
+              );
+            }
+          },
+        );
+      },
+    );
+  }
+
   void _handleFileMenu(FileInfo file, String action) {
     debugPrint(
       '📋 [RecentFilesSearch] Menu action "$action" for: ${file.name}',
@@ -143,11 +189,7 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
         _handleFileDelete(file);
         break;
       case 'rename':
-        debugPrint('ℹ️ [RecentFilesSearch] Rename not implemented yet');
-        final t = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.t('common_rename_coming_soon'))),
-        );
+        _handleFileRename(file);
         break;
       case 'share':
         debugPrint('📤 [RecentFilesSearch] Share handled by DocEntryCard');

@@ -187,7 +187,7 @@ class _DocEntryCardState extends State<DocEntryCard> {
         borderRadius: BorderRadius.circular(12),
         onTap: widget.disabled ? null : widget.onOpen,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8, ),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             children: [
               Padding(
