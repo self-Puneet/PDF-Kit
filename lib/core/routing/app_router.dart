@@ -57,6 +57,13 @@ final appRouter = GoRouter(
       builder: (context, state) => const ThemeSettingsPage(),
     ),
 
+    GoRoute(
+      name: 'pdf-content-fit-settings',
+      path: '/settings/pdf-content-fit',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) => const PdfContentFitSettingsPage(),
+    ),
+
     buildHomeShellRoute(
       homeNavKey: _homeNavKey,
       fileNavKey: _filesNavKey,

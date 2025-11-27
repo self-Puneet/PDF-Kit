@@ -9,6 +9,12 @@ class Constants {
   /// Recent files storage key (used by RecentFilesService)
   static const String recentFilesKey = 'recent_files';
 
+  /// PDF content fit mode preference key
+  static const String pdfContentFitModeKey = 'pdf_content_fit_mode';
+
+  /// Default PDF content fit mode (use PdfContentFitMode enum for actual values)
+  static const String defaultPdfContentFitMode = 'original';
+
   /// Default image compression quality (0-100) used when compressing images
   /// during merge/compress flows. Tweak this value as needed.
   static const int imageCompressQuality = 60;

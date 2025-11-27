@@ -109,16 +109,16 @@ class _AddWatermarkPageState extends State<AddWatermarkPage> {
         });
 
         // Navigate to image selection using actionId instead of selectionId
-        final imageResult = await context.pushNamed(
-          AppRouteName.filesRootFullscreen,
-          queryParameters: {
-            'actionId': actionId,
-            'actionText': 'Select Image for Watermark',
-            'max': '1',
-            'min': '1',
-            'allowed': 'image-only',
-          },
-        );
+        // final imageResult = await context.pushNamed(
+        //   AppRouteName.filesRootFullscreen,
+        //   queryParameters: {
+        //     'actionId': actionId,
+        //     'actionText': 'Select Image for Watermark',
+        //     'max': '1',
+        //     'min': '1',
+        //     'allowed': 'image-only',
+        //   },
+        // );
       } else {
         setState(() {
           _watermarkText = result['text'] as String?;

@@ -7,6 +7,7 @@ export 'protect_pdf.dart';
 export 'compress_pdf.dart';
 export 'sign_pdf_page.dart';
 export 'theme_settings_page.dart';
+export 'pdf_content_fit_settings_page.dart';
 export 'folder_picker_page.dart';
 export 'recent_files_page.dart';
 export 'recent_files_search_page.dart';

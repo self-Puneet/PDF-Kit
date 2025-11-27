@@ -1,30 +1,183 @@
 // lib/service/pdf_merge_service.dart
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart' as sf;
+
+// Keep pdf_combiner only for PDF <-> PDF merging
+import 'package:pdf_combiner/pdf_combiner.dart';
 
 import 'package:pdf_kit/models/file_model.dart';
-import 'package:pdf_kit/core/constants.dart';
 import 'package:pdf_kit/service/pdf_compress_service.dart';
+import 'package:pdf_kit/core/constants.dart';
+import 'package:pdf_kit/core/utility/storage_utility.dart';
+import 'package:pdf_kit/core/enums/pdf_content_fit_mode.dart';
 
-/// Size analysis result for merge operation
-class _SizeAnalysis {
-  final int totalInputSize;
-  final int estimatedOutputSize;
-  final int pdfTotalSize;
-  final int imageTotalSize;
+// dart_pdf
+import 'package:pdf/pdf.dart' as pw_pdf;
+import 'package:pdf/widgets.dart' as pw;
+import 'package:image/image.dart' as img;
 
-  _SizeAnalysis({
-    required this.totalInputSize,
-    required this.estimatedOutputSize,
-    required this.pdfTotalSize,
-    required this.imageTotalSize,
+/// Parameters for image-to-PDF conversion in isolate
+class _ImageToPdfParams {
+  final List<String> imagePaths;
+  final String fitModeString;
+  final String outputPath;
+
+  const _ImageToPdfParams({
+    required this.imagePaths,
+    required this.fitModeString,
+    required this.outputPath,
   });
+}
+
+/// Top-level function for converting images to PDF in a separate isolate
+/// Returns the output path on success, null on failure
+Future<String?> _imagesToPdfIsolate(_ImageToPdfParams params) async {
+  try {
+    debugPrint(
+      '🖼️ [Isolate] Converting ${params.imagePaths.length} images to PDF',
+    );
+
+    final fitMode = PdfContentFitMode.fromString(params.fitModeString);
+    debugPrint('   Fit mode: ${fitMode.value}');
+
+    final doc = pw.Document();
+    const a4PageFormat = pw_pdf.PdfPageFormat.a4;
+
+    int index = 0;
+    for (final imagePath in params.imagePaths) {
+      index++;
+      final imageFile = File(imagePath);
+      if (!await imageFile.exists()) {
+        debugPrint('   ⚠️ Image file does not exist: $imagePath');
+        continue;
+      }
+
+      debugPrint('   ➡️ Processing image #$index (${p.basename(imagePath)})');
+
+      // Read and decode image
+      final Uint8List bytes = await imageFile.readAsBytes();
+      debugPrint(
+        '      File size: ${(bytes.length / 1024 / 1024).toStringAsFixed(2)} MB',
+      );
+
+      // Decode image to get dimensions
+      final decodedImage = img.decodeImage(bytes);
+      if (decodedImage == null) {
+        debugPrint('      ❌ Failed to decode image, skipping');
+        continue;
+      }
+
+      final imgWidth = decodedImage.width.toDouble();
+      final imgHeight = decodedImage.height.toDouble();
+      debugPrint(
+        '      Dimensions: ${imgWidth.toInt()}×${imgHeight.toInt()} pixels',
+      );
+
+      final image = pw.MemoryImage(bytes);
+
+      // Determine page format based on fit mode
+      late pw_pdf.PdfPageFormat pageFormat;
+
+      switch (fitMode) {
+        case PdfContentFitMode.original:
+          // Page size matches image dimensions (72 dpi)
+          // Convert pixels to PDF points (1 point = 1/72 inch, so 1 pixel ≈ 1 point at 72 dpi)
+          pageFormat = pw_pdf.PdfPageFormat(
+            imgWidth,
+            imgHeight,
+          ); // 1:1 pixel-to-point
+          debugPrint('      Page format: Original ($imgWidth×$imgHeight pt)');
+          break;
+
+        case PdfContentFitMode.fit:
+          // Always A4, image will be fitted inside with padding
+          pageFormat = a4PageFormat;
+          debugPrint('      Page format: A4 (with fit padding)');
+          break;
+
+        case PdfContentFitMode.crop:
+          // Always A4, image will cover it (cropped if needed)
+          pageFormat = a4PageFormat;
+          debugPrint('      Page format: A4 (with crop)');
+          break;
+      }
+
+      // Add page with appropriate fit mode
+      doc.addPage(
+        pw.Page(
+          pageFormat: pageFormat,
+          build: (context) {
+            switch (fitMode) {
+              case PdfContentFitMode.original:
+                return _buildOriginalMode(image, pageFormat);
+              case PdfContentFitMode.fit:
+                return _buildFitMode(image, pageFormat);
+              case PdfContentFitMode.crop:
+                return _buildCropMode(image, pageFormat);
+            }
+          },
+        ),
+      );
+
+      debugPrint('      ✓ Page added');
+    }
+
+    // Serialize document
+    debugPrint('   📦 Serializing PDF document...');
+    final pdfBytes = await doc.save();
+    debugPrint(
+      '      PDF size: ${(pdfBytes.length / 1024 / 1024).toStringAsFixed(2)} MB',
+    );
+
+    // Write to disk
+    final outFile = File(params.outputPath);
+    await outFile.writeAsBytes(pdfBytes, flush: true);
+
+    debugPrint('   ✅ PDF created at: ${params.outputPath}');
+    return params.outputPath;
+  } catch (e, stackTrace) {
+    debugPrint('   ❌ Exception in isolate: $e');
+    debugPrint('   Stack trace: $stackTrace');
+    return null;
+  }
+}
+
+/// Helper functions for building PDF pages with different fit modes
+
+/// Original mode: image at native size, no padding or cropping
+pw.Widget _buildOriginalMode(
+  pw.ImageProvider image,
+  pw_pdf.PdfPageFormat pageFormat,
+) {
+  return pw.Image(image, fit: pw.BoxFit.none);
+}
+
+/// Fit mode: image scaled to fit within A4 page with padding (letterbox)
+pw.Widget _buildFitMode(
+  pw.ImageProvider image,
+  pw_pdf.PdfPageFormat pageFormat,
+) {
+  return pw.Container(
+    width: pageFormat.width,
+    height: pageFormat.height,
+    child: pw.FittedBox(fit: pw.BoxFit.contain, child: pw.Image(image)),
+  );
+}
+
+/// Crop mode: image scaled to fill entire A4 page, cropped if needed
+pw.Widget _buildCropMode(
+  pw.ImageProvider image,
+  pw_pdf.PdfPageFormat pageFormat,
+) {
+  return pw.Container(
+    width: pageFormat.width,
+    height: pageFormat.height,
+    child: pw.FittedBox(fit: pw.BoxFit.cover, child: pw.Image(image)),
+  );
 }
 
 /// Custom exception for PDF merge operations
@@ -38,35 +191,19 @@ class CustomException {
   String toString() => 'CustomException($code): $message';
 }
 
-/// Service for merging multiple PDF files using Syncfusion Flutter PDF
+/// Service for merging multiple PDF files using pdf_combiner + dart_pdf
 class PdfMergeService {
   PdfMergeService._();
 
-  /// Merges multiple PDF files and/or images into a single PDF document.
-  /// Images are compressed based on size requirements.
-  ///
-  /// [files] - List of PDF files and/or images to merge
-  /// [outputFileName] - Name for the merged PDF file (without extension)
-  /// [destinationPath] - Optional destination folder path. If null, uses app's documents directory
-  ///
-  /// **Size Management:**
-  /// - Dynamically adjusts image compression if estimated size exceeds target
-  /// - Target max size: [Constants.mergedPdfTargetSizeMB] MB (configurable)
-  /// - Compression factor ranges from [Constants.minCompressionFactor] to [Constants.maxCompressionFactor]
-  ///
-  /// Supported image formats: jpg, jpeg, png, gif, webp, bmp
-  ///
-  /// Returns [FileInfo] of the merged PDF on success, or [CustomException] on failure
   static Future<Either<CustomException, FileInfo>> mergePdfs({
     required List<FileInfo> files,
     required String outputFileName,
     String? destinationPath,
   }) async {
     try {
-      // Validate input
       if (files.isEmpty) {
-        return Left(
-          const CustomException(
+        return const Left(
+          CustomException(
             message: 'No files provided for merging',
             code: 'NO_FILES',
           ),
@@ -74,15 +211,14 @@ class PdfMergeService {
       }
 
       if (files.length < 2) {
-        return Left(
-          const CustomException(
+        return const Left(
+          CustomException(
             message: 'At least 2 files are required for merging',
             code: 'INSUFFICIENT_FILES',
           ),
         );
       }
 
-      // Validate all files exist and are PDFs or images
       for (final fileInfo in files) {
         final file = File(fileInfo.path);
         if (!await file.exists()) {
@@ -108,149 +244,147 @@ class PdfMergeService {
         }
       }
 
-      // Step 1: Analyze sizes and calculate compression factor
-      final sizeAnalysis = _analyzeSizes(files);
-      final compressionFactor = _calculateCompressionFactor(sizeAnalysis);
-
-      debugPrint(
-        '📊 [MergeService] Total input: ${_formatBytes(sizeAnalysis.totalInputSize)}',
-      );
-      debugPrint(
-        '📊 [MergeService] Estimated output: ${_formatBytes(sizeAnalysis.estimatedOutputSize)}',
-      );
-      debugPrint(
-        '📊 [MergeService] Target max: ${Constants.mergedPdfTargetSizeMB}MB',
-      );
-      debugPrint(
-        '📊 [MergeService] Compression factor: ${(compressionFactor * 100).toStringAsFixed(1)}%',
-      );
-
-      // Determine destination directory
       final Directory targetDir = await _resolveDestination(destinationPath);
 
-      // Create merged PDF document
-      final sf.PdfDocument mergedDocument = sf.PdfDocument();
+      String finalFileName = outputFileName.trim();
+      if (!finalFileName.toLowerCase().endsWith('.pdf')) {
+        finalFileName = '$finalFileName.pdf';
+      }
 
-      // Remove default margins to avoid extra padding around content.
-      mergedDocument.pageSettings.margins.all = 0;
+      final outputPath = p.join(targetDir.path, finalFileName);
 
-      try {
-        // Merge each PDF or image
-        for (final fileInfo in files) {
-          final file = File(fileInfo.path);
-          final isPdf = fileInfo.extension.toLowerCase() == 'pdf';
-          final isImage = PdfCompressService.isImageFile(fileInfo);
+      debugPrint('📊 [MergeService] Merging ${files.length} files');
 
-          if (isPdf) {
-            // Handle PDF file - merge as-is without compression
-            final bytes = await file.readAsBytes();
-            final sf.PdfDocument sourceDocument = sf.PdfDocument(
-              inputBytes: bytes,
-            );
+      final fitModeString =
+          Prefs.getString(Constants.pdfContentFitModeKey) ??
+          Constants.defaultPdfContentFitMode;
+      final fitMode = PdfContentFitMode.fromString(fitModeString);
+      debugPrint(
+        '🎨 [MergeService] Using fit mode from prefs: "$fitModeString" -> ${fitMode.value}',
+      );
 
-            try {
-              // Import all pages from source document WITHOUT forcing orientation
-              for (int i = 0; i < sourceDocument.pages.count; i++) {
-                _importPdfPageAsIs(sourceDocument, i, mergedDocument);
-              }
-            } finally {
-              sourceDocument.dispose();
-            }
-          } else if (isImage) {
-            // Handle image file with dynamic quality adjustment
-            final quality = _calculateImageQuality(compressionFactor);
+      final pdfFiles = <FileInfo>[];
+      final imageFiles = <FileInfo>[];
 
-            // Convert image to PDF with compression
-            final Uint8List pdfBytes =
-                await PdfCompressService.convertImageToPdf(
-                  File(file.path),
-                  shouldCompress: true,
-                  quality: quality,
-                );
-
-            // Load the converted PDF and merge it
-            final sf.PdfDocument sourceDocument = sf.PdfDocument(
-              inputBytes: pdfBytes,
-            );
-
-            try {
-              // Import pages from the image-PDF onto PORTRAIT pages, scaled to fit
-              for (int i = 0; i < sourceDocument.pages.count; i++) {
-                _importImagePagePortraitFit(sourceDocument, i, mergedDocument);
-              }
-            } finally {
-              sourceDocument.dispose();
-            }
-          }
+      for (final fileInfo in files) {
+        if (fileInfo.extension.toLowerCase() == 'pdf') {
+          pdfFiles.add(fileInfo);
+        } else if (PdfCompressService.isImageFile(fileInfo)) {
+          imageFiles.add(fileInfo);
         }
+      }
 
-        // Ensure output filename has .pdf extension
-        String finalFileName = outputFileName.trim();
-        if (!finalFileName.toLowerCase().endsWith('.pdf')) {
-          finalFileName = '$finalFileName.pdf';
-        }
+      debugPrint('   PDFs: ${pdfFiles.length}, Images: ${imageFiles.length}');
 
-        // Create output file path
-        final outputPath = p.join(targetDir.path, finalFileName);
-        final outputFile = File(outputPath);
+      List<String> inputPaths;
 
-        // Save merged document
-        final bytes = await mergedDocument.save();
-        await outputFile.writeAsBytes(bytes);
+      if (imageFiles.isNotEmpty && pdfFiles.isNotEmpty) {
+        // Mixed: images -> temp PDF (dart_pdf in isolate), then merge
+        debugPrint('   Processing mixed content (PDFs + images)');
+        debugPrint('   🚀 Launching isolate for image conversion...');
 
-        // Get file stats
-        final stats = await outputFile.stat();
-        final actualSize = stats.size;
-        final targetSize = Constants.mergedPdfTargetSizeMB * 1024 * 1024;
-
-        debugPrint(
-          '✅ [MergeService] Final PDF size: ${_formatBytes(actualSize)}',
+        final tempOutputPath = p.join(
+          targetDir.path,
+          'temp_images_${DateTime.now().millisecondsSinceEpoch}.pdf',
         );
-        if (actualSize > targetSize) {
-          debugPrint(
-            '⚠️ [MergeService] WARNING: Exceeded target size by ${_formatBytes(actualSize - targetSize)}',
+
+        final tempImagePdf = await compute(
+          _imagesToPdfIsolate,
+          _ImageToPdfParams(
+            imagePaths: imageFiles.map((f) => f.path).toList(),
+            fitModeString: fitMode.value,
+            outputPath: tempOutputPath,
+          ),
+        );
+
+        if (tempImagePdf == null) {
+          return const Left(
+            CustomException(
+              message: 'Failed to convert images to PDF',
+              code: 'IMAGE_CONVERSION_ERROR',
+            ),
           );
         }
 
-        // Create FileInfo for merged PDF
-        final mergedFileInfo = FileInfo(
-          name: p.basename(outputPath),
-          path: outputPath,
-          extension: 'pdf',
-          size: actualSize,
-          lastModified: stats.modified,
-          mimeType: 'application/pdf',
-          parentDirectory: p.dirname(outputPath),
-          isDirectory: false,
+        debugPrint('   ✅ Isolate completed, temp PDF created');
+        inputPaths = [...pdfFiles.map((f) => f.path), tempImagePdf];
+      } else if (imageFiles.isNotEmpty) {
+        // Images only -> final PDF using dart_pdf in isolate
+        debugPrint('   Processing images only (dart_pdf in isolate)');
+        debugPrint('   🚀 Launching isolate for image conversion...');
+
+        final imagesOnlyPdfPath = await compute(
+          _imagesToPdfIsolate,
+          _ImageToPdfParams(
+            imagePaths: imageFiles.map((f) => f.path).toList(),
+            fitModeString: fitMode.value,
+            outputPath: outputPath,
+          ),
         );
 
-        return Right(mergedFileInfo);
-      } finally {
-        mergedDocument.dispose();
+        if (imagesOnlyPdfPath == null) {
+          return const Left(
+            CustomException(
+              message: 'Failed to convert images to PDF',
+              code: 'IMAGE_CONVERSION_ERROR',
+            ),
+          );
+        }
+
+        debugPrint('   ✅ Isolate completed');
+        return _createFileInfoFromPath(imagesOnlyPdfPath);
+      } else {
+        // PDFs only: do not touch PDF pages at all
+        debugPrint('   Processing PDFs only (no image conversion)');
+        inputPaths = pdfFiles.map((f) => f.path).toList();
+      }
+
+      debugPrint(
+        '🔧 [MergeService] Calling PdfCombiner.generatePDFFromDocuments',
+      );
+      debugPrint('   Input paths count: ${inputPaths.length}');
+      debugPrint('   Output path: $outputPath');
+
+      final docResponse = await PdfCombiner.generatePDFFromDocuments(
+        inputPaths: inputPaths,
+        outputPath: outputPath,
+      );
+
+      debugPrint('📦 [MergeService] Response received');
+      debugPrint('   Status: ${docResponse.status}');
+      debugPrint('   Message: ${docResponse.message}');
+      debugPrint('   Output path: ${docResponse.outputPath}');
+
+      if (docResponse.status.toString().toLowerCase().contains('success')) {
+        debugPrint('✅ [MergeService] Merge successful, creating FileInfo');
+        return _createFileInfoFromPath(docResponse.outputPath);
+      } else {
+        final errorMessage = docResponse.message;
+        debugPrint('❌ [MergeService] Merge failed: $errorMessage');
+        return Left(
+          CustomException(message: errorMessage, code: 'MERGE_ERROR'),
+        );
       }
     } catch (e) {
       return Left(
         CustomException(
-          message: 'Failed to merge PDFs: ${e.toString()}',
+          message: 'Failed to merge files: ${e.toString()}',
           code: 'MERGE_ERROR',
         ),
       );
     }
   }
 
-  /// Resolves the destination directory for the merged PDF
   static Future<Directory> _resolveDestination(String? destinationPath) async {
     if (destinationPath != null && destinationPath.isNotEmpty) {
       final dir = Directory(destinationPath);
       if (await dir.exists()) {
         return dir;
       }
-      // Create if doesn't exist
       await dir.create(recursive: true);
       return dir;
     }
 
-    // Fallback to app's documents directory
     final appDocDir = await getApplicationDocumentsDirectory();
     final mergedDir = Directory(p.join(appDocDir.path, 'MergedPDFs'));
     if (!await mergedDir.exists()) {
@@ -259,143 +393,42 @@ class PdfMergeService {
     return mergedDir;
   }
 
-  /// Analyzes input files and estimates output size
-  static _SizeAnalysis _analyzeSizes(List<FileInfo> files) {
-    int totalInputSize = 0;
-    int pdfTotalSize = 0;
-    int imageTotalSize = 0;
+  static Future<Either<CustomException, FileInfo>> _createFileInfoFromPath(
+    String path,
+  ) async {
+    try {
+      debugPrint('📝 [MergeService] Creating FileInfo from path: $path');
+      final file = File(path);
 
-    for (final file in files) {
-      totalInputSize += file.size;
-
-      if (file.extension.toLowerCase() == 'pdf') {
-        pdfTotalSize += file.size;
-      } else if (PdfCompressService.isImageFile(file)) {
-        imageTotalSize += file.size;
-      }
-    }
-
-    // Estimate output size based on compression ratios from Constants
-    final estimatedPdfSize = (pdfTotalSize * Constants.pdfCompressionRatio)
-        .toInt();
-    final estimatedImageSize =
-        (imageTotalSize * Constants.imageCompressionRatio).toInt();
-    final estimatedOutputSize = estimatedPdfSize + estimatedImageSize;
-
-    return _SizeAnalysis(
-      totalInputSize: totalInputSize,
-      estimatedOutputSize: estimatedOutputSize,
-      pdfTotalSize: pdfTotalSize,
-      imageTotalSize: imageTotalSize,
-    );
-  }
-
-  /// Calculates compression factor based on size analysis
-  /// Returns a value between [Constants.minCompressionFactor] and [Constants.maxCompressionFactor]
-  static double _calculateCompressionFactor(_SizeAnalysis analysis) {
-    final targetSize = Constants.mergedPdfTargetSizeMB * 1024 * 1024;
-
-    // If estimated size is within target, no additional compression needed
-    if (analysis.estimatedOutputSize <= targetSize) {
-      return Constants.maxCompressionFactor; // 1.0 - no extra compression
-    }
-
-    // Calculate how much we need to compress
-    final compressionFactor =
-        (targetSize.toDouble() / analysis.estimatedOutputSize).clamp(
-          Constants.minCompressionFactor,
-          Constants.maxCompressionFactor,
+      if (!await file.exists()) {
+        return const Left(
+          CustomException(
+            message: 'Output file not found',
+            code: 'OUTPUT_NOT_FOUND',
+          ),
         );
+      }
 
-    return compressionFactor;
-  }
+      final stats = await file.stat();
+      final fileInfo = FileInfo(
+        name: p.basename(path),
+        path: path,
+        extension: p.extension(path).replaceFirst('.', ''),
+        size: stats.size,
+        lastModified: stats.modified,
+        mimeType: 'application/pdf',
+        parentDirectory: p.dirname(path),
+        isDirectory: false,
+      );
 
-  /// Calculates image quality based on compression factor
-  /// Maps compression factor (0.3-1.0) to quality (20-95)
-  static int _calculateImageQuality(double compressionFactor) {
-    final quality = (Constants.baseImageQuality * compressionFactor)
-        .toInt()
-        .clamp(Constants.minImageQuality, Constants.baseImageQuality);
-
-    debugPrint(
-      '🎨 [MergeService] Image quality: $quality (factor: ${(compressionFactor * 100).toStringAsFixed(1)}%)',
-    );
-    return quality;
-  }
-
-  /// Imports a page from a *PDF* source document into the target document
-  /// preserving the original page size, without forcing orientation/rotation.
-  static void _importPdfPageAsIs(
-    sf.PdfDocument sourceDoc,
-    int sourcePageIndex,
-    sf.PdfDocument targetDoc,
-  ) {
-    final srcPage = sourceDoc.pages[sourcePageIndex];
-    final Size pageSize = srcPage.size;
-    final double w = pageSize.width;
-    final double h = pageSize.height;
-
-    // Match the source page size and remove margins.
-    targetDoc.pageSettings.size = Size(w, h);
-    targetDoc.pageSettings.margins.all = 0;
-
-    // Add destination page and draw template 1:1.
-    final destPage = targetDoc.pages.add();
-    final template = srcPage.createTemplate();
-
-    destPage.graphics.drawPdfTemplate(template, const Offset(0, 0), Size(w, h));
-  }
-
-  /// Imports a page from an image-converted PDF into the target document
-  /// using a PORTRAIT page and scaling the content so nothing is cropped.
-  static void _importImagePagePortraitFit(
-    sf.PdfDocument sourceDoc,
-    int sourcePageIndex,
-    sf.PdfDocument targetDoc,
-  ) {
-    final srcPage = sourceDoc.pages[sourcePageIndex];
-    final Size srcSize = srcPage.size;
-    final double srcW = srcSize.width;
-    final double srcH = srcSize.height;
-
-    // Force the next page to be portrait A4 with no margins.
-    targetDoc.pageSettings.size = sf.PdfPageSize.a4;
-    targetDoc.pageSettings.orientation = sf.PdfPageOrientation.portrait;
-    targetDoc.pageSettings.margins.all = 0;
-
-    final destPage = targetDoc.pages.add();
-    final Size destSize = destPage.getClientSize();
-    final double destW = destSize.width;
-    final double destH = destSize.height;
-
-    final template = srcPage.createTemplate();
-
-    // Compute uniform scale so the entire source fits inside the portrait page.
-    final double scale = [
-      destW / srcW,
-      destH / srcH,
-    ].reduce((a, b) => a < b ? a : b);
-
-    final double drawW = srcW * scale;
-    final double drawH = srcH * scale;
-
-    // Center the image content on the page.
-    final double dx = (destW - drawW) / 2;
-    final double dy = (destH - drawH) / 2;
-
-    destPage.graphics.drawPdfTemplate(
-      template,
-      Offset(dx, dy),
-      Size(drawW, drawH),
-    );
-  }
-
-  /// Formats bytes to human-readable string
-  static String _formatBytes(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) {
-      return '${(bytes / 1024).toStringAsFixed(2)} KB';
+      return Right(fileInfo);
+    } catch (e) {
+      return Left(
+        CustomException(
+          message: 'Failed to create file info: ${e.toString()}',
+          code: 'FILE_INFO_ERROR',
+        ),
+      );
     }
-    return '${(bytes / 1024 / 1024).toStringAsFixed(2)} MB';
   }
 }

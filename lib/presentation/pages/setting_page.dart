@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:pdf_kit/core/theme/app_theme.dart';
 import 'package:pdf_kit/presentation/component/setting_tile.dart';
 import 'package:pdf_kit/presentation/models/setting_info_type.dart';
-import 'package:pdf_kit/core/localization/app_localizations.dart';
 import 'package:pdf_kit/providers/locale_provider.dart';
-import 'package:go_router/go_router.dart';
+import 'package:pdf_kit/core/app_export.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -94,7 +91,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         subtitle: t.t('settings_pdf_content_fit_subtitle'),
         type: SettingsItemType.navigation,
         leadingIcon: Icons.crop_landscape,
-        onTap: () {},
+        onTap: () {
+          context.push('/settings/pdf-content-fit');
+        },
       ),
       SettingsItem(
         id: 'help_center',

@@ -91,24 +91,6 @@ class _DocEntryCardState extends State<DocEntryCard> {
     final key = widget.info.path;
     if (_cache.containsKey(key)) return _cache[key];
 
-    // if (_isPdf) {
-    //   final doc = await PdfDocument.openFile(widget.info.path);
-    //   final page = await doc.getPage(1);
-    //   final w = page.width.round();
-    //   final h = page.height.round();
-    //   const scale = 2.0;
-    //   final img = await page.render(
-    //     width: (w * scale).toDouble(),
-    //     height: (h * scale).toDouble(),
-    //   );
-    //   await page.close();
-    //   await doc.close();
-    //   if (img == null) return null;
-    //   final t = _Thumb(img.bytes, w, h);
-    //   _cache[key] = t;
-    //   return t;
-    // }
-
     if (_isPdf) {
       debugPrint(
         '📑 [DocEntryCard] Opening PDF to get page count and thumbnail: $key',
@@ -129,17 +111,38 @@ class _DocEntryCardState extends State<DocEntryCard> {
         setState(() {});
       }
       final page = await doc.getPage(1);
-      final w = page.width.round();
-      final h = page.height.round();
-      const scale = 2.0;
-      final img = await page.render(
-        width: (w * scale).toDouble(),
-        height: (h * scale).toDouble(),
+
+      // Safe thumbnail rendering - target max 200px to prevent OOM crashes
+      // Never render at native PDF resolution (can be 28000×20000px!)
+      const thumbSize = 200.0;
+
+      // Calculate aspect-ratio safe render size
+      final aspect = page.width / page.height;
+      double renderW, renderH;
+
+      if (aspect >= 1) {
+        // Landscape or square
+        renderW = thumbSize;
+        renderH = thumbSize / aspect;
+      } else {
+        // Portrait
+        renderH = thumbSize;
+        renderW = thumbSize * aspect;
+      }
+
+      debugPrint(
+        '🖼️ [DocEntryCard] Rendering PDF thumbnail: '
+        '${renderW.toInt()}×${renderH.toInt()}px '
+        '(original: ${page.width.toInt()}×${page.height.toInt()})',
       );
+
+      final img = await page.render(width: renderW, height: renderH);
       await page.close();
       await doc.close();
       if (img == null) return null;
-      final t = _Thumb(img.bytes, w, h);
+
+      // Store actual rendered dimensions, not original page size
+      final t = _Thumb(img.bytes, renderW.toInt(), renderH.toInt());
       _cache[key] = t;
       return t;
     }
