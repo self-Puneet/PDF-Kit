@@ -36,6 +36,7 @@ dependencies:
   ares_defence_labs_lock_smith_pdf: ^0.0.7
   pdf_combiner: ^4.4.1
   image: ^4.5.4
+  reorderable_grid_view: ^2.2.8
   
 
 dev_dependencies:

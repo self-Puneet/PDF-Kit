@@ -314,9 +314,16 @@
   ,"action_protect_label": "Protect PDF"
   ,"action_compress_label": "Compress PDF"
   ,"action_unlock_label": "Unlock PDF"
+  ,"action_images_to_pdf_label": "Images to PDF"
+  ,"action_pdf_to_image_label": "PDF to Image"
+  ,"action_reorder_label": "Reorder PDF"
   ,"action_all_tools_label": "All Tools"
   ,"action_coming_soon_toast": "{feature} coming soon"
   ,"watermark_pdf_title": "Add Watermark"
+  ,"images_to_pdf_title": "Convert Images to PDF"
+  ,"pdf_to_image_title": "Convert PDF to Images"
+  ,"split_pdf_title": "Split PDF"
+  ,"reorder_pdf_title": "Reorder PDF Pages"
   ,"@action_coming_soon_toast": {"placeholders": {"feature": {"type": "String"}}}
   ,"settings_about_us_subtitle": "Discover our vision and how we work"
   ,"language_settings_page_title": "Language Settings"
@@ -418,6 +425,33 @@
 "onboarding_button_back": "Back",
 "onboarding_button_get_started": "Get started"
 , "onboarding_tagline": "Your complete toolkit for every PDF task."
+
+  ,"pdf_to_image_page_title": "PDF to Images"
+  ,"pdf_to_image_page_description": "Convert all pages of your PDF to high-quality image files. Each page will be saved as a separate image."
+  ,"pdf_to_image_name_label": "Image Name Prefix"
+  ,"pdf_to_image_name_hint": "Enter name for images"
+  ,"pdf_to_image_name_helper": "Images will be named: <name>_page_001.jpg, <name>_page_002.jpg, etc."
+  ,"pdf_to_image_destination_label": "Save Images To"
+  ,"pdf_to_image_selected_file_label": "Selected PDF File"
+  ,"pdf_to_image_no_file_selected": "Please select a PDF file from the previous screen"
+  ,"pdf_to_image_pages_label": "Pages to Convert"
+  ,"pdf_to_image_select_pages_button": "Select Pages"
+  ,"pdf_to_image_select_pages_title": "Select Pages"
+  ,"pdf_to_image_pages_selected": "pages selected"
+  ,"pdf_to_image_all_pages_info": "All pages from the PDF will be converted to images"
+  ,"pdf_to_image_selected_pages_info": "{count} selected pages will be converted to images"
+  ,"@pdf_to_image_selected_pages_info": {"placeholders": {"count": {"type": "String"}}}
+  ,"pdf_to_image_convert_button": "Convert to Images"
+  ,"pdf_to_image_converting_button": "Converting..."
+  ,"pdf_to_image_no_file_error": "No PDF file selected"
+  ,"pdf_to_image_default_name": "PDF_Images"
+  ,"pdf_to_image_destination_snackbar": "Destination changed to {folderName}"
+  ,"@pdf_to_image_destination_snackbar": {"placeholders": {"folderName": {"type": "String"}}}
+  ,"pdf_to_image_loading_default_folder": "Loading default folder..."
+  ,"pdf_to_image_select_folder_placeholder": "Select destination folder"
+  ,"common_done": "Done"
+  ,"snackbar_success_pdf_to_image": "Successfully converted {count} pages to images in {folderName}"
+  ,"@snackbar_success_pdf_to_image": {"placeholders": {"count": {"type": "String"}, "folderName": {"type": "String"}}}
 
   
 }

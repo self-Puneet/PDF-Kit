@@ -43,15 +43,7 @@ ShellRoute buildSelectionShellRoute({
             final action = actionText?.toLowerCase() ?? '';
 
             // Check for specific actions in order (most specific first)
-            if (action.contains('watermark')) {
-              rootNavKey.currentContext!.pushReplacementNamed(
-                AppRouteName.addWatermark,
-                queryParameters: {
-                  'selectionId': selectionId,
-                  if (minSelectable != null) 'min': minSelectable.toString(),
-                },
-              );
-            } else if (action.contains('unlock')) {
+            if (action.contains('unlock')) {
               rootNavKey.currentContext!.pushNamed(
                 AppRouteName.unlockPdf,
                 queryParameters: {
@@ -78,6 +70,14 @@ ShellRoute buildSelectionShellRoute({
             } else if (action.contains('sign')) {
               rootNavKey.currentContext!.pushNamed(
                 AppRouteName.signPdf,
+                queryParameters: {
+                  'selectionId': selectionId,
+                  if (minSelectable != null) 'min': minSelectable.toString(),
+                },
+              );
+            } else if (action.contains('image')) {
+              rootNavKey.currentContext!.pushNamed(
+                AppRouteName.pdfToImage,
                 queryParameters: {
                   'selectionId': selectionId,
                   if (minSelectable != null) 'min': minSelectable.toString(),
@@ -123,6 +123,11 @@ ShellRoute buildSelectionShellRoute({
               } else if (action.contains('unlock')) {
                 rootNavKey.currentContext!.pushNamed(
                   AppRouteName.unlockPdf,
+                  extra: files,
+                );
+              } else if (action.contains('image')) {
+                rootNavKey.currentContext!.pushNamed(
+                  AppRouteName.pdfToImage,
                   extra: files,
                 );
               } else {

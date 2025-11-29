@@ -81,27 +81,6 @@ final appRouter = GoRouter(
           ShowPdfPage(path: state.uri.queryParameters['path']),
     ),
     GoRoute(
-      name: AppRouteName.addWatermark,
-      path: '/pdf/watermark',
-      parentNavigatorKey: _rootNavKey,
-      builder: (context, state) {
-        final selectionId = state.uri.queryParameters['selectionId'];
-        return AddWatermarkPage(selectionId: selectionId);
-      },
-    ),
-    GoRoute(
-      name: AppRouteName.addSignature,
-      path: '/pdf/signature',
-      parentNavigatorKey: _rootNavKey,
-      builder: (context, state) => Scaffold(
-        appBar: AppBar(title: const Text('Add Signature')),
-        body: const Center(
-          child: Text('Please use the Sign PDF feature from the home page.'),
-        ),
-      ),
-    ),
-
-    GoRoute(
       name: AppRouteName.mergePdf,
       path: '/pdf/merge',
       parentNavigatorKey: _rootNavKey,
@@ -199,10 +178,9 @@ final appRouter = GoRouter(
         );
       },
     ),
-
     GoRoute(
-      name: AppRouteName.signPdf,
-      path: '/pdf/sign',
+      name: AppRouteName.pdfToImage,
+      path: '/pdf/to-image',
       parentNavigatorKey: _rootNavKey,
       builder: (context, state) {
         final selectionId = state.uri.queryParameters['selectionId'];
@@ -211,17 +189,16 @@ final appRouter = GoRouter(
             final provider = Get.find<SelectionManager>().of(selectionId);
             return ChangeNotifierProvider<SelectionProvider>.value(
               value: provider,
-              child: SignPdfPage(selectionId: selectionId),
+              child: PdfToImagePage(selectionId: selectionId),
             );
           } catch (_) {}
         }
         return ChangeNotifierProvider(
           create: (_) => SelectionProvider(),
-          child: const SignPdfPage(),
+          child: const PdfToImagePage(),
         );
       },
     ),
-
     GoRoute(
       name: AppRouteName.recentFilesSearch,
       path: '/recent-files/search',
