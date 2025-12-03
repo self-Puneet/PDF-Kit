@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart' as pdfx;
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:pdf_kit/presentation/component/pdf_page_thumbnail.dart';
 
+/// Simplified PDF page selector for selecting pages (used in pdf_to_image)
+/// For reordering functionality, use the custom widgets in reorder_pdf_page.dart
 class PdfPageSelector extends StatefulWidget {
   final File pdfFile;
   final Set<int> initialSelectedPages;
-  final Function(Set<int> selectedPages, bool hasRotationChanges)
-  onSelectionChanged;
+  final Function(Set<int> selectedPages) onSelectionChanged;
 
   const PdfPageSelector({
     super.key,
@@ -25,13 +27,10 @@ class PdfPageSelector extends StatefulWidget {
 class _PdfPageSelectorState extends State<PdfPageSelector> {
   late final TextEditingController _selectCtrl;
   late Set<int> _selectedPages;
-  List<int> _pageOrder = []; // For reordering
   String? _selectError;
   bool _isLoading = true;
   int _totalPages = 0;
   final Map<int, Uint8List?> _pageCache = {};
-  final Map<int, double> _rotations = {}; // Store rotation angles for pages
-  bool _hasRotationChanges = false;
 
   @override
   void initState() {
@@ -52,18 +51,17 @@ class _PdfPageSelectorState extends State<PdfPageSelector> {
     try {
       final doc = await pdfx.PdfDocument.openFile(widget.pdfFile.path);
       _totalPages = doc.pagesCount;
-      _pageOrder = List.generate(_totalPages, (i) => i + 1);
 
       // If no pages were initially selected, select all by default
       if (_selectedPages.isEmpty) {
-        _selectedPages = Set.from(_pageOrder);
+        _selectedPages = Set.from(List.generate(_totalPages, (i) => i + 1));
       }
 
       await doc.close();
       setState(() => _isLoading = false);
 
       // Notify parent of initial state
-      widget.onSelectionChanged(_selectedPages, _hasRotationChanges);
+      widget.onSelectionChanged(_selectedPages);
 
       // Start loading page thumbnails
       _loadPageThumbnails();
@@ -77,7 +75,7 @@ class _PdfPageSelectorState extends State<PdfPageSelector> {
     try {
       final doc = await pdfx.PdfDocument.openFile(widget.pdfFile.path);
 
-      for (int pageNum in _pageOrder) {
+      for (int pageNum = 1; pageNum <= _totalPages; pageNum++) {
         if (!mounted) break;
         if (_pageCache.containsKey(pageNum)) continue;
 
@@ -110,7 +108,7 @@ class _PdfPageSelectorState extends State<PdfPageSelector> {
   }
 
   void _notifyParent() {
-    widget.onSelectionChanged(_selectedPages, _hasRotationChanges);
+    widget.onSelectionChanged(_selectedPages);
   }
 
   void _parseSelectionRange(String input) {
@@ -243,15 +241,6 @@ class _PdfPageSelectorState extends State<PdfPageSelector> {
     _notifyParent();
   }
 
-  void _rotatePage(int pageNum) {
-    setState(() {
-      final currentRotation = _rotations[pageNum] ?? 0.0;
-      _rotations[pageNum] = (currentRotation + 90) % 360;
-      _hasRotationChanges = true;
-    });
-    _notifyParent();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -302,7 +291,7 @@ class _PdfPageSelectorState extends State<PdfPageSelector> {
         ),
         const SizedBox(height: 16),
 
-        // Selected count info and actions
+        // Selected count info
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
@@ -317,11 +306,13 @@ class _PdfPageSelectorState extends State<PdfPageSelector> {
                 color: theme.colorScheme.primary,
               ),
               const SizedBox(width: 8),
-              Text(
-                '${_selectedPages.length} of $_totalPages page${_selectedPages.length != 1 ? 's' : ''} selected',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.primary,
+              Expanded(
+                child: Text(
+                  '${_selectedPages.length} of $_totalPages page${_selectedPages.length != 1 ? 's' : ''} selected',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
               ),
             ],
@@ -329,178 +320,34 @@ class _PdfPageSelectorState extends State<PdfPageSelector> {
         ),
         const SizedBox(height: 16),
 
-        // Pages grid (2 columns)
-        Expanded(
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 0.65,
-            ),
-            itemCount: _pageOrder.length,
-            itemBuilder: (context, index) {
-              final pageNum = _pageOrder[index];
-              final isSelected = _selectedPages.contains(pageNum);
-              final rotation = _rotations[pageNum] ?? 0.0;
-
-              return _PageThumbnail(
-                pageNum: pageNum,
-                isSelected: isSelected,
-                thumbnailBytes: _pageCache[pageNum],
-                rotation: rotation,
-                onToggle: () => _togglePage(pageNum),
-                onRotate: () => _rotatePage(pageNum),
-              );
-            },
+        // Pages grid (2 columns) - Non-reorderable
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 0.65,
           ),
+          itemCount: _totalPages,
+          itemBuilder: (context, index) {
+            final pageNum = index + 1;
+            final isSelected = _selectedPages.contains(pageNum);
+
+            return PdfPageThumbnail(
+              pageNum: pageNum,
+              isSelected: isSelected,
+              thumbnailBytes: _pageCache[pageNum],
+              rotation: 0.0,
+              onToggle: () => _togglePage(pageNum),
+              showRotateButton: false,
+              showRemoveButton: false,
+              showSelectButton: true,
+            );
+          },
         ),
       ],
-    );
-  }
-}
-
-class _PageThumbnail extends StatelessWidget {
-  final int pageNum;
-  final bool isSelected;
-  final Uint8List? thumbnailBytes;
-  final double rotation;
-  final VoidCallback onToggle;
-  final VoidCallback onRotate;
-
-  const _PageThumbnail({
-    required this.pageNum,
-    required this.isSelected,
-    required this.thumbnailBytes,
-    required this.rotation,
-    required this.onToggle,
-    required this.onRotate,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return GestureDetector(
-      onTap: onToggle,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isSelected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.outline.withOpacity(0.3),
-            width: isSelected ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          color: isSelected
-              ? theme.colorScheme.primaryContainer.withOpacity(0.2)
-              : theme.colorScheme.surface,
-        ),
-        child: Column(
-          children: [
-            // Header with page number and buttons
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? theme.colorScheme.primaryContainer
-                    : theme.colorScheme.surfaceVariant.withOpacity(0.5),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(11),
-                  topRight: Radius.circular(11),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Page $pageNum',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: isSelected
-                            ? theme.colorScheme.onPrimaryContainer
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: onRotate,
-                          borderRadius: BorderRadius.circular(6),
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: Icon(
-                              Icons.rotate_right,
-                              size: 18,
-                              color: isSelected
-                                  ? theme.colorScheme.onPrimaryContainer
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 2),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: onToggle,
-                          borderRadius: BorderRadius.circular(6),
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: Icon(
-                              isSelected
-                                  ? Icons.check_circle
-                                  : Icons.circle_outlined,
-                              size: 18,
-                              color: isSelected
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            // Thumbnail
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: thumbnailBytes != null
-                    ? LayoutBuilder(
-                        builder: (context, constraints) {
-                          return Center(
-                            child: Transform.rotate(
-                              angle: rotation * 3.14159 / 180,
-                              child: Image.memory(
-                                thumbnailBytes!,
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                          );
-                        },
-                      )
-                    : Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            theme.colorScheme.primary,
-                          ),
-                        ),
-                      ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

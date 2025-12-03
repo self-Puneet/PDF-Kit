@@ -59,7 +59,7 @@ List<Functionality> getActions(BuildContext context) {
           queryParameters: {
             'selectionId': selectionId,
             'actionText': t('images_to_pdf_title'),
-            'min': '1', // Require at least 1 image
+            'min': '2', // Require at least 2 images
             'allowed': 'images', // Only allow image files
           },
         );
@@ -180,6 +180,7 @@ List<Functionality> getActions(BuildContext context) {
             'actionText': t('compress_pdf_button'),
             'max': '1',
             'min': '1',
+            'allowed': 'pdf-only',
           },
         );
 

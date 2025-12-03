@@ -118,8 +118,8 @@ class SelectionProvider extends ChangeNotifier {
       return await _validatePdfOnly(file);
     }
 
-    // Check for image-only filter
-    if (_allowedFilter == 'image-only') {
+    // Check for image-only filter (accepts both 'images' and 'image-only')
+    if (_allowedFilter == 'images' || _allowedFilter == 'image-only') {
       return await _validateImageOnly(file);
     }
 

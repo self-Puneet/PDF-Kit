@@ -49,6 +49,7 @@ ShellRoute buildSelectionShellRoute({
                 queryParameters: {
                   'selectionId': selectionId,
                   if (minSelectable != null) 'min': minSelectable.toString(),
+                  if (maxSelectable != null) 'max': maxSelectable.toString(),
                 },
               );
             } else if (action.contains('protect')) {
@@ -57,6 +58,7 @@ ShellRoute buildSelectionShellRoute({
                 queryParameters: {
                   'selectionId': selectionId,
                   if (minSelectable != null) 'min': minSelectable.toString(),
+                  if (maxSelectable != null) 'max': maxSelectable.toString(),
                 },
               );
             } else if (action.contains('compress')) {
@@ -65,6 +67,7 @@ ShellRoute buildSelectionShellRoute({
                 queryParameters: {
                   'selectionId': selectionId,
                   if (minSelectable != null) 'min': minSelectable.toString(),
+                  if (maxSelectable != null) 'max': maxSelectable.toString(),
                 },
               );
             } else if (action.contains('sign')) {
@@ -73,6 +76,25 @@ ShellRoute buildSelectionShellRoute({
                 queryParameters: {
                   'selectionId': selectionId,
                   if (minSelectable != null) 'min': minSelectable.toString(),
+                  if (maxSelectable != null) 'max': maxSelectable.toString(),
+                },
+              );
+            } else if (action.contains('images to pdf')) {
+              rootNavKey.currentContext!.pushNamed(
+                AppRouteName.imagesToPdf,
+                queryParameters: {
+                  'selectionId': selectionId,
+                  if (minSelectable != null) 'min': minSelectable.toString(),
+                  if (maxSelectable != null) 'max': maxSelectable.toString(),
+                },
+              );
+            } else if (action.contains('reorder')) {
+              rootNavKey.currentContext!.pushNamed(
+                AppRouteName.reorderPdf,
+                queryParameters: {
+                  'selectionId': selectionId,
+                  if (minSelectable != null) 'min': minSelectable.toString(),
+                  if (maxSelectable != null) 'max': maxSelectable.toString(),
                 },
               );
             } else if (action.contains('image')) {
@@ -81,6 +103,7 @@ ShellRoute buildSelectionShellRoute({
                 queryParameters: {
                   'selectionId': selectionId,
                   if (minSelectable != null) 'min': minSelectable.toString(),
+                  if (maxSelectable != null) 'max': maxSelectable.toString(),
                 },
               );
             } else {
@@ -89,6 +112,7 @@ ShellRoute buildSelectionShellRoute({
                 queryParameters: {
                   'selectionId': selectionId,
                   if (minSelectable != null) 'min': minSelectable.toString(),
+                  if (maxSelectable != null) 'max': maxSelectable.toString(),
                 },
               );
             }
@@ -123,6 +147,16 @@ ShellRoute buildSelectionShellRoute({
               } else if (action.contains('unlock')) {
                 rootNavKey.currentContext!.pushNamed(
                   AppRouteName.unlockPdf,
+                  extra: files,
+                );
+              } else if (action.contains('images to pdf')) {
+                rootNavKey.currentContext!.pushNamed(
+                  AppRouteName.imagesToPdf,
+                  extra: files,
+                );
+              } else if (action.contains('reorder')) {
+                rootNavKey.currentContext!.pushNamed(
+                  AppRouteName.reorderPdf,
                   extra: files,
                 );
               } else if (action.contains('image')) {

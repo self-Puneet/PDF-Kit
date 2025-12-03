@@ -34,10 +34,6 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
   Set<int> _selectedPages = {};
   int _totalPages = 0;
 
-  // Tracks whether anything is different from the default
-  // (all pages, no rotations)
-  bool _hasPageSelectionChanges = false;
-
   @override
   void initState() {
     super.initState();
@@ -139,9 +135,7 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
   }
 
   String? get _pageSelectionSummaryText {
-    if (!_hasPageSelectionChanges ||
-        _selectedPages.isEmpty ||
-        _totalPages == 0) {
+    if (_selectedPages.isEmpty || _totalPages == 0) {
       return null;
     }
 
@@ -361,16 +355,9 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
                       child: PdfPageSelector(
                         pdfFile: File(files.first.path),
                         initialSelectedPages: _selectedPages,
-                        onSelectionChanged: (selected, hasRotationChanges) {
+                        onSelectionChanged: (selected) {
                           setState(() {
                             _selectedPages = selected;
-
-                            final countChanged =
-                                _totalPages > 0 &&
-                                _selectedPages.length != _totalPages;
-
-                            _hasPageSelectionChanges =
-                                hasRotationChanges || countChanged;
                           });
                         },
                       ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
@@ -33,37 +32,18 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
     });
   }
 
-  double _compressionQuality = 60.0; // 0-100, where 100 is best quality
   bool _isWorking = false;
   int? _originalFileSize;
-  int? _estimatedSize;
 
-  void _updateEstimatedSize() {
-    if (_originalFileSize == null) {
-      _estimatedSize = null;
-      return;
-    }
-    // Estimate compressed size based on quality slider
-    // Higher quality (closer to 100) = less compression = larger size
-    // Lower quality (closer to 0) = more compression = smaller size
-    final compressionFactor = 0.2 + (_compressionQuality / 100) * 0.7;
-    _estimatedSize = (_originalFileSize! * compressionFactor).round();
+  String get _estimatedReduction {
+    // Rasterization typically achieves 40-60% compression
+    return '40-60%';
   }
 
   String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-  }
-
-  int _qualityToLevel(double quality) {
-    // Convert 0-100 quality to 0-2 level (inverted)
-    // 0-33 quality -> level 0 (high compression)
-    // 34-66 quality -> level 1 (medium)
-    // 67-100 quality -> level 2 (low compression)
-    if (quality <= 33) return 0;
-    if (quality <= 66) return 1;
-    return 2;
   }
 
   Future<void> _handleCompress(
@@ -83,9 +63,8 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
     setState(() => _isWorking = true);
     final file = sel.files.first;
     try {
-      final level = _qualityToLevel(_compressionQuality);
       final Either<CustomException, FileInfo> result =
-          await PdfCompressService.compressFile(fileInfo: file, level: level);
+          await PdfCompressService.compressFile(fileInfo: file);
       if (!mounted) return;
       result.fold(
         (err) {
@@ -128,10 +107,7 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
               final pattern = t
                   .t('compress_pdf_result_pattern')
                   .replaceFirst('{original}', originalName)
-                  .replaceFirst(
-                    '{level}',
-                    '${_compressionQuality.round()}% quality',
-                  )
+                  .replaceFirst('{level}', 'optimized')
                   .replaceFirst('{result}', resultName);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -203,7 +179,6 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                                 ) {
                                   setState(() {
                                     _originalFileSize = file.size;
-                                    _updateEstimatedSize();
                                   });
                                 });
                               }
@@ -235,48 +210,14 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                             ],
                           ),
                     const SizedBox(height: 28),
-                    Text(
-                      AppLocalizations.of(
-                        context,
-                      ).t('compress_pdf_select_level_label'),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Quality: ${_compressionQuality.round()}%',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Slider(
-                      value: _compressionQuality,
-                      min: 0,
-                      max: 100,
-                      divisions: 100,
-                      label: '${_compressionQuality.round()}%',
-                      onChanged: _isWorking
-                          ? null
-                          : (value) {
-                              setState(() {
-                                _compressionQuality = value;
-                                _updateEstimatedSize();
-                              });
-                            },
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Smallest', style: theme.textTheme.bodySmall),
-                        Text('Best Quality', style: theme.textTheme.bodySmall),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
                     if (hasFile && _originalFileSize != null) ...[
+                      Text(
+                        'Compression Info',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -305,38 +246,25 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 12),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  'Estimated Size:',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.primary,
-                                  ),
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 18,
+                                  color: theme.colorScheme.primary,
                                 ),
-                                Text(
-                                  _estimatedSize != null
-                                      ? _formatFileSize(_estimatedSize!)
-                                      : '--',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.colorScheme.primary,
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'This will compress your PDF by rasterizing pages at optimized quality (80%). Expected reduction: $_estimatedReduction',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                            if (_estimatedSize != null &&
-                                _originalFileSize != null) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                'Savings: ${((1 - _estimatedSize! / _originalFileSize!) * 100).toStringAsFixed(0)}%',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.secondary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
                           ],
                         ),
                       ),

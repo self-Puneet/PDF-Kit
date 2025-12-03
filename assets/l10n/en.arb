@@ -114,6 +114,29 @@
     "placeholders": {"fileName": {"type": "String"}}
   },
 
+  "images_to_pdf_title": "Images to PDF",
+  "images_to_pdf_description": "Convert multiple images into a single PDF document. Drag to reorder, rename, choose where to save, and add or edit images anytime.",
+  "images_to_pdf_file_name_label": "File Name",
+  "images_to_pdf_file_name_hint": "Type output file name",
+  "images_to_pdf_save_to_folder_label": "Save to Folder",
+  "images_to_pdf_files_selected": "{count} Images Selected",
+  "@images_to_pdf_files_selected": {
+    "description": "Label showing number of images selected for conversion.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "images_to_pdf_reorder": "Reorder",
+  "images_to_pdf_done": "Done",
+  "images_to_pdf_add_more_files": "Add More Images",
+  "images_to_pdf_button": "Convert to PDF",
+  "images_to_pdf_loading_default_folder": "Loading default folder...",
+  "images_to_pdf_select_folder_placeholder": "Select Folder",
+  "images_to_pdf_destination_snackbar": "Destination: {folderName}",
+  "@images_to_pdf_destination_snackbar": {
+    "description": "Snackbar message showing chosen destination folder.",
+    "placeholders": {"folderName": {"type": "String"}}
+  },
+  "images_to_pdf_default_file_name": "Images Document",
+
   "protect_pdf_title": "Protect PDF",
   "protect_pdf_description": "Set a password to protect your scan. This password will be required if you or the person you provide the scanned document wants to access the file. If you forget the password, then this file will not be accessible forever.",
   "protect_pdf_selected_file_label": "Selected File",
@@ -184,6 +207,11 @@
   "snackbar_success_protect": "Successfully protected {fileName}",
   "@snackbar_success_protect": {
     "description": "Duplicate of protect_pdf_success_snackbar (can consolidate).",
+    "placeholders": {"fileName": {"type": "String"}}
+  },
+  "snackbar_success_images_to_pdf": "Successfully converted to {fileName}",
+  "@snackbar_success_images_to_pdf": {
+    "description": "Success message after converting images to PDF.",
     "placeholders": {"fileName": {"type": "String"}}
   }
 
@@ -324,6 +352,10 @@
   ,"pdf_to_image_title": "Convert PDF to Images"
   ,"split_pdf_title": "Split PDF"
   ,"reorder_pdf_title": "Reorder PDF Pages"
+  ,"reorder_pdf_description": "Reorder, rotate, or remove pages from your PDF. Tap a page to preview, drag to reorder, and save your customized document."
+  ,"reorder_pdf_button": "Reorder"
+  ,"reorder_pdf_no_file": "No PDF selected. Please go back and choose a PDF file."
+  ,"reorder_pdf_success": "PDF pages reordered successfully"
   ,"@action_coming_soon_toast": {"placeholders": {"feature": {"type": "String"}}}
   ,"settings_about_us_subtitle": "Discover our vision and how we work"
   ,"language_settings_page_title": "Language Settings"

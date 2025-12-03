@@ -4,6 +4,8 @@ import 'package:pdf_kit/providers/locale_provider.dart';
 import 'package:pdf_kit/core/routing/file_selection_shell.dart';
 import 'package:pdf_kit/core/routing/home_shell.dart';
 import 'package:pdf_kit/presentation/pages/page_export.dart';
+import 'package:pdf_kit/presentation/pages/images_to_pdf_page.dart';
+import 'package:pdf_kit/presentation/pages/reorder_pdf_page.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/presentation/provider/provider_export.dart';
 
@@ -196,6 +198,48 @@ final appRouter = GoRouter(
         return ChangeNotifierProvider(
           create: (_) => SelectionProvider(),
           child: const PdfToImagePage(),
+        );
+      },
+    ),
+    GoRoute(
+      name: AppRouteName.imagesToPdf,
+      path: '/images/to-pdf',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) {
+        final selectionId = state.uri.queryParameters['selectionId'];
+        if (selectionId != null) {
+          // reuse provider from SelectionManager cache
+          final provider = Get.find<SelectionManager>().of(selectionId);
+          return ChangeNotifierProvider<SelectionProvider>.value(
+            value: provider,
+            child: ImagesToPdfPage(selectionId: selectionId),
+          );
+        }
+        // fallback: create a fresh provider scoped to this route
+        return ChangeNotifierProvider(
+          create: (_) => SelectionProvider(),
+          child: const ImagesToPdfPage(),
+        );
+      },
+    ),
+    GoRoute(
+      name: AppRouteName.reorderPdf,
+      path: '/pdf/reorder',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) {
+        final selectionId = state.uri.queryParameters['selectionId'];
+        if (selectionId != null) {
+          try {
+            final provider = Get.find<SelectionManager>().of(selectionId);
+            return ChangeNotifierProvider<SelectionProvider>.value(
+              value: provider,
+              child: ReorderPdfPage(selectionId: selectionId),
+            );
+          } catch (_) {}
+        }
+        return ChangeNotifierProvider(
+          create: (_) => SelectionProvider(),
+          child: const ReorderPdfPage(),
         );
       },
     ),

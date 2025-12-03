@@ -10,7 +10,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf_combiner/pdf_combiner.dart';
 
 import 'package:pdf_kit/models/file_model.dart';
-import 'package:pdf_kit/service/pdf_compress_service.dart';
 import 'package:pdf_kit/core/constants.dart';
 import 'package:pdf_kit/core/utility/storage_utility.dart';
 import 'package:pdf_kit/core/enums/pdf_content_fit_mode.dart';
@@ -195,6 +194,20 @@ class CustomException {
 class PdfMergeService {
   PdfMergeService._();
 
+  /// Check if the file is a supported image type
+  static bool _isImageFile(FileInfo fileInfo) {
+    const supportedImageExtensions = [
+      'jpg',
+      'jpeg',
+      'png',
+      'gif',
+      'bmp',
+      'webp',
+    ];
+    final ext = fileInfo.extension.toLowerCase();
+    return supportedImageExtensions.contains(ext);
+  }
+
   static Future<Either<CustomException, FileInfo>> mergePdfs({
     required List<FileInfo> files,
     required String outputFileName,
@@ -231,7 +244,7 @@ class PdfMergeService {
         }
 
         final isPdf = fileInfo.extension.toLowerCase() == 'pdf';
-        final isImage = PdfCompressService.isImageFile(fileInfo);
+        final isImage = _isImageFile(fileInfo);
 
         if (!isPdf && !isImage) {
           return Left(
@@ -269,7 +282,7 @@ class PdfMergeService {
       for (final fileInfo in files) {
         if (fileInfo.extension.toLowerCase() == 'pdf') {
           pdfFiles.add(fileInfo);
-        } else if (PdfCompressService.isImageFile(fileInfo)) {
+        } else if (_isImageFile(fileInfo)) {
           imageFiles.add(fileInfo);
         }
       }
