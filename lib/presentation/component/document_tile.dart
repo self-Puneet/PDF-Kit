@@ -8,6 +8,7 @@ import 'package:pdfx/pdfx.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/core/app_export.dart';
+import 'package:go_router/go_router.dart';
 
 class _Thumb {
   final Uint8List bytes;
@@ -173,6 +174,21 @@ class _DocEntryCardState extends State<DocEntryCard> {
     );
   }
 
+  void _handleTap(BuildContext context) {
+    if (widget.disabled) return;
+
+    // If it's a PDF, open the viewer page
+    if (_isPdf) {
+      context.pushNamed(
+        AppRouteName.pdfViewer,
+        queryParameters: {'path': widget.info.path},
+      );
+    } else {
+      // For non-PDFs, use the original onOpen callback
+      widget.onOpen?.call();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
@@ -188,7 +204,7 @@ class _DocEntryCardState extends State<DocEntryCard> {
       elevation: 2,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: widget.disabled ? null : widget.onOpen,
+        onTap: widget.disabled ? null : () => _handleTap(context),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(

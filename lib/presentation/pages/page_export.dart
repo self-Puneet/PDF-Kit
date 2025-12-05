@@ -6,6 +6,7 @@ export 'merge_pdf.dart';
 export 'protect_pdf.dart';
 export 'compress_pdf.dart';
 export 'pdf_to_image_page.dart';
+export 'pdf_viewer_page.dart';
 export 'theme_settings_page.dart';
 export 'pdf_content_fit_settings_page.dart';
 export 'folder_picker_page.dart';

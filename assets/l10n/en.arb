@@ -485,5 +485,11 @@
   ,"snackbar_success_pdf_to_image": "Successfully converted {count} pages to images in {folderName}"
   ,"@snackbar_success_pdf_to_image": {"placeholders": {"count": {"type": "String"}, "folderName": {"type": "String"}}}
 
+  ,"pdf_options_rename": "Rename"
+  ,"pdf_options_delete": "Delete"
+  ,"pdf_options_split": "Split"
+  ,"pdf_options_protect": "Protect / Remove Password"
+  ,"pdf_options_compress": "Compress PDF"
+  ,"pdf_options_move_to_folder": "Move to Folder"
   
 }

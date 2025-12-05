@@ -82,6 +82,14 @@ final appRouter = GoRouter(
       builder: (context, state) =>
           ShowPdfPage(path: state.uri.queryParameters['path']),
     ),
+    // Full featured PDF viewer (dark-themed page)
+    GoRoute(
+      name: AppRouteName.pdfViewer,
+      path: '/pdf/viewer',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) =>
+          PdfViewerPage(path: state.uri.queryParameters['path']),
+    ),
     GoRoute(
       name: AppRouteName.mergePdf,
       path: '/pdf/merge',

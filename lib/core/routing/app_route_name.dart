@@ -17,6 +17,7 @@ class AppRouteName {
   static const pdfToImage = 'pdf.toImage';
   static const imagesToPdf = 'images.toPdf';
   static const reorderPdf = 'pdf.reorder';
+  static const pdfViewer = 'pdf.viewer';
   static const signPdf = 'pdf.sign';
   static const filesRootFullscreen = 'files.root.fullscreen';
   static const filesFolderFullScreen = 'files.folder.fullscreen';
