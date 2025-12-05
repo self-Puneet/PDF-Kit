@@ -8,6 +8,11 @@ import 'package:pdf_kit/presentation/layouts/selection_layout.dart';
 import 'package:pdf_kit/presentation/provider/selection_provider.dart';
 import 'package:pdf_kit/service/file_system_serevice.dart';
 import 'package:pdf_kit/service/open_service.dart';
+import 'package:pdf_kit/presentation/sheets/delete_file_sheet.dart';
+import 'package:pdf_kit/presentation/sheets/rename_file_sheet.dart';
+import 'package:pdf_kit/service/file_service.dart';
+import 'package:pdf_kit/service/recent_file_service.dart';
+import 'package:pdf_kit/presentation/pages/home_page.dart';
 import 'package:pdf_kit/core/app_export.dart';
 
 class SearchFilesScreen extends StatefulWidget {
@@ -38,6 +43,7 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
 
   String _query = '';
   bool _searching = false;
+  bool _fileDeleted = false; // Track if any file was deleted
 
   // Batching to reduce rebuild frequency
   Timer? _batchTimer;
@@ -68,6 +74,10 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
     _sub?.cancel();
     _batchTimer?.cancel();
     _controller.dispose();
+    // Trigger home page refresh if any file was deleted
+    if (_fileDeleted) {
+      RecentFilesSection.refreshNotifier.value++;
+    }
     super.dispose();
   }
 
@@ -142,6 +152,7 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
   }
 
   Widget _searchBar(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       child: Row(
@@ -174,7 +185,7 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
                 style: Theme.of(context).textTheme.labelLarge,
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  hintText: 'Search files and folders...',
+                  hintText: t.t('files_search_hint'), // ← was hard‑coded
                   prefixIcon: const Icon(Icons.search, size: 18),
                   suffixIcon: (_controller.text.isNotEmpty)
                       ? IconButton(
@@ -184,7 +195,9 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
                           ),
                           iconSize: 18,
                           padding: const EdgeInsets.all(5),
-                          tooltip: 'Clear',
+                          tooltip: t.t(
+                            'files_previous_search_clear_all_tooltip',
+                          ),
                           icon: const Icon(Icons.close),
                           onPressed: () {
                             _controller.clear();
@@ -202,6 +215,8 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
   }
 
   Widget _previousSection(BuildContext context) {
+    final t = AppLocalizations.of(context);
+
     return Expanded(
       child: ListView(
         children: [
@@ -210,14 +225,14 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
             child: Row(
               children: [
                 Text(
-                  'Previous Search',
+                  t.t('recent_files_search_previous_header'),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const Spacer(),
                 IconButton(
                   onPressed: () {}, // optional: clear all later
                   icon: const Icon(Icons.close),
-                  tooltip: 'Clear all',
+                  tooltip: t.t('files_previous_search_clear_all_tooltip'),
                 ),
               ],
             ),
@@ -263,14 +278,18 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
               child: f.isDirectory
                   ? FolderEntryCard(
                       info: f,
-                      onTap: () {
+                      onTap: () async {
                         final routeName = widget.isFullscreenRoute
                             ? 'files.search.fullscreen'
                             : AppRouteName.filesSearch;
-                        context.pushNamed(
+                        await context.pushNamed(
                           routeName,
                           queryParameters: {'path': f.path},
                         );
+                        // Refresh search results when coming back
+                        if (_query.isNotEmpty && mounted) {
+                          _start(_query);
+                        }
                       },
                       onMenuSelected: (_) {},
                     )
@@ -286,13 +305,116 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
                         if (!enabled) p?.enable();
                         p?.toggle(f);
                       },
-                      onMenu: (_) {},
+                      onMenu: (action) => _handleFileMenu(action, f),
                     ),
             ),
           );
         },
       ),
     );
+  }
+
+  Future<void> _handleFileRename(FileInfo file) async {
+    debugPrint('✏️ [SearchFilesScreen] Renaming file: ${file.name}');
+    await showRenameFileSheet(
+      context: context,
+      initialName: file.name,
+      onRename: (newName) async {
+        final result = await FileService.renameFile(file, newName);
+        result.fold(
+          (exception) {
+            debugPrint(
+              '❌ [SearchFilesScreen] Rename failed: ${exception.message}',
+            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(exception.message),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
+            }
+          },
+          (renamedFileInfo) {
+            debugPrint(
+              '✅ [SearchFilesScreen] Rename successful: ${renamedFileInfo.name}',
+            );
+            if (mounted) {
+              // Update the search results to reflect the renamed file
+              setState(() {
+                final index = _results.indexWhere((e) => e.path == file.path);
+                if (index != -1) {
+                  _results[index] = renamedFileInfo;
+                  // Update the seen set
+                  _seen.remove(file.path);
+                  _seen.add(renamedFileInfo.path);
+                }
+              });
+              // Trigger home page refresh
+              RecentFilesSection.refreshNotifier.value++;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('File renamed successfully')),
+              );
+            }
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _handleFileMenu(String action, FileInfo f) async {
+    switch (action) {
+      case 'open':
+        OpenService.open(f.path);
+        break;
+      case 'rename':
+        await _handleFileRename(f);
+        break;
+      case 'delete':
+        await showDeleteFileSheet(
+          context: context,
+          fileName: f.name,
+          onDelete: () async {
+            // Optimistically remove from UI
+            setState(() {
+              _results.removeWhere((e) => e.path == f.path);
+              _seen.remove(f.path);
+            });
+
+            // Perform actual deletion
+            final result = await FileService.deleteFile(f);
+
+            if (!mounted) return;
+
+            result.fold(
+              (error) {
+                // Restore item on error
+                setState(() {
+                  if (_seen.add(f.path)) {
+                    _results.add(f);
+                  }
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(error.message),
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                );
+              },
+              (success) async {
+                // Also remove from recent files if present
+                await RecentFilesService.removeRecentFile(f.path);
+                // Mark that a file was deleted
+                _fileDeleted = true;
+                // ScaffoldMessenger.of(context).showSnackBar(
+                //   SnackBar(content: Text('${f.name} deleted successfully')),
+                // );
+              },
+            );
+          },
+        );
+        break;
+    }
   }
 
   Widget _emptyState(BuildContext context) {

@@ -3,6 +3,8 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  file_selector_linux
+  pdf_combiner
   url_launcher_linux
 )
 

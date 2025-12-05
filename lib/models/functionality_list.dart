@@ -1,74 +1,257 @@
 import 'package:flutter/material.dart';
 import 'package:pdf_kit/models/functionality_model.dart';
 import 'package:pdf_kit/core/app_export.dart';
-import 'package:pdf_kit/dependency_injection.dart';
+import 'package:pdf_kit/presentation/pages/home_page.dart';
 
-final List<Functionality> actions = [
-  Functionality(
-    id: 'watermark',
-    label: 'Watermark',
-    icon: Icons.water_drop_outlined,
-    color: Colors.brown,
-    onPressed: (context) => _toast(context, 'Watermark'),
-  ),
-  Functionality(
-    id: 'esign',
-    label: 'eSign PDF',
-    icon: Icons.edit_document, // if not available, use Icons.edit_note
-    color: Colors.pink,
-    onPressed: (context) => _toast(context, 'eSign PDF'),
-  ),
-  Functionality(
-    id: 'split',
-    label: 'Split PDF',
-    icon: Icons.content_cut,
-    color: Colors.deepPurple,
-    onPressed: (context) => _toast(context, 'Split PDF'),
-  ),
-  Functionality(
-    id: 'merge',
-    label: 'Merge PDF',
-    icon: Icons.merge_type,
-    color: Colors.indigo,
-    onPressed: (context) {
-      // create a mapped selection provider and navigate to merge screen
-      final selectionId = 'merge_${DateTime.now().microsecondsSinceEpoch}';
-      // ensure SelectionManager is available and create provider in cache
-      try {
-        final mgr = Get.find<SelectionManager>();
-        mgr.of(selectionId);
-      } catch (_) {
-        // if DI not initialized, still continue with navigation
-      }
+List<Functionality> getActions(BuildContext context) {
+  final localizations = AppLocalizations.of(context);
+  final t = localizations.t;
 
-      context.pushNamed(
-        AppRouteName.mergePdf,
-        queryParameters: {'selectionId': selectionId},
-      );
-    },
-  ),
-  Functionality(
-    id: 'protect',
-    label: 'Protect PDF',
-    icon: Icons.lock_outline,
-    color: Colors.green,
-    onPressed: (context) => _toast(context, 'Protect PDF'),
-  ),
-  Functionality(
-    id: 'compress',
-    label: 'Compress PDF',
-    icon: Icons.data_saver_on, // "compress" substitute
-    color: Colors.orange,
-    onPressed: (context) => _toast(context, 'Compress PDF'),
-  ),
-  Functionality(
-    id: 'all',
-    label: 'All Tools',
-    icon: Icons.grid_view_rounded,
-    color: Colors.blueGrey,
-    onPressed: (context) => _toast(context, 'All Tools'),
-  ),
-];
+  return [
+    // Merge PDF
+    Functionality(
+      id: 'merge',
+      label: t('action_merge_label'),
+      icon: Icons.merge_type,
+      color: Colors.indigo,
+      onPressed: (context) async {
+        final selectionId = 'merge_${DateTime.now().microsecondsSinceEpoch}';
+        try {
+          final mgr = Get.find<SelectionManager>();
+          mgr.of(selectionId);
+        } catch (_) {}
 
-void _toast(BuildContext c, String msg) =>
-    ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text(msg)));
+        await Future.delayed(const Duration(milliseconds: 150));
+
+        if (!context.mounted) return;
+
+        final result = await context.pushNamed(
+          AppRouteName.filesRootFullscreen,
+          queryParameters: {
+            'selectionId': selectionId,
+            'actionText': t('merge_pdf_title'),
+            'min': '2', // Merge requires at least 2 files
+          },
+        );
+
+        if (result == true) {
+          RecentFilesSection.refreshNotifier.value++;
+        }
+      },
+    ),
+
+    // Images to PDF
+    Functionality(
+      id: 'images_to_pdf',
+      label: t('action_images_to_pdf_label'),
+      icon: Icons.picture_as_pdf,
+      color: Colors.blue,
+      onPressed: (context) async {
+        final selectionId =
+            'images_to_pdf_${DateTime.now().microsecondsSinceEpoch}';
+        try {
+          final mgr = Get.find<SelectionManager>();
+          mgr.of(selectionId);
+        } catch (_) {}
+
+        final result = await context.pushNamed(
+          AppRouteName.filesRootFullscreen,
+          queryParameters: {
+            'selectionId': selectionId,
+            'actionText': t('images_to_pdf_title'),
+            'min': '2', // Require at least 2 images
+            'allowed': 'images', // Only allow image files
+          },
+        );
+
+        if (result == true) {
+          RecentFilesSection.refreshNotifier.value++;
+        }
+      },
+    ),
+
+    // Split PDF
+    Functionality(
+      id: 'split',
+      label: t('action_split_label'),
+      icon: Icons.content_cut,
+      color: Colors.deepPurple,
+      onPressed: (context) async {
+        final selectionId = 'split_${DateTime.now().microsecondsSinceEpoch}';
+        try {
+          final mgr = Get.find<SelectionManager>();
+          mgr.of(selectionId);
+        } catch (_) {}
+
+        final result = await context.pushNamed(
+          AppRouteName.filesRootFullscreen,
+          queryParameters: {
+            'selectionId': selectionId,
+            'actionText': t('split_pdf_title'),
+            'max': '1', // Only one PDF at a time
+            'min': '1',
+            'allowed': 'pdf-only',
+          },
+        );
+
+        if (result == true) {
+          RecentFilesSection.refreshNotifier.value++;
+        }
+      },
+    ),
+
+    // Protect PDF
+    Functionality(
+      id: 'protect',
+      label: t('action_protect_label'),
+      icon: Icons.lock_outline,
+      color: Colors.green,
+      onPressed: (context) async {
+        final selectionId = 'protect_${DateTime.now().microsecondsSinceEpoch}';
+        try {
+          final mgr = Get.find<SelectionManager>();
+          mgr.of(selectionId);
+        } catch (_) {}
+
+        final result = await context.pushNamed(
+          AppRouteName.filesRootFullscreen,
+          queryParameters: {
+            'selectionId': selectionId,
+            'actionText': t('protect_pdf_title'),
+            'max': '1',
+            'min': '1',
+            'allowed': 'unprotected',
+          },
+        );
+
+        if (result == true) {
+          RecentFilesSection.refreshNotifier.value++;
+        }
+      },
+    ),
+
+    // Remove Password
+    Functionality(
+      id: 'unlock',
+      label: t('action_unlock_label'),
+      icon: Icons.lock_open,
+      color: Colors.teal,
+      onPressed: (context) async {
+        final selectionId = 'unlock_${DateTime.now().microsecondsSinceEpoch}';
+        try {
+          final mgr = Get.find<SelectionManager>();
+          mgr.of(selectionId);
+        } catch (_) {}
+
+        final result = await context.pushNamed(
+          AppRouteName.filesRootFullscreen,
+          queryParameters: {
+            'selectionId': selectionId,
+            'actionText': t('unlock_pdf_title'),
+            'max': '1',
+            'min': '1',
+            'allowed': 'protected',
+          },
+        );
+
+        if (result == true) {
+          RecentFilesSection.refreshNotifier.value++;
+        }
+      },
+    ),
+
+    // Compress PDF
+    Functionality(
+      id: 'compress',
+      label: t('action_compress_label'),
+      icon: Icons.compress,
+      color: Colors.orange,
+      onPressed: (context) async {
+        final selectionId = 'compress_${DateTime.now().microsecondsSinceEpoch}';
+        try {
+          final mgr = Get.find<SelectionManager>();
+          mgr.of(selectionId);
+        } catch (_) {}
+
+        final result = await context.pushNamed(
+          AppRouteName.filesRootFullscreen,
+          queryParameters: {
+            'selectionId': selectionId,
+            'actionText': t('compress_pdf_button'),
+            'max': '1',
+            'min': '1',
+            'allowed': 'pdf-only',
+          },
+        );
+
+        if (result == true) {
+          RecentFilesSection.refreshNotifier.value++;
+        }
+      },
+    ),
+
+    // PDF to Image
+    Functionality(
+      id: 'pdf_to_image',
+      label: t('action_pdf_to_image_label'),
+      icon: Icons.image,
+      color: Colors.pink,
+      onPressed: (context) async {
+        final selectionId =
+            'pdf_to_image_${DateTime.now().microsecondsSinceEpoch}';
+        try {
+          final mgr = Get.find<SelectionManager>();
+          mgr.of(selectionId);
+        } catch (_) {}
+
+        final result = await context.pushNamed(
+          AppRouteName.filesRootFullscreen,
+          queryParameters: {
+            'selectionId': selectionId,
+            'actionText': t('pdf_to_image_title'),
+            'max': '1',
+            'min': '1',
+            'allowed': 'pdf-only',
+          },
+        );
+
+        if (result == true) {
+          RecentFilesSection.refreshNotifier.value++;
+        }
+      },
+    ),
+
+    // Reorder PDF
+    Functionality(
+      id: 'reorder',
+      label: t('action_reorder_label'),
+      icon: Icons.reorder,
+      color: Colors.brown,
+      onPressed: (context) async {
+        final selectionId = 'reorder_${DateTime.now().microsecondsSinceEpoch}';
+        try {
+          final mgr = Get.find<SelectionManager>();
+          mgr.of(selectionId);
+        } catch (_) {}
+
+        final result = await context.pushNamed(
+          AppRouteName.filesRootFullscreen,
+          queryParameters: {
+            'selectionId': selectionId,
+            'actionText': t('reorder_pdf_title'),
+            'max': '1',
+            'min': '1',
+            'allowed': 'pdf-only',
+          },
+        );
+
+        if (result == true) {
+          RecentFilesSection.refreshNotifier.value++;
+        }
+      },
+    ),
+  ];
+}
+
+// void _toast(BuildContext c, String msg) =>
+//     ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text(msg)));

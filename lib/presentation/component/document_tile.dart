@@ -7,6 +7,8 @@ import 'package:pdf_kit/presentation/widget/shimmer.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pdf_kit/models/file_model.dart';
+import 'package:pdf_kit/core/app_export.dart';
+import 'package:go_router/go_router.dart';
 
 class _Thumb {
   final Uint8List bytes;
@@ -19,10 +21,17 @@ class DocEntryCard extends StatefulWidget {
   final FileInfo info;
   final VoidCallback? onOpen;
   final ValueChanged<String>? onMenu;
-  final bool selectable; // NEW
-  final bool selected; // NEW
-  final VoidCallback? onToggleSelected; // NEW
-  final VoidCallback? onLongPress; // NEW
+  final bool selectable;
+  final bool selected;
+  final VoidCallback? onToggleSelected;
+  final VoidCallback? onLongPress;
+  final bool showRemove;
+  final bool showEdit;
+  final bool showVertOption;
+  final VoidCallback? onEdit;
+  final VoidCallback? onRemove;
+  final bool reorderable;
+  final bool disabled;
 
   const DocEntryCard({
     super.key,
@@ -33,6 +42,13 @@ class DocEntryCard extends StatefulWidget {
     this.selected = false,
     this.onToggleSelected,
     this.onLongPress,
+    this.showRemove = false,
+    this.showEdit = false,
+    this.showVertOption = true,
+    this.onEdit,
+    this.onRemove,
+    this.reorderable = false,
+    this.disabled = false,
   });
 
   @override
@@ -41,6 +57,7 @@ class DocEntryCard extends StatefulWidget {
 
 class _DocEntryCardState extends State<DocEntryCard> {
   static final Map<String, _Thumb> _cache = {};
+  late Future<_Thumb?> _thumbnailFuture; // Cache the future itself
 
   bool get _isPdf => widget.info.extension.toLowerCase() == 'pdf';
   bool get _isImage => const {
@@ -54,24 +71,79 @@ class _DocEntryCardState extends State<DocEntryCard> {
     'heif',
   }.contains(widget.info.extension.toLowerCase());
 
+  int? _pageCount; // for PDFs only
+
+  @override
+  void initState() {
+    super.initState();
+    _thumbnailFuture = _thumbnail(); // Initialize once
+  }
+
+  @override
+  void didUpdateWidget(DocEntryCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Only recreate future if the file path changes
+    if (oldWidget.info.path != widget.info.path) {
+      _thumbnailFuture = _thumbnail();
+    }
+  }
+
   Future<_Thumb?> _thumbnail() async {
     final key = widget.info.path;
     if (_cache.containsKey(key)) return _cache[key];
 
     if (_isPdf) {
-      final doc = await PdfDocument.openFile(widget.info.path);
-      final page = await doc.getPage(1);
-      final w = page.width.round();
-      final h = page.height.round();
-      const scale = 2.0;
-      final img = await page.render(
-        width: (w * scale).toDouble(),
-        height: (h * scale).toDouble(),
+      debugPrint(
+        '📑 [DocEntryCard] Opening PDF to get page count and thumbnail: $key',
       );
+
+      final doc = await PdfDocument.openFile(widget.info.path);
+      debugPrint(
+        '✅ [DocEntryCard] PdfDocument opened: $key, pagesCount=${doc.pagesCount}',
+      );
+
+      _pageCount = doc.pagesCount; // pdfx provides this
+      // Trigger a rebuild so the page count row updates
+      if (mounted) {
+        debugPrint(
+          '🔄 [DocEntryCard] setState after setting _pageCount=$_pageCount for: $key',
+        );
+
+        setState(() {});
+      }
+      final page = await doc.getPage(1);
+
+      // Safe thumbnail rendering - target max 200px to prevent OOM crashes
+      // Never render at native PDF resolution (can be 28000×20000px!)
+      const thumbSize = 200.0;
+
+      // Calculate aspect-ratio safe render size
+      final aspect = page.width / page.height;
+      double renderW, renderH;
+
+      if (aspect >= 1) {
+        // Landscape or square
+        renderW = thumbSize;
+        renderH = thumbSize / aspect;
+      } else {
+        // Portrait
+        renderH = thumbSize;
+        renderW = thumbSize * aspect;
+      }
+
+      debugPrint(
+        '🖼️ [DocEntryCard] Rendering PDF thumbnail: '
+        '${renderW.toInt()}×${renderH.toInt()}px '
+        '(original: ${page.width.toInt()}×${page.height.toInt()})',
+      );
+
+      final img = await page.render(width: renderW, height: renderH);
       await page.close();
       await doc.close();
       if (img == null) return null;
-      final t = _Thumb(img.bytes, w, h);
+
+      // Store actual rendered dimensions, not original page size
+      final t = _Thumb(img.bytes, renderW.toInt(), renderH.toInt());
       _cache[key] = t;
       return t;
     }
@@ -92,7 +164,8 @@ class _DocEntryCardState extends State<DocEntryCard> {
 
   String _recent() {
     final dt = widget.info.lastModified ?? DateTime.now();
-    return DateFormat('MM/dd/yyyy  HH:mm').format(dt);
+    // 12‑hour format with AM/PM, e.g. 11/23/2025  10:45 PM
+    return DateFormat('MM/dd/yyyy  hh:mm a').format(dt);
   }
 
   void _share() {
@@ -101,17 +174,37 @@ class _DocEntryCardState extends State<DocEntryCard> {
     );
   }
 
+  void _handleTap(BuildContext context) {
+    if (widget.disabled) return;
+
+    // If it's a PDF, open the viewer page
+    if (_isPdf) {
+      context.pushNamed(
+        AppRouteName.pdfViewer,
+        queryParameters: {'path': widget.info.path},
+      );
+    } else {
+      // For non-PDFs, use the original onOpen callback
+      widget.onOpen?.call();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    debugPrint(
+      '🎨 [DocEntryCard] build(): ${widget.info.name} '
+      '(path=${widget.info.path}, isPdf=$_isPdf, pageCount=$_pageCount)',
+    );
+
     return Material(
       borderRadius: BorderRadius.circular(12),
-      color: Colors.black.withAlpha(28),
+      color: Colors.black.withAlpha(widget.disabled ? 12 : 28),
       shadowColor: Colors.black.withAlpha(28),
       elevation: 2,
-
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: widget.onOpen,
+        onTap: widget.disabled ? null : () => _handleTap(context),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
@@ -119,7 +212,7 @@ class _DocEntryCardState extends State<DocEntryCard> {
               Padding(
                 padding: const EdgeInsets.only(right: 12, left: 12),
                 child: FutureBuilder<_Thumb?>(
-                  future: _thumbnail(),
+                  future: _thumbnailFuture, // Use the cached future
                   builder: (context, snap) {
                     Widget child;
                     if (snap.connectionState == ConnectionState.waiting) {
@@ -141,16 +234,49 @@ class _DocEntryCardState extends State<DocEntryCard> {
                       final fit = (t.height < t.width)
                           ? BoxFit.fitWidth
                           : BoxFit.fitHeight;
+
                       child = ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: SizedBox.square(
                           dimension: 70,
-                          child: Image.memory(
-                            t.bytes,
-                            fit: fit,
-                            // Optional decode downscale for memory savings:
-                            cacheWidth: 140,
-                            cacheHeight: 140,
+                          child: Stack(
+                            children: [
+                              // Thumbnail
+                              Positioned.fill(
+                                child: Image.memory(
+                                  t.bytes,
+                                  fit: fit,
+                                  cacheWidth: 140,
+                                  cacheHeight: 140,
+                                ),
+                              ),
+
+                              // Extension badge (top‑left)
+                              Positioned(
+                                top: 4,
+                                left: 4,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 3,
+                                    vertical: 1,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(
+                                      0.6,
+                                    ), // not pure black
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                  child: Text(
+                                    widget.info.extension.toUpperCase(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       );
@@ -175,7 +301,6 @@ class _DocEntryCardState extends State<DocEntryCard> {
                   },
                 ),
               ),
-              // const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -183,9 +308,15 @@ class _DocEntryCardState extends State<DocEntryCard> {
                   children: [
                     Text(
                       widget.info.name,
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: widget.disabled
+                            ? Theme.of(
+                                context,
+                              ).textTheme.titleMedium?.color?.withOpacity(0.5)
+                            : null,
+                      ),
                     ),
                     Text(
                       _recent(),
@@ -195,36 +326,136 @@ class _DocEntryCardState extends State<DocEntryCard> {
                         ).colorScheme.onSurface.withAlpha(153),
                       ),
                     ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.sd_storage,
+                              size: 14,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withAlpha(153),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              widget.info.readableSize,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withAlpha(153),
+                                  ),
+                            ),
+                          ],
+                        ),
+                        if (_isPdf && _pageCount != null) ...[
+                          const SizedBox(width: 12),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.auto_stories,
+                                size: 14,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withAlpha(153),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${_pageCount} page${_pageCount == 1 ? '' : 's'}',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withAlpha(153),
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
                   ],
                 ),
               ),
-              (widget.selectable)
-                  ? Padding(
-                      padding: const EdgeInsets.only(left: 12, right: 8),
-                      child: InkResponse(
-                        onTap: widget.onToggleSelected,
-                        child: Icon(
-                          widget.selected
-                              ? Icons.check_box
-                              : Icons.check_box_outline_blank,
-                        ),
-                      ),
-                    )
-                  : PopupMenuButton<String>(
-                      onSelected: widget.onMenu,
-                      itemBuilder: (c) => [
-                        PopupMenuItem(value: 'open', child: Text('Open')),
-                        PopupMenuItem(value: 'rename', child: Text('Rename')),
-                        PopupMenuItem(value: 'delete', child: Text('Delete')),
-                        PopupMenuItem(
-                          value: 'share',
-                          onTap: () {
-                            _share();
-                          },
-                          child: Text('Share'),
-                        ),
-                      ],
+              if (widget.reorderable)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8, left: 8),
+                  child: Icon(
+                    Icons.drag_indicator,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant
+                        .withOpacity(widget.disabled ? 0.3 : 1.0),
+                  ),
+                )
+              else if (widget.selectable)
+                Padding(
+                  padding: const EdgeInsets.only(left: 12, right: 8),
+                  child: InkResponse(
+                    onTap: widget.disabled ? null : widget.onToggleSelected,
+                    child: Icon(
+                      widget.selected
+                          ? Icons.check_box
+                          : Icons.check_box_outline_blank,
+                      color: widget.disabled
+                          ? Theme.of(context).iconTheme.color?.withOpacity(0.4)
+                          : null,
                     ),
+                  ),
+                )
+              else if (widget.showEdit || widget.showRemove)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (widget.showEdit && widget.onEdit != null)
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: widget.disabled ? null : widget.onEdit,
+                        tooltip: t.t('doc_menu_edit'),
+                      ),
+                    if (widget.showRemove && widget.onRemove != null)
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: widget.disabled ? null : widget.onRemove,
+                        tooltip: t.t('doc_menu_remove'),
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                  ],
+                )
+              else if (widget.showVertOption)
+                (widget.disabled
+                    ? Icon(
+                        Icons.more_vert,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant.withOpacity(0.3),
+                      )
+                    : PopupMenuButton<String>(
+                        onSelected: widget.onMenu,
+                        itemBuilder: (c) => [
+                          PopupMenuItem(
+                            value: 'open',
+                            child: Text(t.t('doc_menu_open')),
+                          ),
+                          PopupMenuItem(
+                            value: 'rename',
+                            child: Text(t.t('doc_menu_rename')),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Text(t.t('doc_menu_delete')),
+                          ),
+                          PopupMenuItem(
+                            value: 'share',
+                            onTap: () {
+                              _share();
+                            },
+                            child: Text(t.t('doc_menu_share')),
+                          ),
+                        ],
+                      )),
             ],
           ),
         ),

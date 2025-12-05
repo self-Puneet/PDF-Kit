@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pdf_kit/core/localization/app_localizations.dart';
 
 // NOTE: FilesTabWithRouter is no longer needed with go_router's StatefulShellRoute.
 // The shell injects a StatefulNavigationShell that manages per-branch Navigators.
@@ -13,34 +14,36 @@ class HomeShell extends StatelessWidget {
     return Scaffold(
       // Renders the active branch's Navigator (keeps each tab's back stack/state)
       body: navigationShell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: (index) {
-          // Switch tabs without pushing; preserve existing stacks
-          navigationShell.goBranch(
-            index,
-            // If tapping the already-selected tab, you can choose to pop to its root
-            // by setting initialLocation: true; set false to keep current location.
-            initialLocation: index == navigationShell.currentIndex,
+      bottomNavigationBar: Builder(
+        builder: (context) {
+          final t = AppLocalizations.of(context);
+          return NavigationBar(
+            selectedIndex: navigationShell.currentIndex,
+            onDestinationSelected: (index) {
+              navigationShell.goBranch(
+                index,
+                initialLocation: index == navigationShell.currentIndex,
+              );
+            },
+            destinations: [
+              NavigationDestination(
+                icon: const Icon(Icons.home_outlined),
+                selectedIcon: const Icon(Icons.home),
+                label: t.t('app_nav_home'),
+              ),
+              NavigationDestination(
+                icon: const Icon(Icons.folder_open_outlined),
+                selectedIcon: const Icon(Icons.folder),
+                label: t.t('app_nav_files'),
+              ),
+              NavigationDestination(
+                icon: const Icon(Icons.settings_outlined),
+                selectedIcon: const Icon(Icons.settings),
+                label: t.t('app_nav_settings'),
+              ),
+            ],
           );
         },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.folder_open_outlined),
-            selectedIcon: Icon(Icons.folder),
-            label: 'Files',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
       ),
     );
   }

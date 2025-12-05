@@ -12,9 +12,17 @@ import 'package:pdf_kit/service/folder_service.dart';
 import 'package:pdf_kit/service/open_service.dart';
 import 'package:pdf_kit/service/path_service.dart';
 import 'package:pdf_kit/service/permission_service.dart';
+import 'package:pdf_kit/service/recent_file_service.dart';
+import 'package:pdf_kit/presentation/pages/home_page.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/presentation/sheets/new_folder_sheet.dart';
+import 'package:pdf_kit/presentation/sheets/filter_sheet.dart';
+import 'package:pdf_kit/presentation/sheets/delete_file_sheet.dart';
+import 'package:pdf_kit/presentation/sheets/rename_file_sheet.dart';
+import 'package:pdf_kit/service/file_service.dart';
 import 'package:path/path.dart' as p;
+
+import 'package:pdf_kit/presentation/models/filter_models.dart';
 
 class AndroidFilesScreen extends StatefulWidget {
   final String? initialPath;
@@ -42,11 +50,28 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
   String? _currentPath;
   List<FileInfo> _entries = [];
   StreamSubscription? _searchSub;
+  bool _fileDeleted = false; // Track if any file was deleted
+  // Sorting and filtering state
+  SortOption _sortOption = SortOption.name;
+  final Set<TypeFilter> _typeFilters = {}; // empty = all
+  bool _filterSheetOpen = false;
+  final ScrollController _listingScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _boot();
+    _listingScrollController.addListener(() {
+      if (!_filterSheetOpen) return;
+      try {
+        if (_listingScrollController.hasClients &&
+            _listingScrollController.position.isScrollingNotifier.value) {
+          if (mounted) Navigator.of(context).maybePop();
+        }
+      } catch (_) {
+        // ignore any position/access glitches
+      }
+    });
   }
 
   Future<void> _boot() async {
@@ -66,6 +91,11 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
   @override
   void dispose() {
     _searchSub?.cancel();
+    _listingScrollController.dispose();
+    // Trigger home page refresh if any file was deleted
+    if (_fileDeleted) {
+      RecentFilesSection.refreshNotifier.value++;
+    }
     super.dispose();
   }
 
@@ -91,6 +121,114 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
     });
   }
 
+  List<FileInfo> _getVisibleEntries() {
+    final list = List<FileInfo>.from(_entries);
+
+    // Apply type filter (multi-select). If none selected => all
+    List<FileInfo> filtered = list.where((e) {
+      if (_typeFilters.isEmpty) return true;
+      if (_typeFilters.contains(TypeFilter.folder) && e.isDirectory)
+        return true;
+      if (_typeFilters.contains(TypeFilter.pdf) &&
+          e.extension.toLowerCase() == 'pdf')
+        return true;
+      if (_typeFilters.contains(TypeFilter.image)) {
+        const imgExt = {
+          'jpg',
+          'jpeg',
+          'png',
+          'gif',
+          'webp',
+          'bmp',
+          'tif',
+          'tiff',
+          'heic',
+          'heif',
+          'svg',
+        };
+        if (imgExt.contains(e.extension.toLowerCase())) return true;
+      }
+      return false;
+    }).toList();
+
+    // Apply sort
+    switch (_sortOption) {
+      case SortOption.name:
+        filtered.sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
+        break;
+      case SortOption.modified:
+        filtered.sort(
+          (a, b) => (b.lastModified ?? DateTime.fromMillisecondsSinceEpoch(0))
+              .compareTo(
+                a.lastModified ?? DateTime.fromMillisecondsSinceEpoch(0),
+              ),
+        );
+        break;
+      case SortOption.type:
+        filtered.sort((a, b) {
+          if (a.isDirectory && !b.isDirectory) return -1;
+          if (!a.isDirectory && b.isDirectory) return 1;
+          final ae = a.extension.toLowerCase();
+          final be = b.extension.toLowerCase();
+          final c = ae.compareTo(be);
+          if (c != 0) return c;
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        });
+        break;
+    }
+
+    return filtered;
+  }
+
+  Future<void> _openFilterDialog() async {
+    _filterSheetOpen = true;
+
+    await showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent, // Important for transparent overlay
+      isScrollControlled: true,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(
+            16,
+            12,
+            16,
+            16,
+          ), // margin with top inset too
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: Container(
+              // color: Theme.of(context).dialogBackgroundColor, // or cardColor
+              padding: const EdgeInsets.all(0),
+              child: SafeArea(
+                bottom: true,
+                top: false,
+                left: false,
+                right: false,
+                child: FilterSheet(
+                  currentSort: _sortOption,
+                  currentTypes: Set.from(_typeFilters),
+                  onSortChanged: (s) => setState(() => _sortOption = s),
+                  onTypeFiltersChanged: (set) {
+                    setState(() {
+                      _typeFilters.clear();
+                      _typeFilters.addAll(set);
+                    });
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    _filterSheetOpen = false;
+  }
+
   void _cancelSearch() {
     _searchSub?.cancel();
     _searchSub = null;
@@ -109,23 +247,28 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
       if (widget.selectionActionText != null)
         params['actionText'] = widget.selectionActionText!;
 
-      context.pushNamed(
+      await context.pushNamed(
         AppRouteName.filesFolderFullScreen,
         queryParameters: params,
       );
     } else {
-      context.pushNamed(
+      await context.pushNamed(
         AppRouteName.filesFolder,
         queryParameters: {'path': path},
       );
+    }
+
+    // Refresh the current folder when returning from navigation
+    if (_currentPath != null && mounted) {
+      await _open(_currentPath!);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final items = _entries;
-    final folders = items.where((e) => e.isDirectory).toList();
-    final files = items.where((e) => !e.isDirectory).toList();
+    final visibleItems = _getVisibleEntries();
+    final folders = visibleItems.where((e) => e.isDirectory).toList();
+    final files = visibleItems.where((e) => !e.isDirectory).toList();
 
     return Scaffold(
       body: SafeArea(
@@ -150,11 +293,15 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
   }
 
   Widget _buildHeader(BuildContext context, List<FileInfo> visibleFiles) {
+    final t = AppLocalizations.of(context);
+
     final p = _maybeProvider();
     final enabled = widget.selectable && (p?.isEnabled ?? false);
-    final allOnPage = enabled
+    final maxLimitActive = p?.maxSelectable != null;
+    final allOnPage = (!maxLimitActive && enabled)
         ? (p?.areAllSelected(visibleFiles) ?? false)
         : false;
+
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -162,21 +309,33 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
       child: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.widgets_rounded,
-              size: 20,
-              color: Theme.of(context).colorScheme.primary,
+            child: ClipOval(
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: Image.asset(
+                  'assets/app_icon1.png',
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.cover,
+                  errorBuilder: (c, e, s) => Icon(
+                    Icons.widgets_rounded,
+                    size: 40,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 12),
           Text(
-            'Files',
+            t.t('files_header_title'), // was 'Files'
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -197,9 +356,9 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
                 );
               }
             },
-            tooltip: 'Search',
+            tooltip: t.t('common_search'), // was 'Search'
           ),
-          if (widget.selectable)
+          if (widget.selectable && !maxLimitActive)
             IconButton(
               icon: Icon(
                 !enabled
@@ -209,19 +368,23 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
                           : Icons.check_box_outline_blank),
               ),
               tooltip: !enabled
-                  ? 'Enable selection'
-                  : (allOnPage ? 'Clear this page' : 'Select all on page'),
+                  ? t.t('files_enable_selection_tooltip')
+                  : (allOnPage
+                        ? t.t('files_clear_page_tooltip')
+                        : t.t('files_select_all_page_tooltip')),
               onPressed: () {
                 final prov = _maybeProvider();
                 if (prov == null) return;
                 prov.cyclePage(visibleFiles);
               },
             )
+          else if (widget.selectable && maxLimitActive)
+            const SizedBox.shrink()
           else
             IconButton(
               icon: const Icon(Icons.more_vert),
               onPressed: () {},
-              tooltip: 'More',
+              tooltip: t.t('files_more_tooltip'), // was 'More'
             ),
         ],
       ),
@@ -232,7 +395,13 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
     children: _roots
         .map(
           (d) => ListTile(
-            leading: const Icon(Icons.sd_storage),
+            leading: Image.asset(
+              'assets/app_icon.png',
+              width: 24,
+              height: 24,
+              fit: BoxFit.contain,
+              errorBuilder: (c, e, s) => const Icon(Icons.sd_storage),
+            ),
             title: Text(d.path),
             onTap: () => _openFolder(d.path),
           ),
@@ -242,6 +411,8 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
 
   Widget _buildEmptyState() {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(context);
+
     return RefreshIndicator(
       onRefresh: () => _open(_currentPath!),
       child: ListView(
@@ -252,7 +423,7 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
           Center(child: Image.asset('assets/not_found.png')),
           const SizedBox(height: 12),
           Text(
-            'This folder is empty',
+            t.t('files_empty_folder_title'), // was 'This folder is empty'
             textAlign: TextAlign.center,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
@@ -269,6 +440,7 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
     List<FileInfo> files,
     BuildContext context,
   ) {
+    final t = AppLocalizations.of(context);
     final isEmpty = folders.isEmpty && files.isEmpty;
 
     final String displayName;
@@ -281,7 +453,7 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
         orElse: () => Directory(''),
       );
       if (exactRoot.path.isNotEmpty) {
-        displayName = 'root';
+        displayName = "root"; // was 'root'
       } else {
         Directory? parentRoot;
         for (final r in _roots) {
@@ -321,16 +493,22 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Total: ${folders.length + files.length} items',
+                      t
+                          .t('files_total_items')
+                          .replaceAll(
+                            '{count}',
+                            (folders.length + files.length).toString(),
+                          ),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
                 ),
               ),
-              const IconButton(
-                padding: EdgeInsets.all(0),
-                onPressed: null,
-                icon: Icon(Icons.import_export_rounded),
+              IconButton(
+                padding: EdgeInsets.zero,
+                tooltip: t.t('files_sort_filter_tooltip'),
+                icon: const Icon(Icons.tune),
+                onPressed: () => _openFilterDialog(),
               ),
               IconButton(
                 onPressed: () {
@@ -342,8 +520,6 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
 
                       final base = _currentPath!;
 
-                      // Determine if this path is inside app-specific external storage.
-                      // If not, request "All files access" for public/shared folders.
                       final appBase = await FolderServiceAndroid.appFilesPath();
                       final requireAll = !p.isWithin(
                         appBase,
@@ -377,6 +553,7 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
               : RefreshIndicator(
                   onRefresh: () => _open(_currentPath!),
                   child: ListView(
+                    controller: _listingScrollController,
                     padding: const EdgeInsets.only(bottom: 16),
                     children: [
                       ...folders.map(
@@ -438,14 +615,96 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
     }
   }
 
-  void _handleFileMenu(String v, FileInfo f) {
+  Future<void> _handleFileRename(FileInfo file) async {
+    debugPrint('✏️ [AndroidFilesScreen] Renaming file: ${file.name}');
+    await showRenameFileSheet(
+      context: context,
+      initialName: file.name,
+      onRename: (newName) async {
+        final result = await FileService.renameFile(file, newName);
+        result.fold(
+          (exception) {
+            debugPrint(
+              '❌ [AndroidFilesScreen] Rename failed: ${exception.message}',
+            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(exception.message),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
+            }
+          },
+          (renamedFileInfo) {
+            debugPrint(
+              '✅ [AndroidFilesScreen] Rename successful: ${renamedFileInfo.name}',
+            );
+            if (mounted) {
+              // Refresh current folder to show renamed file
+              if (_currentPath != null) {
+                _open(_currentPath!);
+              }
+              // Trigger home page refresh
+              RecentFilesSection.refreshNotifier.value++;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('File renamed successfully')),
+              );
+            }
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _handleFileMenu(String v, FileInfo f) async {
     switch (v) {
       case 'open':
         OpenService.open(f.path);
         break;
       case 'rename':
+        await _handleFileRename(f);
         break;
       case 'delete':
+        await showDeleteFileSheet(
+          context: context,
+          fileName: f.name,
+          onDelete: () async {
+            // Optimistically remove from UI
+            setState(() {
+              _entries.removeWhere((e) => e.path == f.path);
+            });
+
+            // Perform actual deletion
+            final result = await FileService.deleteFile(f);
+
+            if (!mounted) return;
+
+            result.fold(
+              (error) {
+                // Restore item on error
+                setState(() {
+                  _entries.add(f);
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(error.message),
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                );
+              },
+              (success) async {
+                // Also remove from recent files if present
+                await RecentFilesService.removeRecentFile(f.path);
+                // Mark that a file was deleted
+                _fileDeleted = true;
+                // ScaffoldMessenger.of(context).showSnackBar(
+                //   SnackBar(content: Text('${f.name} deleted successfully')),
+                // );
+              },
+            );
+          },
+        );
         break;
     }
   }

@@ -53,4 +53,20 @@ class PathService {
       return Left(Exception('Failed to resolve public directories: $e'));
     }
   }
+
+  // Downloads directory
+  static Future<Either<Exception, Directory>> downloads() async {
+    try {
+      final path = await ExternalPath.getExternalStoragePublicDirectory(
+        ExternalPath.DIRECTORY_DOWNLOAD,
+      );
+      final dir = Directory(path);
+      if (!await dir.exists()) {
+        return Left(Exception('Downloads directory not found'));
+      }
+      return Right(dir);
+    } catch (e) {
+      return Left(Exception('Failed to resolve downloads directory: $e'));
+    }
+  }
 }

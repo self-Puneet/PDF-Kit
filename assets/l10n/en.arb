@@ -1,0 +1,495 @@
+{
+  "@@locale": "en",
+
+  "app_nav_home": "Home",
+  "app_nav_files": "Files",
+  "app_nav_settings": "Settings",
+  "settings_title": "Settings",
+
+  "common_cancel": "Cancel",
+  "common_clear_all": "Clear All",
+  "common_clear": "Clear",
+  "common_select": "Select",
+  "common_retry": "Retry",
+  "common_open": "Open",
+  "common_rename": "Rename",
+  "common_delete": "Delete",
+  "common_share": "Share",
+  "common_search": "Search",
+  "common_close": "Close",
+  "common_action": "Action",
+  "common_enable_selection": "Enable selection",
+  "common_select_all_on_page": "Select all on page",
+  "common_clear_page_selection": "Clear this page",
+
+  "recent_files_title": "Recent Files",
+  "recent_files_empty_title": "No recent files",
+  "recent_files_empty_message": "Your recently accessed files will appear here.",
+  "recent_files_removed_snackbar": "Removed from recent files",
+  "recent_files_clear_menu": "Clear all recent files",
+  "recent_files_clear_confirm_title": "Clear all recent files?",
+  "recent_files_clear_confirm_message": "This will remove all files from your recent files list. This action cannot be undone.",
+
+  "recent_files_search_hint": "Search recent files...",
+  "recent_files_search_previous_header": "Previous Search",
+  "recent_files_search_no_results_title": "No results found",
+  "recent_files_search_no_results_message": "Try searching with different keywords.",
+
+  "files_header_title": "Files",
+  "files_empty_folder_title": "This folder is empty",
+  "files_total_items": "Total: {count} items",
+  "@files_total_items": {
+    "description": "Label showing total number of items in current folder.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "files_sort_filter_tooltip": "Sort / Filter",
+  "files_enable_selection_tooltip": "Enable selection",
+  "files_select_all_page_tooltip": "Select all on page",
+  "files_clear_page_tooltip": "Clear this page",
+  "files_more_tooltip": "More",
+  "files_create_new_folder_tooltip": "Create new folder",
+  "files_previous_search_clear_all_tooltip": "Clear all",
+  "files_search_hint": "Search files and folders...",
+  "files_search_not_found_title": "Not Found",
+  "files_search_not_found_message": "Please search with another keywords.",
+
+  "selection_count_label": "{count} selected",
+  "@selection_count_label": {
+    "description": "Label in selection bar showing count of selected files.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "selection_pick_sheet_selected": "{count} Selected",
+  "@selection_pick_sheet_selected": {
+    "description": "Header showing number of selected files in bottom sheet.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "selection_pick_sheet_no_files": "No files selected",
+  "selection_pick_sheet_close_tooltip": "Close",
+  "selection_pick_sheet_remove_tooltip": "Remove",
+
+  "filter_sheet_title": "Sort & Filter",
+  "filter_by_name": "By name",
+  "filter_by_modified": "By modified date",
+  "filter_type_header": "Type",
+  "filter_type_all": "All",
+  "filter_type_folders": "Folders",
+  "filter_type_pdfs": "PDFs",
+  "filter_type_images": "Images",
+
+  "new_folder_sheet_title": "New Folder",
+  "new_folder_field_label": "Folder Name",
+  "new_folder_field_hint": "Enter folder name",
+
+  "folder_picker_title": "Select Folder",
+  "folder_picker_select_button": "SELECT",
+  "folder_picker_unable_to_load_title": "Unable to load folders",
+  "folder_picker_no_folders": "No folders available",
+  "folder_picker_selected_folder_label": "Selected Folder",
+  "folder_picker_retry": "Retry",
+
+  "merge_pdf_title": "Merge PDF",
+  "merge_pdf_description": "Merge PDFs and images together, drag to reorder, rename, choose where to save, and add or edit files anytime.",
+  "merge_pdf_file_name_label": "File Name",
+  "merge_pdf_file_name_hint": "Type output file name",
+  "merge_pdf_save_to_folder_label": "Save to Folder",
+  "merge_pdf_files_selected": "{count} Files Selected",
+  "@merge_pdf_files_selected": {
+    "description": "Label showing number of files selected for merging.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "merge_pdf_reorder": "Reorder",
+  "merge_pdf_done": "Done",
+  "merge_pdf_add_more_files": "Add More Files",
+  "merge_pdf_button": "Merge PDF",
+  "merge_pdf_loading_default_folder": "Loading default folder...",
+  "merge_pdf_select_folder_placeholder": "Select Folder",
+  "merge_pdf_destination_snackbar": "Destination: {folderName}",
+  "@merge_pdf_destination_snackbar": {
+    "description": "Snackbar message showing chosen destination folder.",
+    "placeholders": {"folderName": {"type": "String"}}
+  },
+  "merge_pdf_success_snackbar": "Successfully merged to {fileName}",
+  "@merge_pdf_success_snackbar": {
+    "description": "Snackbar message after successful merge.",
+    "placeholders": {"fileName": {"type": "String"}}
+  },
+
+  "images_to_pdf_title": "Images to PDF",
+  "images_to_pdf_description": "Convert multiple images into a single PDF document. Drag to reorder, rename, choose where to save, and add or edit images anytime.",
+  "images_to_pdf_file_name_label": "File Name",
+  "images_to_pdf_file_name_hint": "Type output file name",
+  "images_to_pdf_save_to_folder_label": "Save to Folder",
+  "images_to_pdf_files_selected": "{count} Images Selected",
+  "@images_to_pdf_files_selected": {
+    "description": "Label showing number of images selected for conversion.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "images_to_pdf_reorder": "Reorder",
+  "images_to_pdf_done": "Done",
+  "images_to_pdf_add_more_files": "Add More Images",
+  "images_to_pdf_button": "Convert to PDF",
+  "images_to_pdf_loading_default_folder": "Loading default folder...",
+  "images_to_pdf_select_folder_placeholder": "Select Folder",
+  "images_to_pdf_destination_snackbar": "Destination: {folderName}",
+  "@images_to_pdf_destination_snackbar": {
+    "description": "Snackbar message showing chosen destination folder.",
+    "placeholders": {"folderName": {"type": "String"}}
+  },
+  "images_to_pdf_default_file_name": "Images Document",
+
+  "protect_pdf_title": "Protect PDF",
+  "protect_pdf_description": "Set a password to protect your scan. This password will be required if you or the person you provide the scanned document wants to access the file. If you forget the password, then this file will not be accessible forever.",
+  "protect_pdf_selected_file_label": "Selected File",
+  "protect_pdf_no_pdf_selected": "No PDF selected",
+  "protect_pdf_add_pdf_file": "Add PDF File",
+  "protect_pdf_password_label": "Password",
+  "protect_pdf_confirm_password_label": "Confirm Password",
+  "protect_pdf_password_hint_obscured": "••••••••••",
+  "protect_pdf_visibility_toggle_show": "Show",
+  "protect_pdf_visibility_toggle_hide": "Hide",
+  "protect_pdf_button": "Protect",
+  "protect_pdf_error_enter_password": "Please enter a password",
+  "protect_pdf_error_passwords_mismatch": "Passwords do not match",
+
+  "unlock_pdf_title": "Unlock PDF",
+  "unlock_pdf_description": "Enter the password to remove protection from this PDF. Once unlocked, the file can be opened without a password.",
+  "unlock_pdf_selected_file_label": "Selected File",
+  "unlock_pdf_no_pdf_selected": "No PDF selected",
+  "unlock_pdf_password_label": "Enter Password",
+  "unlock_pdf_password_hint": "Enter PDF password",
+  "unlock_pdf_button": "Unlock",
+  "unlock_pdf_error_enter_password": "Please enter the password",
+  "action_unlock_label": "Unlock PDF",
+
+  "doc_menu_open": "Open",
+  "doc_menu_rename": "Rename",
+  "doc_menu_delete": "Delete",
+  "doc_menu_share": "Share",
+  "doc_menu_edit": "Edit",
+  "doc_menu_remove": "Remove",
+  "doc_rotation_degrees": "{degrees}°",
+  "@doc_rotation_degrees": {
+    "description": "Badge showing rotation of a page in degrees.",
+    "placeholders": {"degrees": {"type": "int"}}
+  },
+
+  "errors_generic": "Error: {message}",
+  "@errors_generic": {
+    "description": "Generic error message with details.",
+    "placeholders": {"message": {"type": "String"}}
+  },
+  "errors_failed_to_load_recent": "Failed to load recent files.",
+  "errors_unable_to_load_folders": "Unable to load folders",
+
+  "empty_no_files_selected": "No files selected",
+  "empty_no_recent_files": "No recent files",
+  "empty_folder": "This folder is empty",
+  "empty_not_found": "Not Found",
+  "empty_no_results_found": "No results found",
+  "empty_try_different_keywords": "Try searching with different keywords.",
+
+  "snackbar_removed_recent": "Removed from recent files",
+  "snackbar_destination_folder": "Destination: {folderName}",
+  "@snackbar_destination_folder": {
+    "description": "Duplicate of merge_pdf_destination_snackbar (can consolidate).",
+    "placeholders": {"folderName": {"type": "String"}}
+  },
+  "snackbar_error": "Error: {message}",
+  "@snackbar_error": {
+    "description": "Generic snackbar error message.",
+    "placeholders": {"message": {"type": "String"}}
+  },
+  "snackbar_success_merge": "Successfully merged to {fileName}",
+  "@snackbar_success_merge": {
+    "description": "Duplicate of merge_pdf_success_snackbar (can consolidate).",
+    "placeholders": {"fileName": {"type": "String"}}
+  },
+  "snackbar_success_protect": "Successfully protected {fileName}",
+  "@snackbar_success_protect": {
+    "description": "Duplicate of protect_pdf_success_snackbar (can consolidate).",
+    "placeholders": {"fileName": {"type": "String"}}
+  },
+  "snackbar_success_images_to_pdf": "Successfully converted to {fileName}",
+  "@snackbar_success_images_to_pdf": {
+    "description": "Success message after converting images to PDF.",
+    "placeholders": {"fileName": {"type": "String"}}
+  }
+
+  ,"home_brand_title": "PDF Kit"
+  ,"home_get_started_title": "Get started with your PDFs"
+  ,"home_get_started_message": "Scan documents or import files to see them here."
+  ,"home_get_started_scan": "Scan a document"
+  ,"home_get_started_import": "Import PDF"
+
+  ,"recent_files_view_all_tooltip": "View all recent files"
+
+  ,"common_rename_coming_soon": "Rename feature coming soon"
+
+  ,"files_root_label": "root"
+
+  ,"merge_pdf_default_file_name": "Merged Document"
+  ,"merge_pdf_default_suffix": "Merged"
+  ,"merge_pdf_default_downloads_label": "Downloads"
+  ,"doc_page_count": "{count, plural, one {# page} other {# pages}}"
+  ,"@doc_page_count": {"description": "Page count label for a PDF.", "placeholders": {"count": {"type": "int"}}}
+
+  ,"selection_limit_error": "You can select at most {count, plural, one {# file} other {# files}}."
+  ,"@selection_limit_error": {"description": "Shown when user exceeds maximum selectable files.", "placeholders": {"count": {"type": "int"}}}
+
+  ,"selection_min_error": "Select at least {count} items."
+  ,"@selection_min_error": {"description": "Shown when user presses action but has selected fewer than the required minimum.", "placeholders": {"count": {"type": "int"}}}
+
+  ,"compress_pdf_title": "Compress PDF"
+  ,"compress_pdf_description": "Reduce PDF size with smart compression, adjust quality, choose your save location, and rename the file. Add PDFs anytime and quickly create a lighter, optimized document."
+  ,"compress_pdf_no_pdf_selected": "No PDF selected. Go back and choose one."
+  ,"compress_pdf_select_level_label": "Select compression level:"
+  ,"compress_pdf_high": "High Compression"
+  ,"compress_pdf_medium": "Medium Compression"
+  ,"compress_pdf_low": "Low Compression"
+  ,"compress_pdf_high_sub": "Smallest size, lower quality"
+  ,"compress_pdf_medium_sub": "Medium size, medium quality"
+  ,"compress_pdf_low_sub": "Largest size, better quality"
+  ,"compress_pdf_button": "Compress"
+  ,"compress_pdf_compressing": "Compressing..."
+  ,"compress_pdf_select_first_error": "Select a PDF first"
+  ,"compress_pdf_result_pattern": "Compressed \"{original}\" ({level}) → {result}"
+  ,"@compress_pdf_result_pattern": {"description": "Snackbar pattern after compression.", "placeholders": {"original": {"type": "String"}, "level": {"type": "String"}, "result": {"type": "String"}}}
+
+  ,"sign_pdf_title": "Sign PDF"
+  ,"sign_pdf_description": "Add your digital signature to a PDF or image. Draw your signature or import from library, place it anywhere you want, and save."
+  ,"sign_pdf_no_file": "No file selected. Go back and choose one."
+  ,"sign_pdf_select_first_error": "Select a PDF or image first"
+  ,"sign_pdf_continue_button": "Continue"
+
+  ,"signature_sheet_title": "Draw Signature"
+  ,"signature_sheet_clear": "Clear"
+  ,"signature_sheet_import": "Import"
+  ,"signature_sheet_add": "Add Signature"
+
+  ,"protect_pdf_success_snackbar": "Successfully protected {fileName}"
+  ,"@protect_pdf_success_snackbar": {"description": "Snackbar message after successful protection (override duplicates).", "placeholders": {"fileName": {"type": "String"}}}
+
+  ,"volume_internal_storage": "Internal Storage"
+  ,"volume_sd_card": "SD Card"
+  ,"volume_generic_storage": "Storage"
+
+  ,"folder_children_files_label": "{count} files"
+  ,"@folder_children_files_label": {"placeholders": {"count": {"type": "int"}}}
+
+  ,"new_folder_create_button": "Create"
+
+  ,"recent_files_search_seed_1": "My Home Certificate"
+  ,"recent_files_search_seed_2": "Work Documents"
+  ,"recent_files_search_seed_3": "Recommendation Letter"
+  ,"recent_files_search_seed_4": "Sales Report Documents"
+  ,"recent_files_search_seed_5": "Business Plan Proposal"
+  ,"recent_files_search_seed_6": "Job Application Letter"
+  ,"recent_files_search_seed_7": "Legal & Terms of Reference"
+  ,"recent_files_search_seed_8": "My National ID Card"
+
+  ,"recent_files_search_clear_all_tooltip": "Clear all"
+
+  ,"clear_recent_files_title": "Clear all recent files?"
+  ,"clear_recent_files_message": "This will remove all files from your recent files list. This action cannot be undone."
+  ,"clear_recent_files_confirm": "Clear All"
+
+  ,"delete_file_title": "Delete File?"
+  ,"delete_file_message": "Are you sure you want to delete"
+  ,"delete_file_confirm": "Delete"
+
+  ,"common_edit": "Edit"
+  ,"common_remove": "Remove"
+  ,"common_open_snackbar": "Open"
+
+  ,"selection_action_default": "Action"
+  ,"selection_selected_label": "{count} selected"
+  ,"@selection_selected_label": {"placeholders": {"count": {"type": "int"}}}
+  ,"settings_language_item_title": "Language"
+  ,"settings_language_item_subtitle": "Select any language you want"
+  ,"settings_default_save_location_title": "Default Save Location"
+  ,"settings_default_save_location_subtitle": "Choose where all PDFs will be saved"
+  ,"settings_dark_mode_title": "Theme"
+  ,"settings_dark_mode_subtitle": "Switch between light, dark, and system themes"
+  ,"theme_settings_page_title": "Theme Settings"
+  ,"theme_settings_info_message": "Choose your preferred theme. System theme will automatically adjust based on your device settings."
+  ,"theme_settings_choose_label": "Select Theme"
+  ,"theme_settings_light_title": "Light Theme"
+  ,"theme_settings_light_subtitle": "Use light colors for the app interface"
+  ,"theme_settings_dark_title": "Dark Theme"
+  ,"theme_settings_dark_subtitle": "Use dark colors for the app interface"
+  ,"theme_settings_system_title": "System Default"
+  ,"theme_settings_system_subtitle": "Follow device system theme settings"
+  ,"settings_file_naming_title": "File Naming Scheme"
+  ,"settings_file_naming_subtitle": "Set how new files are named automatically"
+  ,"settings_pdf_compression_title": "PDF Compression"
+  ,"settings_pdf_compression_subtitle": "Set how new files are compressed automatically"
+  ,"settings_filter_options_title": "Filter Options"
+  ,"settings_filter_options_subtitle": "Choose which filters the app applies by default"
+  ,"settings_grid_view_layout_title": "Grid View Layout"
+  ,"settings_grid_view_layout_subtitle": "Control how files and folders appear"
+  ,"settings_pdf_content_fit_title": "PDF Content Fit Mode"
+  ,"settings_pdf_content_fit_subtitle": "Choose how images and PDFs should fit"
+  ,"settings_help_center_title": "Help Center"
+  ,"settings_help_center_subtitle": "Get help, FAQs, and answers"
+  ,"settings_about_pdf_kit_title": "About PDF-Kit"
+  ,"settings_about_pdf_kit_subtitle": "View details about this app"
+  ,"settings_about_us_title": "About Us"
+
+  ,"action_watermark_label": "Watermark"
+  ,"action_esign_label": "eSign PDF"
+  ,"action_split_label": "Split PDF"
+  ,"action_merge_label": "Merge PDF"
+  ,"action_protect_label": "Protect PDF"
+  ,"action_compress_label": "Compress PDF"
+  ,"action_unlock_label": "Unlock PDF"
+  ,"action_images_to_pdf_label": "Images to PDF"
+  ,"action_pdf_to_image_label": "PDF to Image"
+  ,"action_reorder_label": "Reorder PDF"
+  ,"action_all_tools_label": "All Tools"
+  ,"action_coming_soon_toast": "{feature} coming soon"
+  ,"watermark_pdf_title": "Add Watermark"
+  ,"images_to_pdf_title": "Convert Images to PDF"
+  ,"pdf_to_image_title": "Convert PDF to Images"
+  ,"split_pdf_title": "Split PDF"
+  ,"reorder_pdf_title": "Reorder PDF Pages"
+  ,"reorder_pdf_description": "Reorder, rotate, or remove pages from your PDF. Tap a page to preview, drag to reorder, and save your customized document."
+  ,"reorder_pdf_button": "Reorder"
+  ,"reorder_pdf_no_file": "No PDF selected. Please go back and choose a PDF file."
+  ,"reorder_pdf_success": "PDF pages reordered successfully"
+  ,"@action_coming_soon_toast": {"placeholders": {"feature": {"type": "String"}}}
+  ,"settings_about_us_subtitle": "Discover our vision and how we work"
+  ,"language_settings_page_title": "Language Settings"
+  ,"language_settings_choose_label": "Choose App Language"
+  ,"language_option_english": "English"
+  ,"language_option_hindi": "हिन्दी (Hindi)"
+  ,"language_option_spanish": "Español (Spanish)"
+  ,"language_option_arabic": "العربية (Arabic)"
+  ,"language_option_bengali": "বাংলা (Bengali)"
+  ,"language_option_german": "Deutsch (German)"
+  ,"language_option_french": "Français (French)"
+  ,"language_option_japanese": "日本語 (Japanese)"
+  ,"language_option_portuguese": "Português (Portuguese)"
+  ,"language_option_chinese": "中文 (Chinese)"
+  ,"language_settings_applied_snackbar": "Language updated"
+  ,"show_pdf_no_path": "no path"
+  ,"show_pdf_prefix": "Show PDF: {path}"
+  ,"@show_pdf_prefix": {"placeholders": {"path": {"type": "String"}}}
+  ,"onboarding_title": "Onboarding"
+  ,"all_files_title": "All Files & Folders"
+  ,"search_files_title": "Search Files"
+  ,"preferences_title": "Preferences"
+  ,"contact_us_title": "Contact Us"
+  ,"about_app_title": "About the App"
+  ,"take_image_title": "Take Image"
+  ,"add_watermark_title": "Add Watermark"
+  ,"add_signature_title": "Add Digital Signature"
+  ,"not_found_page_title": "Page not found"
+  ,"not_found_page_route_undefined": "No route defined for: {route}"
+  ,"@not_found_page_route_undefined": {"placeholders": {"route": {"type": "String"}}}
+  ,"not_found_go_home_button": "Go Home",
+  "selection_max_info": "Max: {count}",
+  "@selection_max_info": {
+    "description": "Info message in selection sheet showing the maximum selectable files.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+"selection_sheet_title": "Selected Files",
+"@selection_sheet_title": {
+  "description": "Title of the bottom sheet showing currently selected files."
+},
+
+"selection_sheet_empty": "No files selected",
+"@selection_sheet_empty": {
+  "description": "Message shown when there are no files selected in the sheet."
+},
+
+"selection_folder_items_single": "{count} item",
+"@selection_folder_items_single": {
+  "description": "Label for a folder group when it has exactly one selected item.",
+  "placeholders": {
+    "count": { "type": "int" }
+  }
+},
+
+"selection_folder_items_multiple": "{count} items",
+"@selection_folder_items_multiple": {
+  "description": "Label for a folder group when it has more than one selected item.",
+  "placeholders": {
+    "count": { "type": "int" }
+  }
+},
+
+"selection_folder_collapse_tooltip": "Collapse",
+"@selection_folder_collapse_tooltip": {
+  "description": "Tooltip for collapse button in selection folder group."
+},
+
+"selection_folder_expand_tooltip": "Expand",
+"@selection_folder_expand_tooltip": {
+  "description": "Tooltip for expand button in selection folder group."
+},
+
+"selection_limit_error_single": "You can select at most {count} file.",
+"@selection_limit_error_single": {
+  "description": "Shown when user exceeds maximum selectable files (exactly 1 allowed).",
+  "placeholders": { "count": { "type": "int" } }
+},
+
+"selection_limit_error_multiple": "You can select at most {count} files.",
+"@selection_limit_error_multiple": {
+  "description": "Shown when user exceeds maximum selectable files (more than 1 allowed).",
+  "placeholders": { "count": { "type": "int" } }
+},
+
+"onboarding_screen1_title": "Your Files, Fully Private",
+"onboarding_screen1_subtitle": "Work offline with complete peace of mind.\nNothing leaves your device — your data stays safe, secure, and personal to you.",
+
+"onboarding_screen2_title": "All Your PDF Tools in One Place",
+"onboarding_screen2_subtitle": "Manage files and folders, edit PDFs, add watermarks, compress, split, merge, protect, unlock, and more — all inside a smooth, easy-to-use app.",
+
+"onboarding_screen3_title": "Choose Your Preferred Language",
+"onboarding_screen3_subtitle": "Use the app in any language you like.\nWe support 10+ languages, including English, Hindi, Spanish, French, Bengali, and more.",
+
+"onboarding_screen4_title": "Select Your Language",
+"onboarding_screen4_subtitle": "Choose any language from the options below to get started.",
+
+"onboarding_button_skip": "Skip",
+"onboarding_button_next": "Next",
+"onboarding_button_back": "Back",
+"onboarding_button_get_started": "Get started"
+, "onboarding_tagline": "Your complete toolkit for every PDF task."
+
+  ,"pdf_to_image_page_title": "PDF to Images"
+  ,"pdf_to_image_page_description": "Convert all pages of your PDF to high-quality image files. Each page will be saved as a separate image."
+  ,"pdf_to_image_name_label": "Image Name Prefix"
+  ,"pdf_to_image_name_hint": "Enter name for images"
+  ,"pdf_to_image_name_helper": "Images will be named: <name>_page_001.jpg, <name>_page_002.jpg, etc."
+  ,"pdf_to_image_destination_label": "Save Images To"
+  ,"pdf_to_image_selected_file_label": "Selected PDF File"
+  ,"pdf_to_image_no_file_selected": "Please select a PDF file from the previous screen"
+  ,"pdf_to_image_pages_label": "Pages to Convert"
+  ,"pdf_to_image_select_pages_button": "Select Pages"
+  ,"pdf_to_image_select_pages_title": "Select Pages"
+  ,"pdf_to_image_pages_selected": "pages selected"
+  ,"pdf_to_image_all_pages_info": "All pages from the PDF will be converted to images"
+  ,"pdf_to_image_selected_pages_info": "{count} selected pages will be converted to images"
+  ,"@pdf_to_image_selected_pages_info": {"placeholders": {"count": {"type": "String"}}}
+  ,"pdf_to_image_convert_button": "Convert to Images"
+  ,"pdf_to_image_converting_button": "Converting..."
+  ,"pdf_to_image_no_file_error": "No PDF file selected"
+  ,"pdf_to_image_default_name": "PDF_Images"
+  ,"pdf_to_image_destination_snackbar": "Destination changed to {folderName}"
+  ,"@pdf_to_image_destination_snackbar": {"placeholders": {"folderName": {"type": "String"}}}
+  ,"pdf_to_image_loading_default_folder": "Loading default folder..."
+  ,"pdf_to_image_select_folder_placeholder": "Select destination folder"
+  ,"common_done": "Done"
+  ,"snackbar_success_pdf_to_image": "Successfully converted {count} pages to images in {folderName}"
+  ,"@snackbar_success_pdf_to_image": {"placeholders": {"count": {"type": "String"}, "folderName": {"type": "String"}}}
+
+  ,"pdf_options_rename": "Rename"
+  ,"pdf_options_delete": "Delete"
+  ,"pdf_options_split": "Split"
+  ,"pdf_options_protect": "Protect / Remove Password"
+  ,"pdf_options_compress": "Compress PDF"
+  ,"pdf_options_move_to_folder": "Move to Folder"
+  
+}

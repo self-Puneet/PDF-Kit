@@ -1,8 +1,11 @@
 // app_router.dart
 import 'package:flutter/material.dart';
+import 'package:pdf_kit/providers/locale_provider.dart';
 import 'package:pdf_kit/core/routing/file_selection_shell.dart';
 import 'package:pdf_kit/core/routing/home_shell.dart';
 import 'package:pdf_kit/presentation/pages/page_export.dart';
+import 'package:pdf_kit/presentation/pages/images_to_pdf_page.dart';
+import 'package:pdf_kit/presentation/pages/reorder_pdf_page.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/presentation/provider/provider_export.dart';
 
@@ -12,17 +15,55 @@ final _homeNavKey = GlobalKey<NavigatorState>(debugLabel: 'home');
 final _filesNavKey = GlobalKey<NavigatorState>(debugLabel: 'files');
 final _settingsNavKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 
-
 final appRouter = GoRouter(
   navigatorKey: _rootNavKey,
-  initialLocation: '/',
+  initialLocation: '/splash',
   errorBuilder: (context, state) =>
       NotFoundPage(routeName: state.uri.toString()),
   routes: [
     GoRoute(
+      name: AppRouteName.splash,
+      path: '/splash',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) => const PdfKitSplashPage(),
+    ),
+    GoRoute(
+      name: AppRouteName.onboardingShell,
+      path: '/onboarding-shell',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) => const OnboardingShellPage(),
+    ),
+    GoRoute(
+      name: AppRouteName.recentFiles,
+      path: '/recent-files',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) => const RecentFilesPage(),
+    ),
+    GoRoute(
       name: AppRouteName.onboarding,
       path: '/onboarding',
       builder: (context, state) => const OnboardingPage(),
+    ),
+
+    GoRoute(
+      name: 'language-settings',
+      path: '/settings/language',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) => const LanguageSettingsPage(),
+    ),
+
+    GoRoute(
+      name: 'theme-settings',
+      path: '/settings/theme',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) => const ThemeSettingsPage(),
+    ),
+
+    GoRoute(
+      name: 'pdf-content-fit-settings',
+      path: '/settings/pdf-content-fit',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) => const PdfContentFitSettingsPage(),
     ),
 
     buildHomeShellRoute(
@@ -41,19 +82,14 @@ final appRouter = GoRouter(
       builder: (context, state) =>
           ShowPdfPage(path: state.uri.queryParameters['path']),
     ),
+    // Full featured PDF viewer (dark-themed page)
     GoRoute(
-      name: AppRouteName.addWatermark,
-      path: '/pdf/watermark',
+      name: AppRouteName.pdfViewer,
+      path: '/pdf/viewer',
       parentNavigatorKey: _rootNavKey,
-      builder: (context, state) => const AddWatermarkPage(),
+      builder: (context, state) =>
+          PdfViewerPage(path: state.uri.queryParameters['path']),
     ),
-    GoRoute(
-      name: AppRouteName.addSignature,
-      path: '/pdf/signature',
-      parentNavigatorKey: _rootNavKey,
-      builder: (context, state) => const AddSignaturePage(),
-    ),
-
     GoRoute(
       name: AppRouteName.mergePdf,
       path: '/pdf/merge',
@@ -79,13 +115,147 @@ final appRouter = GoRouter(
       name: AppRouteName.protectPdf,
       path: '/pdf/protect',
       parentNavigatorKey: _rootNavKey,
-      builder: (context, state) => const ProtectPdfPage(),
+      builder: (context, state) {
+        final selectionId = state.uri.queryParameters['selectionId'];
+        if (selectionId != null) {
+          // reuse provider from SelectionManager cache
+          final provider = Get.find<SelectionManager>().of(selectionId);
+          return ChangeNotifierProvider<SelectionProvider>.value(
+            value: provider,
+            child: ProtectPdfPage(selectionId: selectionId),
+          );
+        }
+        // fallback: create a fresh provider scoped to this route
+        return ChangeNotifierProvider(
+          create: (_) => SelectionProvider(),
+          child: const ProtectPdfPage(),
+        );
+      },
     ),
+
+    GoRoute(
+      name: AppRouteName.unlockPdf,
+      path: '/pdf/unlock',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) {
+        final selectionId = state.uri.queryParameters['selectionId'];
+        if (selectionId != null) {
+          // reuse provider from SelectionManager cache
+          final provider = Get.find<SelectionManager>().of(selectionId);
+          return ChangeNotifierProvider<SelectionProvider>.value(
+            value: provider,
+            child: UnlockPdfPage(selectionId: selectionId),
+          );
+        }
+        // fallback: create a fresh provider scoped to this route
+        return ChangeNotifierProvider(
+          create: (_) => SelectionProvider(),
+          child: const UnlockPdfPage(),
+        );
+      },
+    ),
+
+    GoRoute(
+      // explicit URL path for the folder picker
+      path: '/folder-picker',
+      name: AppRouteName.folderPickScreen,
+      pageBuilder: (context, state) {
+        return MaterialPage(
+          key: state.pageKey,
+          child: const FolderPickerPage(),
+        );
+      },
+    ),
+
     GoRoute(
       name: AppRouteName.compressPdf,
       path: '/pdf/compress',
       parentNavigatorKey: _rootNavKey,
-      builder: (context, state) => const CompressPdfPage(),
+      builder: (context, state) {
+        final selectionId = state.uri.queryParameters['selectionId'];
+        if (selectionId != null) {
+          try {
+            final provider = Get.find<SelectionManager>().of(selectionId);
+            return ChangeNotifierProvider<SelectionProvider>.value(
+              value: provider,
+              child: CompressPdfPage(selectionId: selectionId),
+            );
+          } catch (_) {}
+        }
+        return ChangeNotifierProvider(
+          create: (_) => SelectionProvider(),
+          child: const CompressPdfPage(),
+        );
+      },
+    ),
+    GoRoute(
+      name: AppRouteName.pdfToImage,
+      path: '/pdf/to-image',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) {
+        final selectionId = state.uri.queryParameters['selectionId'];
+        if (selectionId != null) {
+          try {
+            final provider = Get.find<SelectionManager>().of(selectionId);
+            return ChangeNotifierProvider<SelectionProvider>.value(
+              value: provider,
+              child: PdfToImagePage(selectionId: selectionId),
+            );
+          } catch (_) {}
+        }
+        return ChangeNotifierProvider(
+          create: (_) => SelectionProvider(),
+          child: const PdfToImagePage(),
+        );
+      },
+    ),
+    GoRoute(
+      name: AppRouteName.imagesToPdf,
+      path: '/images/to-pdf',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) {
+        final selectionId = state.uri.queryParameters['selectionId'];
+        if (selectionId != null) {
+          // reuse provider from SelectionManager cache
+          final provider = Get.find<SelectionManager>().of(selectionId);
+          return ChangeNotifierProvider<SelectionProvider>.value(
+            value: provider,
+            child: ImagesToPdfPage(selectionId: selectionId),
+          );
+        }
+        // fallback: create a fresh provider scoped to this route
+        return ChangeNotifierProvider(
+          create: (_) => SelectionProvider(),
+          child: const ImagesToPdfPage(),
+        );
+      },
+    ),
+    GoRoute(
+      name: AppRouteName.reorderPdf,
+      path: '/pdf/reorder',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) {
+        final selectionId = state.uri.queryParameters['selectionId'];
+        if (selectionId != null) {
+          try {
+            final provider = Get.find<SelectionManager>().of(selectionId);
+            return ChangeNotifierProvider<SelectionProvider>.value(
+              value: provider,
+              child: ReorderPdfPage(selectionId: selectionId),
+            );
+          } catch (_) {}
+        }
+        return ChangeNotifierProvider(
+          create: (_) => SelectionProvider(),
+          child: const ReorderPdfPage(),
+        );
+      },
+    ),
+    GoRoute(
+      name: AppRouteName.recentFilesSearch,
+      path: '/recent-files/search',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) => const RecentFilesSearchPage(),
     ),
   ],
 );
@@ -93,122 +263,158 @@ final appRouter = GoRouter(
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Onboarding')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(body: Center(child: Text(t.t('onboarding_title'))));
+  }
 }
 
 class AllFilesPage extends StatelessWidget {
   const AllFilesPage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('All Files & Folders')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(body: Center(child: Text(t.t('all_files_title'))));
+  }
 }
 
 class SearchFilePage extends StatelessWidget {
   const SearchFilePage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Search Files')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(body: Center(child: Text(t.t('search_files_title'))));
+  }
 }
 
 class PreferencesPage extends StatelessWidget {
   const PreferencesPage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Preferences')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(body: Center(child: Text(t.t('preferences_title'))));
+  }
 }
 
 class LanguageSettingsPage extends StatelessWidget {
   const LanguageSettingsPage({super.key});
+
+  static const _languages = [
+    {'code': 'en', 'key': 'language_option_english'},
+    {'code': 'hi', 'key': 'language_option_hindi'},
+    {'code': 'es', 'key': 'language_option_spanish'},
+    {'code': 'ar', 'key': 'language_option_arabic'},
+    {'code': 'bn', 'key': 'language_option_bengali'},
+    {'code': 'de', 'key': 'language_option_german'},
+    {'code': 'fr', 'key': 'language_option_french'},
+    {'code': 'ja', 'key': 'language_option_japanese'},
+    {'code': 'pt', 'key': 'language_option_portuguese'},
+    {'code': 'zh', 'key': 'language_option_chinese'},
+  ];
+
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Language Settings')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final provider = context.watch<LocaleProvider>();
+    final current = provider.locale?.languageCode ?? 'en';
+    return Scaffold(
+      appBar: AppBar(title: Text(t.t('language_settings_page_title'))),
+      body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              t.t('language_settings_choose_label'),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          ..._languages.map(
+            (lang) => RadioListTile<String>(
+              title: Text(t.t(lang['key']!)),
+              value: lang['code']!,
+              groupValue: current,
+              onChanged: (v) {
+                provider.setLocale(lang['code']!);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(t.t('language_settings_applied_snackbar')),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class ContactUsPage extends StatelessWidget {
   const ContactUsPage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Contact Us')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(body: Center(child: Text(t.t('contact_us_title'))));
+  }
 }
 
 class AboutAppPage extends StatelessWidget {
   const AboutAppPage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('About the App')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(body: Center(child: Text(t.t('about_app_title'))));
+  }
 }
 
 class TakeImagePage extends StatelessWidget {
   const TakeImagePage({super.key});
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Take Image')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return Scaffold(body: Center(child: Text(t.t('take_image_title'))));
+  }
 }
 
 class ShowPdfPage extends StatelessWidget {
   final String? path; // optional argument example
   const ShowPdfPage({super.key, this.path});
   @override
-  Widget build(BuildContext context) =>
-      Scaffold(body: Center(child: Text('Show PDF: ${path ?? 'no path'}')));
-}
-
-class RecentFilesPage extends StatelessWidget {
-  const RecentFilesPage({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Recent Files')));
-}
-
-class AddWatermarkPage extends StatelessWidget {
-  const AddWatermarkPage({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Add Watermark')));
-}
-
-class AddSignaturePage extends StatelessWidget {
-  const AddSignaturePage({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Add Digital Signature')));
-}
-
-class ProtectPdfPage extends StatelessWidget {
-  const ProtectPdfPage({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Protect PDF')));
-}
-
-class CompressPdfPage extends StatelessWidget {
-  const CompressPdfPage({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Compress PDF')));
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final safePath = path ?? t.t('show_pdf_no_path');
+    final text = t.t('show_pdf_prefix').replaceFirst('{path}', safePath);
+    return Scaffold(body: Center(child: Text(text)));
+  }
 }
 
 class NotFoundPage extends StatelessWidget {
   final String? routeName;
   const NotFoundPage({super.key, this.routeName});
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Page not found')),
-    body: Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('No route defined for: ${routeName ?? 'unknown'}'),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: () => Navigator.of(
-              context,
-            ).pushNamedAndRemoveUntil(AppRouteName.home, (r) => false),
-            child: const Text('Go Home'),
-          ),
-        ],
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final routeText = t
+        .t('not_found_page_route_undefined')
+        .replaceFirst('{route}', routeName ?? t.t('show_pdf_no_path'));
+    return Scaffold(
+      appBar: AppBar(title: Text(t.t('not_found_page_title'))),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(routeText),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: () => Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil(AppRouteName.home, (r) => false),
+              child: Text(t.t('not_found_go_home_button')),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

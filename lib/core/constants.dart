@@ -1,0 +1,55 @@
+class Constants {
+  Constants._();
+
+  /// Shared preferences keys
+  static const String prefsLanguageKey = 'app_language_code';
+  static const String prefsThemeKey = 'app_theme_mode';
+  static const String prefsOnboardingCompletedKey = 'onboarding_completed';
+
+  /// Recent files storage key (used by RecentFilesService)
+  static const String recentFilesKey = 'recent_files';
+
+  /// PDF content fit mode preference key
+  static const String pdfContentFitModeKey = 'pdf_content_fit_mode';
+
+  /// Default PDF content fit mode (use PdfContentFitMode enum for actual values)
+  static const String defaultPdfContentFitMode = 'original';
+
+  /// Default image compression quality (0-100) used when compressing images
+  /// during merge/compress flows. Tweak this value as needed.
+  static const int imageCompressQuality = 60;
+
+  /// Image size threshold in bytes (2 MB). Images larger than this will be
+  /// compressed before being added to PDF during merge operations.
+  static const int imageSizeThreshold = 2 * 1024 * 1024; // 2 MB
+
+  // ========== PDF Merge Size Management Configuration ==========
+
+  /// Target maximum size for merged PDF in MB
+  /// If estimated output exceeds this, automatic compression will be applied
+  static const int mergedPdfTargetSizeMB = 50;
+
+  /// PDF compression ratio estimate (0.0 to 1.0)
+  /// PDFs typically compress to 80-90% of original size with document compression
+  static const double pdfCompressionRatio = 0.85;
+
+  /// Image compression ratio estimate (0.0 to 1.0)
+  /// Images typically compress to 40-60% depending on quality
+  static const double imageCompressionRatio = 0.5;
+
+  /// Minimum compression factor allowed (0.0 to 1.0)
+  /// Even with size constraints, quality won't drop below this threshold
+  /// 0.3 means maximum 70% quality reduction
+  static const double minCompressionFactor = 0.3;
+
+  /// Maximum compression factor (no compression needed)
+  static const double maxCompressionFactor = 1.0;
+
+  /// Base image quality for dynamic compression (0-100)
+  /// This is the starting quality before applying compression factor
+  static const int baseImageQuality = 95;
+
+  /// Minimum image quality allowed (0-100)
+  /// Even with heavy compression, quality won't drop below this
+  static const int minImageQuality = 20;
+}
