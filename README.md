@@ -1,4 +1,4 @@
-# PDF Kit
+# PDF Kit &nbsp; [![Download APK](https://img.shields.io/badge/Download-APK-blue?style=for-the-badge&logo=android)](https://github.com/self-Puneet/PDF-Kit/releases/download/AppBuild/app-release.apk)
 
 <center><img src="assets/mockup.png" style="height: 50%; max-height: 500px; width: auto;" alt="PDF Kit mockup" />
 </center>
