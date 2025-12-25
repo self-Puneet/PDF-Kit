@@ -207,6 +207,29 @@ class FileSystemProvider extends ChangeNotifier with WidgetsBindingObserver {
     });
   }
 
+  /// Add multiple files to a folder's cache
+  /// Useful for updating UI when new files are created (e.g., after split operation)
+  Future<void> addFiles(String folderPath, List<FileInfo> files) async {
+    if (files.isEmpty) return;
+
+    // Ensure the folder is in cache
+    if (!_cache.containsKey(folderPath)) {
+      await load(folderPath, forceRefresh: true);
+      return;
+    }
+
+    // Add files to cache if they don't exist
+    final existingPaths = _cache[folderPath]!.map((f) => f.path).toSet();
+    final newFiles = files
+        .where((f) => !existingPaths.contains(f.path))
+        .toList();
+
+    if (newFiles.isNotEmpty) {
+      _cache[folderPath]!.addAll(newFiles);
+      notifyListeners();
+    }
+  }
+
   // --- Search ---
 
   StreamSubscription? _searchSub;

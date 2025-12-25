@@ -252,6 +252,27 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
+      name: AppRouteName.splitPdf,
+      path: '/pdf/split',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) {
+        final selectionId = state.uri.queryParameters['selectionId'];
+        if (selectionId != null) {
+          try {
+            final provider = Get.find<SelectionManager>().of(selectionId);
+            return ChangeNotifierProvider<SelectionProvider>.value(
+              value: provider,
+              child: SplitPdfPage(selectionId: selectionId),
+            );
+          } catch (_) {}
+        }
+        return ChangeNotifierProvider(
+          create: (_) => SelectionProvider(),
+          child: const SplitPdfPage(),
+        );
+      },
+    ),
+    GoRoute(
       name: AppRouteName.recentFilesSearch,
       path: '/recent-files/search',
       parentNavigatorKey: _rootNavKey,

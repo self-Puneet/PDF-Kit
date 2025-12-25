@@ -1,0 +1,742 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:pdf_kit/models/file_model.dart';
+import 'package:pdf_kit/presentation/component/document_tile.dart';
+import 'package:pdf_kit/presentation/provider/selection_provider.dart';
+import 'package:pdf_kit/presentation/layouts/selection_layout.dart';
+import 'package:pdf_kit/service/pdf_split_service.dart';
+import 'package:pdf_kit/service/recent_file_service.dart';
+import 'package:pdf_kit/providers/file_system_provider.dart';
+import 'package:pdf_kit/core/app_export.dart';
+import 'package:path/path.dart' as p;
+import 'package:pdf_kit/presentation/pages/home_page.dart';
+import 'package:pdfx/pdfx.dart' as pdfx;
+
+// Model for managing range widget state
+class _RangeWidgetData {
+  final TextEditingController startController;
+  final TextEditingController endController;
+  bool isActive;
+
+  _RangeWidgetData({
+    required this.startController,
+    required this.endController,
+    this.isActive = false,
+  });
+
+  void dispose() {
+    startController.dispose();
+    endController.dispose();
+  }
+
+  PageRange? toPageRange() {
+    final start = int.tryParse(startController.text.trim());
+    final end = int.tryParse(endController.text.trim());
+    if (start != null && end != null && start > 0 && end > 0 && start <= end) {
+      return PageRange(startPage: start, endPage: end);
+    }
+    return null;
+  }
+
+  bool get hasValues =>
+      startController.text.trim().isNotEmpty &&
+      endController.text.trim().isNotEmpty;
+}
+
+class SplitPdfPage extends StatefulWidget {
+  final String? selectionId;
+
+  const SplitPdfPage({super.key, this.selectionId});
+
+  @override
+  State<SplitPdfPage> createState() => _SplitPdfPageState();
+}
+
+class _SplitPdfPageState extends State<SplitPdfPage> {
+  final TextEditingController _namingPatternController =
+      TextEditingController();
+  final List<_RangeWidgetData> _rangeWidgets = [];
+
+  bool _isSplitting = false;
+  int? _totalPages;
+  pdfx.PdfDocument? _pdfDocument;
+  final List<Uint8List?> _pagePreviews = [];
+  bool _isLoadingPreviews = false;
+
+  String? _loadedPath; // <-- add this
+
+  @override
+  void initState() {
+    super.initState();
+
+    _rangeWidgets.add(
+      _RangeWidgetData(
+        startController: TextEditingController(),
+        endController: TextEditingController(),
+        isActive: true,
+      ),
+    );
+    _rangeWidgets.add(
+      _RangeWidgetData(
+        startController: TextEditingController(),
+        endController: TextEditingController(),
+        isActive: false,
+      ),
+    );
+
+    // Add listeners to all range controllers for instant state updates
+    for (var widget in _rangeWidgets) {
+      widget.startController.addListener(_onRangeChanged);
+      widget.endController.addListener(_onRangeChanged);
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Keep this separate; never block PDF loading due to this.
+      try {
+        SelectionScope.of(context).setMinSelectable(1);
+      } catch (e) {
+        debugPrint('SelectionScope not found: $e');
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final selection = context.watch<SelectionProvider>();
+    if (selection.files.isEmpty) return;
+
+    final path = selection.files.first.path;
+    if (_loadedPath == path) return; // already loaded this file
+
+    _loadedPath = path;
+    _loadPdfInfoForPath(path);
+  }
+
+  @override
+  void dispose() {
+    _namingPatternController.dispose();
+    for (var widget in _rangeWidgets) {
+      widget.dispose();
+    }
+    _pdfDocument?.close();
+    super.dispose();
+  }
+
+  Future<void> _loadPdfInfoForPath(String pdfPath) async {
+    setState(() {
+      _isLoadingPreviews = true;
+      _pagePreviews.clear();
+      _totalPages = null;
+    });
+
+    try {
+      await _pdfDocument?.close();
+      _pdfDocument = null;
+
+      final pageCountResult = await PdfSplitService.getPageCount(
+        pdfPath: pdfPath,
+      );
+
+      await pageCountResult.fold(
+        (error) async {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $error'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        },
+        (count) async {
+          if (!mounted) return;
+
+          setState(() {
+            _totalPages = count;
+            _namingPatternController.text = p.basenameWithoutExtension(pdfPath);
+          });
+
+          _pdfDocument = await pdfx.PdfDocument.openFile(pdfPath);
+          await _generatePagePreviews();
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingPreviews = false);
+    }
+  }
+
+  Future<void> _generatePagePreviews() async {
+    if (_pdfDocument == null || _totalPages == null || _totalPages == 0) return;
+
+    for (int i = 1; i <= _totalPages!; i++) {
+      try {
+        final page = await _pdfDocument!.getPage(i);
+        final pageImage = await page.render(
+          width: page.width * 0.3,
+          height: page.height * 0.3,
+          format: pdfx.PdfPageImageFormat.jpeg,
+          backgroundColor: '#FFFFFF',
+        );
+        await page.close();
+        _pagePreviews.add(pageImage?.bytes);
+      } catch (e) {
+        _pagePreviews.add(null);
+      }
+    }
+    if (mounted) setState(() {});
+  }
+
+  void _activateRange(int index) {
+    if (!_rangeWidgets[index].isActive) {
+      setState(() {
+        _rangeWidgets[index].isActive = true;
+        // If this was the last widget, add another inactive one
+        if (index == _rangeWidgets.length - 1) {
+          final newWidget = _RangeWidgetData(
+            startController: TextEditingController(),
+            endController: TextEditingController(),
+            isActive: false,
+          );
+          // Add listeners to new widget
+          newWidget.startController.addListener(_onRangeChanged);
+          newWidget.endController.addListener(_onRangeChanged);
+          _rangeWidgets.add(newWidget);
+        }
+      });
+    }
+  }
+
+  /// Called when any range controller value changes
+  void _onRangeChanged() {
+    setState(() {
+      // This will trigger a rebuild and update button state
+    });
+  }
+
+  void _removeRange(int index) {
+    setState(() {
+      _rangeWidgets[index].dispose();
+      _rangeWidgets.removeAt(index);
+    });
+  }
+
+  List<PageRange> _getValidRanges() {
+    final ranges = <PageRange>[];
+    for (var widget in _rangeWidgets) {
+      if (widget.isActive) {
+        final range = widget.toPageRange();
+        if (range != null) {
+          ranges.add(range);
+        }
+      }
+    }
+    return ranges;
+  }
+
+  Future<void> _handleSplit(
+    BuildContext context,
+    SelectionProvider selection,
+  ) async {
+    final ranges = _getValidRanges();
+
+    if (ranges.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please add at least one valid page range'),
+        ),
+      );
+      return;
+    }
+
+    // Validate all ranges
+    if (_totalPages != null) {
+      final validationResult = PdfSplitService.validateRanges(
+        ranges: ranges,
+        totalPages: _totalPages!,
+      );
+
+      final error = validationResult.fold((err) => err, (_) => null);
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+        return;
+      }
+    }
+
+    setState(() => _isSplitting = true);
+
+    final file = selection.files.first;
+    final pattern = _namingPatternController.text.trim();
+
+    final result = await PdfSplitService.splitPdf(
+      sourcePdfPath: file.path,
+      ranges: ranges,
+      namingPattern: pattern.isNotEmpty ? pattern : null,
+    );
+
+    setState(() => _isSplitting = false);
+
+    if (!mounted) return;
+
+    if (result.success) {
+      final createdFiles = <FileInfo>[];
+      String? downloadsPath;
+
+      for (final outputPath in result.outputPaths) {
+        try {
+          final outputFile = File(outputPath);
+          final stats = await outputFile.stat();
+          final fileInfo = FileInfo(
+            name: p.basename(outputPath),
+            path: outputPath,
+            size: stats.size,
+            extension: 'pdf',
+            lastModified: stats.modified,
+            mimeType: 'application/pdf',
+            parentDirectory: p.dirname(outputPath),
+          );
+          await RecentFilesService.addRecentFile(fileInfo);
+          createdFiles.add(fileInfo);
+          downloadsPath ??= p.dirname(outputPath);
+        } catch (e) {
+          debugPrint('Failed to add split file: $e');
+        }
+      }
+
+      // Update FileSystemProvider to show files in Downloads folder
+      if (downloadsPath != null && createdFiles.isNotEmpty) {
+        try {
+          final fileSystemProvider = context.read<FileSystemProvider>();
+          await fileSystemProvider.addFiles(downloadsPath, createdFiles);
+        } catch (e) {
+          debugPrint('Failed to update FileSystemProvider: $e');
+        }
+      }
+
+      selection.disable();
+      context.go('/');
+      RecentFilesSection.refreshNotifier.value++;
+
+      // Show simple success snackbar instead of dialog
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Successfully split PDF into ${result.outputPaths.length} files',
+              ),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.errorMessage ?? 'Failed to split PDF'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Consumer<SelectionProvider>(
+      builder: (context, selection, _) {
+        final files = selection.files;
+        final hasFile = files.isNotEmpty;
+
+        return Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              onPressed: () => context.pop(),
+            ),
+          ),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Split PDF',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Select page ranges to extract from your PDF',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 24),
+
+                  if (hasFile) ...[
+                    // Text(
+                    //   'Selected PDF',
+                    //   style: theme.textTheme.titleMedium?.copyWith(
+                    //     fontWeight: FontWeight.w600,
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 12),
+                    // DocEntryCard(
+                    //   info: files.first,
+                    //   showEdit: false,
+                    //   showRemove: true,
+                    //   selectable: false,
+                    //   reorderable: false,
+                    //   onOpen: null,
+                    // ),
+                    // const SizedBox(height: 24),
+
+                    // Page Previews Section
+                    if (_pagePreviews.isNotEmpty) ...[
+                      Text('Page Preview', style: theme.textTheme.titleSmall),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 100,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _pagePreviews.length,
+                          itemBuilder: (context, index) {
+                            final preview = _pagePreviews[index];
+                            return Container(
+                              width: 70,
+                              margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: theme.colorScheme.outline,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                children: [
+                                  Expanded(
+                                    child: preview != null
+                                        ? ClipRRect(
+                                            borderRadius:
+                                                const BorderRadius.vertical(
+                                                  top: Radius.circular(7),
+                                                ),
+                                            child: Image.memory(
+                                              preview,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          )
+                                        : const Center(
+                                            child: Icon(Icons.error_outline),
+                                          ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.surfaceVariant,
+                                      borderRadius: const BorderRadius.vertical(
+                                        bottom: Radius.circular(7),
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        '${index + 1}',
+                                        style: theme.textTheme.labelSmall,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ] else if (_isLoadingPreviews) ...[
+                      const Center(child: CircularProgressIndicator()),
+                      const SizedBox(height: 24),
+                    ],
+
+                    Text(
+                      'Output naming pattern',
+                      style: theme.textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _namingPatternController,
+                      readOnly: _isSplitting,
+                      decoration: InputDecoration(
+                        hintText: 'filename_____',
+                        helperText: _totalPages != null
+                            ? 'Total pages: $_totalPages'
+                            : null,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Range Widgets Section
+                    Text(
+                      'Page Ranges',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ..._rangeWidgets.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final rangeWidget = entry.value;
+                      return _RangeInputWidget(
+                        index: index,
+                        rangeWidget: rangeWidget,
+                        totalPages: _totalPages,
+                        isActive: rangeWidget.isActive,
+                        isSplitting: _isSplitting,
+                        onTap: () => _activateRange(index),
+                        onRemove: () => _removeRange(index),
+                      );
+                    }).toList(),
+                  ] else ...[
+                    Row(
+                      children: [
+                        const Icon(Icons.picture_as_pdf_outlined, size: 32),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'No PDF selected',
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          bottomNavigationBar: hasFile
+              ? Container(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  decoration: BoxDecoration(color: Colors.transparent),
+                  child: SafeArea(
+                    bottom: true,
+                    minimum: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: FilledButton(
+                        onPressed: !_isSplitting && _getValidRanges().isNotEmpty
+                            ? () => _handleSplit(context, selection)
+                            : null,
+                        child: _isSplitting
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Text(
+                                'Split PDF',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                )
+              : null,
+        );
+      },
+    );
+  }
+}
+
+// Custom Range Input Widget
+class _RangeInputWidget extends StatelessWidget {
+  final int index;
+  final _RangeWidgetData rangeWidget;
+  final int? totalPages;
+  final bool isActive;
+  final bool isSplitting;
+  final VoidCallback onTap;
+  final VoidCallback onRemove;
+
+  const _RangeInputWidget({
+    required this.index,
+    required this.rangeWidget,
+    required this.totalPages,
+    required this.isActive,
+    required this.isSplitting,
+    required this.onTap,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final opacity = isActive ? 1.0 : 0.4;
+
+    return GestureDetector(
+      onTap: !isActive ? onTap : null,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? Colors.grey.shade200 : Colors.grey.shade300,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Opacity(
+          opacity: opacity,
+          child: Row(
+            children: [
+              // Range number indicator
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? theme.colorScheme.primary
+                      : Colors.grey.shade400,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    '${index + 1}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Start page input
+              _CommonTextField(
+                labelText: 'Start',
+                hintText: '1',
+                controller: rangeWidget.startController,
+                enabled: isActive && !isSplitting,
+                totalPages: totalPages,
+              ),
+              const SizedBox(width: 8),
+
+              // End page input
+              _CommonTextField(
+                labelText: 'End',
+                hintText: totalPages?.toString() ?? '',
+                controller: rangeWidget.endController,
+                enabled: isActive && !isSplitting,
+                totalPages: totalPages,
+              ),
+              const SizedBox(width: 4),
+
+              // Remove button
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: isActive && !isSplitting ? onRemove : null,
+                color: theme.colorScheme.error,
+                iconSize: 16,
+                padding: EdgeInsets.zero, // removes extra padding
+                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+
+                style: IconButton.styleFrom(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Common Text Field Widget
+class _CommonTextField extends StatelessWidget {
+  final String labelText;
+  final String hintText;
+  final TextEditingController controller;
+  final bool enabled;
+  final int? totalPages;
+
+  const _CommonTextField({
+    required this.labelText,
+    required this.hintText,
+    required this.controller,
+    required this.enabled,
+    this.totalPages,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: TextField(
+        controller: controller,
+        enabled: enabled,
+        // make the on focus border size and color change
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        decoration: InputDecoration(
+          labelStyle: Theme.of(context).textTheme.bodyMedium,
+          labelText: labelText,
+          hintText: hintText,
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: 6,
+          ),
+          focusedBorder: OutlineInputBorder(),
+
+          isDense: true,
+        ),
+        cursorHeight: 18,
+        cursorColor: Theme.of(context).colorScheme.secondary,
+        onChanged: (value) {
+          if (value.isNotEmpty) {
+            final num = int.tryParse(value);
+            if (num != null && totalPages != null) {
+              if (num < 1) {
+                controller.text = '1';
+                controller.selection = TextSelection.fromPosition(
+                  TextPosition(offset: controller.text.length),
+                );
+              } else if (num > totalPages!) {
+                controller.text = totalPages.toString();
+                controller.selection = TextSelection.fromPosition(
+                  TextPosition(offset: controller.text.length),
+                );
+              }
+            }
+          }
+        },
+      ),
+    );
+  }
+}

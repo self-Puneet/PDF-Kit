@@ -99,6 +99,15 @@ ShellRoute buildSelectionShellRoute({
                   if (maxSelectable != null) 'max': maxSelectable.toString(),
                 },
               );
+            } else if (action.contains('split')) {
+              rootNavKey.currentContext!.pushNamed(
+                AppRouteName.splitPdf,
+                queryParameters: {
+                  'selectionId': selectionId,
+                  if (minSelectable != null) 'min': minSelectable.toString(),
+                  if (maxSelectable != null) 'max': maxSelectable.toString(),
+                },
+              );
             } else if (action.contains('image')) {
               rootNavKey.currentContext!.pushNamed(
                 AppRouteName.pdfToImage,
@@ -159,6 +168,11 @@ ShellRoute buildSelectionShellRoute({
               } else if (action.contains('reorder')) {
                 rootNavKey.currentContext!.pushNamed(
                   AppRouteName.reorderPdf,
+                  extra: files,
+                );
+              } else if (action.contains('split')) {
+                rootNavKey.currentContext!.pushNamed(
+                  AppRouteName.splitPdf,
                   extra: files,
                 );
               } else if (action.contains('image')) {

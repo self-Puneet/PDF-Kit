@@ -95,6 +95,11 @@ List<Functionality> getActions(BuildContext context) {
         );
 
         if (result == true) {
+          // Navigate to split PDF page
+          await context.pushNamed(
+            AppRouteName.splitPdf,
+            queryParameters: {'selectionId': selectionId},
+          );
           RecentFilesSection.refreshNotifier.value++;
         }
       },
