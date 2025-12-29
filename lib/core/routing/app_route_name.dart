@@ -25,4 +25,6 @@ class AppRouteName {
   static const filesSearchFullscreen = 'files.search.fullscreen'; // NEW
   static const folderPickScreen = 'folder.picker';
   static const recentFilesSearch = 'recentFiles.search';
+  static const recentFilesFullscreen = 'recentFiles.fullscreen';
+  static const recentFilesSearchFullscreen = 'recentFiles.search.fullscreen';
 }

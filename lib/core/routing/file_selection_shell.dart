@@ -194,6 +194,32 @@ ShellRoute buildSelectionShellRoute({
     },
     routes: [
       GoRoute(
+        name: AppRouteName.recentFilesFullscreen,
+        path: '/recent-files-fullscreen',
+        pageBuilder: (context, state) => MaterialPage(
+          key: state.pageKey,
+          child: RecentFilesPage(
+            isFullscreenRoute: true,
+            selectable: true,
+            selectionId: state.uri.queryParameters['selectionId'],
+            selectionActionText: state.uri.queryParameters['actionText'],
+          ),
+        ),
+      ),
+      GoRoute(
+        name: AppRouteName.recentFilesSearchFullscreen,
+        path: '/recent-files-search-fullscreen',
+        pageBuilder: (context, state) => MaterialPage(
+          key: state.pageKey,
+          child: RecentFilesSearchPage(
+            isFullscreenRoute: true,
+            selectable: true,
+            selectionId: state.uri.queryParameters['selectionId'],
+            selectionActionText: state.uri.queryParameters['actionText'],
+          ),
+        ),
+      ),
+      GoRoute(
         name: AppRouteName.filesRootFullscreen,
         path: '/files-fullscreen',
         pageBuilder: (context, state) => MaterialPage(
