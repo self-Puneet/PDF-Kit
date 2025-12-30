@@ -271,11 +271,7 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
           ...folders.map(
             (f) => Container(
               margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-              child: FolderEntryCard(
-                info: f,
-                onTap: () => _openFolder(f.path),
-                onMenuSelected: (v) => _handleFolderMenu(v, f),
-              ),
+              child: FolderEntryCard(info: f, onTap: () => _openFolder(f.path)),
             ),
           ),
           ...files.map(
@@ -312,16 +308,6 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
   }
 
   // --- Actions delegates to Provider ---
-
-  void _handleFolderMenu(String v, FileInfo f) {
-    // Implement folder rename/delete via provider if needed
-    switch (v) {
-      case 'open':
-        _openFolder(f.path);
-        break;
-      // ...
-    }
-  }
 
   Future<void> _handleFileRename(FileInfo file) async {
     await showRenameFileSheet(

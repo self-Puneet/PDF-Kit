@@ -31,7 +31,7 @@ class FilesRootPage extends StatefulWidget {
   State<FilesRootPage> createState() => _FilesRootPageState();
 }
 
-class _FilesRootPageState extends State<FilesRootPage> {
+class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
   List<FileInfo>? _cachedRecentFiles;
   bool _isLoadingRecent = true;
 
@@ -40,9 +40,31 @@ class _FilesRootPageState extends State<FilesRootPage> {
     super.initState();
     // Load storage roots when page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<FileSystemProvider>().loadRoots();
-      _loadRecentFiles();
+      _refresh();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Subscribe to RouteObserver
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called when the top route has been popped off, and this route shows up.
+    print('🔄 [FilesRootPage] Returning to page, refreshing data...');
+    _refresh();
   }
 
   Future<void> _loadRecentFiles() async {
@@ -144,6 +166,13 @@ class _FilesRootPageState extends State<FilesRootPage> {
     _navigateToFolderPicker(prefsKey, pickerDescription);
   }
 
+  Future<void> _refresh() async {
+    // Reload storage roots
+    context.read<FileSystemProvider>().loadRoots();
+    // Reload recent files
+    await _loadRecentFiles();
+  }
+
   /// Navigate to folder picker and handle result
   Future<void> _navigateToFolderPicker(
     String prefsKey,
@@ -239,242 +268,249 @@ class _FilesRootPageState extends State<FilesRootPage> {
               const SizedBox(height: 12),
               // Scrollable content
               Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Quick access cards in grid
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Padding(
-                          //   padding: const EdgeInsets.symmetric(horizontal: 12),
-                          //   child:
-                          Text(
-                            t.t('files_quick_access_title'),
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          // ),
-                          const SizedBox(height: 8),
-                          Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildQuickAccessGridItem(
-                                      context,
-                                      icon: Icons.history,
-                                      label: t.t('recent_files_title'),
-                                      color: Theme.of(
+                child: RefreshIndicator(
+                  onRefresh: _refresh,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Quick access cards in grid
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Padding(
+                            //   padding: const EdgeInsets.symmetric(horizontal: 12),
+                            //   child:
+                            Text(
+                              t.t('files_quick_access_title'),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                            // ),
+                            const SizedBox(height: 8),
+                            Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildQuickAccessGridItem(
                                         context,
-                                      ).colorScheme.primary,
-                                      onTap: () {
-                                        final routeName =
-                                            widget.isFullscreenRoute
-                                            ? AppRouteName.recentFilesFullscreen
-                                            : AppRouteName.recentFiles;
-                                        final params = <String, String>{};
-                                        if (widget.selectionId != null) {
-                                          params['selectionId'] =
-                                              widget.selectionId!;
-                                        }
-                                        if (widget.selectionActionText !=
-                                            null) {
-                                          params['actionText'] =
-                                              widget.selectionActionText!;
-                                        }
-                                        context.pushNamed(
-                                          routeName,
-                                          queryParameters: params,
-                                        );
-                                      },
+                                        icon: Icons.history,
+                                        label: t.t('recent_files_title'),
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                        onTap: () {
+                                          final routeName =
+                                              widget.isFullscreenRoute
+                                              ? AppRouteName
+                                                    .recentFilesFullscreen
+                                              : AppRouteName.recentFiles;
+                                          final params = <String, String>{};
+                                          if (widget.selectionId != null) {
+                                            params['selectionId'] =
+                                                widget.selectionId!;
+                                          }
+                                          if (widget.selectionActionText !=
+                                              null) {
+                                            params['actionText'] =
+                                                widget.selectionActionText!;
+                                          }
+                                          context.pushNamed(
+                                            routeName,
+                                            queryParameters: params,
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: _buildQuickAccessGridItem(
-                                      context,
-                                      icon: Icons.download,
-                                      label: t.t('files_downloads_folder'),
-                                      color: Colors.blue,
-                                      onTap: () {
-                                        _navigateToFolderOrPicker(
-                                          prefsKey:
-                                              Constants.downloadsFolderPathKey,
-                                          defaultPath:
-                                              '/storage/emulated/0/Download_INVALID',
-                                          pickerDescription: t.t(
-                                            'folder_picker_description_downloads',
-                                          ),
-                                        );
-                                      },
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: _buildQuickAccessGridItem(
+                                        context,
+                                        icon: Icons.download,
+                                        label: t.t('files_downloads_folder'),
+                                        color: Colors.blue,
+                                        onTap: () {
+                                          _navigateToFolderOrPicker(
+                                            prefsKey: Constants
+                                                .downloadsFolderPathKey,
+                                            defaultPath:
+                                                '/storage/emulated/0/Download_INVALID',
+                                            pickerDescription: t.t(
+                                              'folder_picker_description_downloads',
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildQuickAccessGridItem(
-                                      context,
-                                      icon: Icons.picture_as_pdf,
-                                      label: t.t('files_pdfs_folder'),
-                                      color: Colors.red,
-                                      onTap: () {
-                                        _navigateToFolderOrPicker(
-                                          prefsKey:
-                                              Constants.downloadsFolderPathKey,
-                                          defaultPath:
-                                              '/storage/emulated/0/Download_INVALID',
-                                          pickerDescription: t.t(
-                                            'folder_picker_description_downloads',
-                                          ),
-                                        );
-                                      },
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildQuickAccessGridItem(
+                                        context,
+                                        icon: Icons.picture_as_pdf,
+                                        label: t.t('files_pdfs_folder'),
+                                        color: Colors.red,
+                                        onTap: () {
+                                          _navigateToFolderOrPicker(
+                                            prefsKey: Constants
+                                                .downloadsFolderPathKey,
+                                            defaultPath:
+                                                '/storage/emulated/0/Download_INVALID',
+                                            pickerDescription: t.t(
+                                              'folder_picker_description_downloads',
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: _buildQuickAccessGridItem(
-                                      context,
-                                      icon: Icons.photo_library,
-                                      label: t.t('files_images_folder'),
-                                      color: Colors.purple,
-                                      onTap: () {
-                                        _navigateToFolderOrPicker(
-                                          prefsKey:
-                                              Constants.imagesFolderPathKey,
-                                          defaultPath:
-                                              '/storage/emulated/0/DCIM/Camera_INVALID',
-                                          pickerDescription: t.t(
-                                            'folder_picker_description_images',
-                                          ),
-                                        );
-                                      },
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: _buildQuickAccessGridItem(
+                                        context,
+                                        icon: Icons.photo_library,
+                                        label: t.t('files_images_folder'),
+                                        color: Colors.purple,
+                                        onTap: () {
+                                          _navigateToFolderOrPicker(
+                                            prefsKey:
+                                                Constants.imagesFolderPathKey,
+                                            defaultPath:
+                                                '/storage/emulated/0/DCIM/Camera_INVALID',
+                                            pickerDescription: t.t(
+                                              'folder_picker_description_images',
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildQuickAccessGridItem(
-                                      context,
-                                      icon: Icons.screenshot,
-                                      label: t.t('files_screenshots_folder'),
-                                      color: Colors.green,
-                                      onTap: () {
-                                        _navigateToFolderOrPicker(
-                                          prefsKey: Constants
-                                              .screenshotsFolderPathKey,
-                                          defaultPath:
-                                              '/storage/emulated/0/DCIM/Screenshots_INVALID',
-                                          pickerDescription: t.t(
-                                            'folder_picker_description_screenshots',
-                                          ),
-                                        );
-                                      },
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildQuickAccessGridItem(
+                                        context,
+                                        icon: Icons.screenshot,
+                                        label: t.t('files_screenshots_folder'),
+                                        color: Colors.green,
+                                        onTap: () {
+                                          _navigateToFolderOrPicker(
+                                            prefsKey: Constants
+                                                .screenshotsFolderPathKey,
+                                            defaultPath:
+                                                '/storage/emulated/0/DCIM/Screenshots_INVALID',
+                                            pickerDescription: t.t(
+                                              'folder_picker_description_screenshots',
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Expanded(child: SizedBox()),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
+                                    const SizedBox(width: 8),
+                                    const Expanded(child: SizedBox()),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
 
-                      // Storage volumes list
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Padding(
-                          //   padding: const EdgeInsets.symmetric(horizontal: 12),
-                          //   child:
-                          Text(
-                            t.t('files_storage_title'),
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          // ),
-                          const SizedBox(height: 8),
+                        // Storage volumes list
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Padding(
+                            //   padding: const EdgeInsets.symmetric(horizontal: 12),
+                            //   child:
+                            Text(
+                              t.t('files_storage_title'),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                            // ),
+                            const SizedBox(height: 8),
 
-                          roots.isEmpty
-                              ? Center(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const CircularProgressIndicator(),
-                                      const SizedBox(height: 16),
-                                      Text(t.t('files_loading_storage')),
-                                    ],
+                            roots.isEmpty
+                                ? Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const CircularProgressIndicator(),
+                                        const SizedBox(height: 16),
+                                        Text(t.t('files_loading_storage')),
+                                      ],
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    padding: EdgeInsets.zero,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: roots.length,
+                                    itemBuilder: (context, index) {
+                                      final root = roots[index];
+                                      return _buildStorageCard(context, root);
+                                    },
                                   ),
-                                )
-                              : ListView.builder(
-                                  shrinkWrap: true,
-                                  padding: EdgeInsets.zero,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: roots.length,
-                                  itemBuilder: (context, index) {
-                                    final root = roots[index];
-                                    return _buildStorageCard(context, root);
+                          ],
+                        ),
+
+                        // Recent Files section
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Padding(
+                            //   padding: const EdgeInsets.symmetric(horizontal: 12),
+                            //   child:
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  t.t('recent_files_title'),
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w600),
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.arrow_forward_ios,
+                                    size: 14,
+                                  ),
+                                  tooltip: t.t('recent_files_view_all_tooltip'),
+                                  onPressed: () {
+                                    final routeName = widget.isFullscreenRoute
+                                        ? AppRouteName.recentFilesFullscreen
+                                        : AppRouteName.recentFiles;
+                                    final params = <String, String>{};
+                                    if (widget.selectionId != null) {
+                                      params['selectionId'] =
+                                          widget.selectionId!;
+                                    }
+                                    if (widget.selectionActionText != null) {
+                                      params['actionText'] =
+                                          widget.selectionActionText!;
+                                    }
+                                    context.pushNamed(
+                                      routeName,
+                                      queryParameters: params,
+                                    );
                                   },
                                 ),
-                        ],
-                      ),
-
-                      // Recent Files section
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Padding(
-                          //   padding: const EdgeInsets.symmetric(horizontal: 12),
-                          //   child:
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                t.t('recent_files_title'),
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w600),
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16,
-                                ),
-                                tooltip: t.t('recent_files_view_all_tooltip'),
-                                onPressed: () {
-                                  final routeName = widget.isFullscreenRoute
-                                      ? AppRouteName.recentFilesFullscreen
-                                      : AppRouteName.recentFiles;
-                                  final params = <String, String>{};
-                                  if (widget.selectionId != null) {
-                                    params['selectionId'] = widget.selectionId!;
-                                  }
-                                  if (widget.selectionActionText != null) {
-                                    params['actionText'] =
-                                        widget.selectionActionText!;
-                                  }
-                                  context.pushNamed(
-                                    routeName,
-                                    queryParameters: params,
-                                  );
-                                },
-                              ),
-                            ],
-                            // ),
-                          ),
-                          // const SizedBox(height: 4),
-                          _buildRecentFilesPreview(context),
-                        ],
-                      ),
-                    ],
+                              ],
+                              // ),
+                            ),
+                            // const SizedBox(height: 4),
+                            _buildRecentFilesPreview(context),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -526,6 +562,7 @@ class _FilesRootPageState extends State<FilesRootPage> {
         child: Padding(
           padding: const EdgeInsets.all(8),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
                 width: 40,
@@ -543,6 +580,7 @@ class _FilesRootPageState extends State<FilesRootPage> {
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -551,7 +589,7 @@ class _FilesRootPageState extends State<FilesRootPage> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    // const SizedBox(height: 4),
                     Text(
                       root.path,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(

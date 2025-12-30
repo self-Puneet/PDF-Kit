@@ -8,9 +8,11 @@ import 'package:pdf_kit/presentation/pages/home_page.dart';
 import 'package:path/path.dart' as p;
 import 'package:pdf_kit/service/pdf_compress_service.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
-import 'package:dartz/dartz.dart' show Either; // avoid State name clash
-import 'package:pdf_kit/service/pdf_merge_service.dart'
-    show CustomException; // for Either left type
+import 'package:dartz/dartz.dart' show Either;
+import 'package:pdf_kit/service/pdf_merge_service.dart' show CustomException;
+
+import 'package:pdf_kit/service/path_service.dart';
+import 'dart:io';
 
 class CompressPdfPage extends StatefulWidget {
   final String? selectionId;
@@ -21,9 +23,55 @@ class CompressPdfPage extends StatefulWidget {
 }
 
 class _CompressPdfPageState extends State<CompressPdfPage> {
+  bool _isWorking = false;
+  int? _originalFileSize;
+  FileInfo? _selectedDestinationFolder;
+
+  /// Load default destination folder (User Pref -> Downloads)
+  Future<void> _loadDefaultDestination() async {
+    try {
+      final savedPath = Prefs.getString(Constants.pdfOutputFolderPathKey);
+      if (savedPath != null) {
+        final dir = Directory(savedPath);
+        if (await dir.exists()) {
+          setState(() {
+            _selectedDestinationFolder = FileInfo(
+              name: p.basename(savedPath),
+              path: savedPath,
+              extension: '',
+              size: 0,
+              isDirectory: true,
+              lastModified: DateTime.now(),
+            );
+          });
+          return;
+        }
+      }
+
+      // Fallback
+      final publicDirsResult = await PathService.publicDirs();
+      publicDirsResult.fold((error) {}, (publicDirs) {
+        final downloadsDir = publicDirs['Downloads'];
+        if (downloadsDir != null) {
+          setState(() {
+            _selectedDestinationFolder = FileInfo(
+              name: 'Downloads',
+              path: downloadsDir.path,
+              extension: '',
+              size: 0,
+              isDirectory: true,
+              lastModified: DateTime.now(),
+            );
+          });
+        }
+      });
+    } catch (_) {}
+  }
+
   @override
   void initState() {
     super.initState();
+    _loadDefaultDestination();
     // Ensure minimum required selection for compress is 1
     WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
@@ -31,9 +79,6 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
       } catch (_) {}
     });
   }
-
-  bool _isWorking = false;
-  int? _originalFileSize;
 
   String get _estimatedReduction {
     // Rasterization typically achieves 40-60% compression
@@ -64,7 +109,10 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
     final file = sel.files.first;
     try {
       final Either<CustomException, FileInfo> result =
-          await PdfCompressService.compressFile(fileInfo: file);
+          await PdfCompressService.compressFile(
+            fileInfo: file,
+            destinationPath: _selectedDestinationFolder?.path,
+          );
       if (!mounted) return;
       result.fold(
         (err) {
@@ -265,6 +313,7 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                           ],
                         ),
                       ),
+                      const SizedBox(height: 20),
                     ],
                   ],
                 ),

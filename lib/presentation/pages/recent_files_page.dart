@@ -299,8 +299,8 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
                               child: Padding(
                                 padding: const EdgeInsets.only(
                                   bottom: 8,
-                                  left: 4,
-                                  right: 4,
+                                  // left: 4,
+                                  // right: 4,
                                 ),
                                 child: DocEntryCard(
                                   info: _files[i],
@@ -345,7 +345,7 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
 
     return Container(
       height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      // padding: const EdgeInsets.symmetric(horizontal: 12),
       alignment: Alignment.center,
       child: Row(
         children: [
@@ -361,7 +361,7 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
                 width: 40,
                 height: 40,
                 child: Image.asset(
-                  'assets/app_icon1.png',
+                  'assets/app_icon.png',
                   width: 40,
                   height: 40,
                   fit: BoxFit.cover,

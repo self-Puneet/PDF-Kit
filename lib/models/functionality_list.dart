@@ -31,6 +31,7 @@ List<Functionality> getActions(BuildContext context) {
             'selectionId': selectionId,
             'actionText': t('merge_pdf_title'),
             'min': '2', // Merge requires at least 2 files
+            'allowed': 'unprotected',
           },
         );
 
@@ -90,7 +91,7 @@ List<Functionality> getActions(BuildContext context) {
             'actionText': t('split_pdf_title'),
             'max': '1', // Only one PDF at a time
             'min': '1',
-            'allowed': 'pdf-only',
+            'allowed': 'unprotected',
           },
         );
 
@@ -185,7 +186,7 @@ List<Functionality> getActions(BuildContext context) {
             'actionText': t('compress_pdf_button'),
             'max': '1',
             'min': '1',
-            'allowed': 'pdf-only',
+            'allowed': 'unprotected',
           },
         );
 
@@ -216,7 +217,7 @@ List<Functionality> getActions(BuildContext context) {
             'actionText': t('pdf_to_image_title'),
             'max': '1',
             'min': '1',
-            'allowed': 'pdf-only',
+            'allowed': 'unprotected',
           },
         );
 
@@ -246,7 +247,7 @@ List<Functionality> getActions(BuildContext context) {
             'actionText': t('reorder_pdf_title'),
             'max': '1',
             'min': '1',
-            'allowed': 'pdf-only',
+            'allowed': 'unprotected',
           },
         );
 

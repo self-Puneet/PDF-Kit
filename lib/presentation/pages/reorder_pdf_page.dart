@@ -9,6 +9,9 @@ import 'package:pdf_kit/service/pdf_manipulation_service.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:pdf_kit/presentation/component/pdf_page_thumbnail.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
+import 'package:path/path.dart' as p;
+
+import 'package:pdf_kit/service/path_service.dart';
 import 'package:pdf_kit/presentation/pages/home_page.dart';
 
 class ReorderPdfPage extends StatefulWidget {
@@ -28,10 +31,50 @@ class _ReorderPdfPageState extends State<ReorderPdfPage> {
   bool _isLoading = true;
   int _totalPages = 0;
   final Map<int, Uint8List?> _pageCache = {};
+  FileInfo? _selectedDestinationFolder;
+
+  Future<void> _loadDefaultDestination() async {
+    try {
+      final savedPath = Prefs.getString(Constants.pdfOutputFolderPathKey);
+      if (savedPath != null) {
+        final dir = Directory(savedPath);
+        if (await dir.exists()) {
+          setState(() {
+            _selectedDestinationFolder = FileInfo(
+              name: p.basename(savedPath),
+              path: savedPath,
+              extension: '',
+              size: 0,
+              isDirectory: true,
+              lastModified: DateTime.now(),
+            );
+          });
+          return;
+        }
+      }
+      final publicDirsResult = await PathService.publicDirs();
+      publicDirsResult.fold((error) {}, (publicDirs) {
+        final downloadsDir = publicDirs['Downloads'];
+        if (downloadsDir != null) {
+          setState(() {
+            _selectedDestinationFolder = FileInfo(
+              name: 'Downloads',
+              path: downloadsDir.path,
+              extension: '',
+              size: 0,
+              isDirectory: true,
+              lastModified: DateTime.now(),
+            );
+          });
+        }
+      });
+    } catch (_) {}
+  }
 
   @override
   void initState() {
     super.initState();
+    _loadDefaultDestination();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadPdfInfo();
     });
@@ -160,6 +203,9 @@ class _ReorderPdfPageState extends State<ReorderPdfPage> {
         reorderPages: hasReordered ? _pageOrder : null,
         pagesToRotate: rotationMap.isEmpty ? null : rotationMap,
         pagesToRemove: _removedPages.isEmpty ? null : _removedPages.toList(),
+        destinationPath: _selectedDestinationFolder != null
+            ? p.join('${p.basenameWithoutExtension(file.name)}_reordered.pdf')
+            : null,
       );
 
       setState(() => _isProcessing = false);
@@ -398,6 +444,7 @@ class _ReorderPdfPageState extends State<ReorderPdfPage> {
                               ],
                             ),
                           ),
+                          const SizedBox(height: 24),
                         ],
                       ),
                     ),

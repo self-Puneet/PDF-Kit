@@ -8,12 +8,14 @@ import 'package:pdf_kit/presentation/provider/folder_picker_provider.dart';
 import 'package:provider/provider.dart';
 
 class FolderPickerPage extends StatelessWidget {
-  const FolderPickerPage({super.key});
+  final String? initialPath;
+  const FolderPickerPage({super.key, this.initialPath});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => FolderPickerProvider()..initialize(),
+      create: (_) =>
+          FolderPickerProvider()..initialize(initialPath: initialPath),
       child: const _FolderPickerPageContent(),
     );
   }

@@ -1,6 +1,7 @@
 // lib/presentation/pages/merge_pdf_page.dart
 
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
 import 'package:pdf_kit/presentation/provider/selection_provider.dart';
@@ -10,6 +11,7 @@ import 'package:pdf_kit/service/path_service.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/presentation/layouts/selection_layout.dart';
 import 'package:pdf_kit/presentation/pages/home_page.dart';
+
 import 'package:path/path.dart' as p;
 import 'dart:ui';
 
@@ -26,7 +28,7 @@ class _MergePdfPageState extends State<MergePdfPage> {
   late final TextEditingController _nameCtrl;
   bool _isMerging = false;
   FileInfo? _selectedDestinationFolder;
-  bool _isLoadingDefaultFolder = true;
+
   bool _reorderMode = false; // toggles UI indication only
 
   @override
@@ -48,17 +50,34 @@ class _MergePdfPageState extends State<MergePdfPage> {
     super.dispose();
   }
 
-  /// Load default destination folder (Downloads)
+  /// Load default destination folder (User Pref -> Downloads)
   Future<void> _loadDefaultDestination() async {
-    setState(() => _isLoadingDefaultFolder = true);
-
     try {
+      // 1. Check for saved preference
+      final savedPath = Prefs.getString(Constants.pdfOutputFolderPathKey);
+      if (savedPath != null) {
+        final dir = Directory(savedPath);
+        if (await dir.exists()) {
+          setState(() {
+            _selectedDestinationFolder = FileInfo(
+              name: p.basename(savedPath),
+              path: savedPath,
+              extension: '',
+              size: 0,
+              isDirectory: true,
+              lastModified: DateTime.now(),
+            );
+          });
+          return;
+        }
+      }
+
+      // 2. Fallback to public Downloads directory
       final publicDirsResult = await PathService.publicDirs();
 
       publicDirsResult.fold(
         (error) {
           debugPrint('Failed to load default destination: $error');
-          setState(() => _isLoadingDefaultFolder = false);
         },
         (publicDirs) {
           final downloadsDir = publicDirs['Downloads'];
@@ -72,16 +91,12 @@ class _MergePdfPageState extends State<MergePdfPage> {
                 isDirectory: true,
                 lastModified: DateTime.now(),
               );
-              _isLoadingDefaultFolder = false;
             });
-          } else {
-            setState(() => _isLoadingDefaultFolder = false);
           }
         },
       );
     } catch (e) {
       debugPrint('Error loading default destination: $e');
-      setState(() => _isLoadingDefaultFolder = false);
     }
   }
 
@@ -89,38 +104,6 @@ class _MergePdfPageState extends State<MergePdfPage> {
   // lib/presentation/pages/merge_pdf_page.dart
 
   /// Open folder picker and update destination
-  Future<void> _selectDestinationFolder() async {
-    // ✅ Option 1: Use pushNamed with the route name
-    final selectedPath = await context.pushNamed<String>(
-      AppRouteName.folderPickScreen,
-    );
-
-    // ✅ OR Option 2: Use push with the full path
-    // final selectedPath = await context.push<String>('/folder-picker');
-
-    if (selectedPath != null && mounted) {
-      setState(() {
-        _selectedDestinationFolder = FileInfo(
-          name: selectedPath.split('/').last,
-          path: selectedPath,
-          extension: '',
-          size: 0,
-          isDirectory: true,
-          lastModified: DateTime.now(),
-        );
-      });
-
-      if (mounted) {
-        final t = AppLocalizations.of(context);
-        final msg = t
-            .t('merge_pdf_destination_snackbar')
-            .replaceAll('{folderName}', _selectedDestinationFolder!.name);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
-        );
-      }
-    }
-  }
 
   String _displayName(FileInfo f) {
     try {
@@ -317,19 +300,8 @@ class _MergePdfPageState extends State<MergePdfPage> {
                         ),
                         const SizedBox(height: 16),
 
-                        // 🆕 Destination Folder Section
-                        Text(
-                          t.t('merge_pdf_save_to_folder_label'),
-                          style: theme.textTheme.titleSmall,
-                        ),
-                        const SizedBox(height: 8),
-                        _DestinationFolderSelector(
-                          selectedFolder: _selectedDestinationFolder,
-                          isLoading: _isLoadingDefaultFolder,
-                          onTap: _selectDestinationFolder,
-                          disabled: _isMerging,
-                        ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
+
                         Row(
                           children: [
                             Expanded(
@@ -401,16 +373,7 @@ class _MergePdfPageState extends State<MergePdfPage> {
           ),
           bottomNavigationBar: Container(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  offset: const Offset(0, -2),
-                  blurRadius: 8,
-                ),
-              ],
-            ),
+            decoration: BoxDecoration(color: Colors.transparent),
             child: SafeArea(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -472,113 +435,4 @@ class _MergePdfPageState extends State<MergePdfPage> {
   }
 }
 
-// 🆕 Destination Folder Selector Widget
-class _DestinationFolderSelector extends StatelessWidget {
-  final FileInfo? selectedFolder;
-  final bool isLoading;
-  final VoidCallback onTap;
-  final bool disabled;
-
-  const _DestinationFolderSelector({
-    required this.selectedFolder,
-    required this.isLoading,
-    required this.onTap,
-    this.disabled = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final t = AppLocalizations.of(context);
-
-    return InkWell(
-      onTap: disabled ? null : onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: disabled
-                ? theme.colorScheme.onSurfaceVariant.withOpacity(0.15)
-                : theme.colorScheme.primary.withOpacity(0.3),
-            width: 1,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: isLoading
-            ? Row(
-                children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        theme.colorScheme.primary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    t.t('merge_pdf_loading_default_folder'),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              )
-            : Row(
-                children: [
-                  Icon(
-                    Icons.folder,
-                    color: disabled
-                        ? theme.colorScheme.onSurfaceVariant.withOpacity(0.4)
-                        : theme.colorScheme.primary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          selectedFolder?.name ??
-                              t.t('merge_pdf_select_folder_placeholder'),
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.w500,
-                            color: disabled
-                                ? theme.colorScheme.onSurfaceVariant
-                                      .withOpacity(0.5)
-                                : null,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (selectedFolder != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            selectedFolder!.path,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant
-                                  .withOpacity(disabled ? 0.4 : 1.0),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.chevron_right,
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(
-                      disabled ? 0.3 : 1.0,
-                    ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-}
+// Remove _DestinationFolderSelector class

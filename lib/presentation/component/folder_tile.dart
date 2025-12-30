@@ -5,14 +5,8 @@ import 'package:pdf_kit/models/file_model.dart';
 class FolderEntryCard extends StatelessWidget {
   final FileInfo info;
   final VoidCallback? onTap;
-  final ValueChanged<String>? onMenuSelected;
 
-  const FolderEntryCard({
-    super.key,
-    required this.info,
-    this.onTap,
-    this.onMenuSelected,
-  });
+  const FolderEntryCard({super.key, required this.info, this.onTap});
 
   bool get _isDir => info.isDirectory;
 
@@ -106,14 +100,12 @@ class FolderEntryCard extends StatelessWidget {
                 ),
                 // ),
               ),
-              PopupMenuButton<String>(
-                onSelected: onMenuSelected,
-                itemBuilder: (ctx) => const [
-                  PopupMenuItem(value: 'open', child: Text('Open')),
-                  PopupMenuItem(value: 'rename', child: Text('Rename')),
-                  PopupMenuItem(value: 'delete', child: Text('Delete')),
-                ],
-                icon: const Icon(Icons.more_vert),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Icon(
+                  Icons.chevron_right,
+                  color: Theme.of(context).colorScheme.onSurface.withAlpha(128),
+                ),
               ),
             ],
           ),

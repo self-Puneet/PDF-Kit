@@ -140,7 +140,7 @@ class SelectionProvider extends ChangeNotifier {
           if (_allowedFilter == 'protected' && !isProtected) {
             return 'This PDF is not protected with a password.';
           } else if (_allowedFilter == 'unprotected' && isProtected) {
-            return 'This PDF is already protected with a password.';
+            return 'Action not allowed on protected PDF. Unlock it first to proceed.';
           }
           return null;
         },

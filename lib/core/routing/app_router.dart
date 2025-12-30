@@ -15,9 +15,13 @@ final _homeNavKey = GlobalKey<NavigatorState>(debugLabel: 'home');
 final _filesNavKey = GlobalKey<NavigatorState>(debugLabel: 'files');
 final _settingsNavKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 
+/// Global route observer to track page visibility
+final routeObserver = RouteObserver<ModalRoute>();
+
 final appRouter = GoRouter(
   navigatorKey: _rootNavKey,
   initialLocation: '/splash',
+  observers: [routeObserver],
   errorBuilder: (context, state) =>
       NotFoundPage(routeName: state.uri.toString()),
   routes: [
@@ -160,9 +164,10 @@ final appRouter = GoRouter(
       path: '/folder-picker',
       name: AppRouteName.folderPickScreen,
       pageBuilder: (context, state) {
+        final initialPath = state.extra as String?;
         return MaterialPage(
           key: state.pageKey,
-          child: const FolderPickerPage(),
+          child: FolderPickerPage(initialPath: initialPath),
         );
       },
     ),

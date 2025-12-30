@@ -254,16 +254,7 @@ class _UnlockPdfPageState extends State<UnlockPdfPage> {
           bottomNavigationBar: hasFile
               ? Container(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        offset: const Offset(0, -2),
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
+                  decoration: BoxDecoration(color: Colors.transparent),
                   child: SafeArea(
                     minimum: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                     child: SizedBox(

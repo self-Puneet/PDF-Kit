@@ -10,7 +10,9 @@ import 'package:pdf_kit/providers/file_system_provider.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:path/path.dart' as p;
 import 'package:pdf_kit/presentation/pages/home_page.dart';
+import 'package:pdf_kit/presentation/component/destination_folder_selector.dart';
 import 'package:pdfx/pdfx.dart' as pdfx;
+import 'package:pdf_kit/service/path_service.dart';
 
 // Model for managing range widget state
 class _RangeWidgetData {
@@ -63,7 +65,77 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
   final List<Uint8List?> _pagePreviews = [];
   bool _isLoadingPreviews = false;
 
-  String? _loadedPath; // <-- add this
+  String? _loadedPath;
+  FileInfo? _selectedDestinationFolder;
+  bool _isLoadingDefaultFolder = true;
+
+  Future<void> _loadDefaultDestination(String sourcePath) async {
+    setState(() => _isLoadingDefaultFolder = true);
+    try {
+      // Default to source file's parent directory
+      final parentDir = Directory(p.dirname(sourcePath));
+      if (await parentDir.exists()) {
+        setState(() {
+          _selectedDestinationFolder = FileInfo(
+            name: p.basename(parentDir.path),
+            path: parentDir.path,
+            extension: '',
+            size: 0,
+            isDirectory: true,
+            lastModified: DateTime.now(),
+          );
+          _isLoadingDefaultFolder = false;
+        });
+        return;
+      }
+
+      // Fallback to public Dir
+      final publicDirsResult = await PathService.publicDirs();
+      publicDirsResult.fold(
+        (error) => setState(() => _isLoadingDefaultFolder = false),
+        (publicDirs) {
+          final downloadsDir = publicDirs['Downloads'];
+          if (downloadsDir != null) {
+            setState(() {
+              _selectedDestinationFolder = FileInfo(
+                name: 'Downloads',
+                path: downloadsDir.path,
+                extension: '',
+                size: 0,
+                isDirectory: true,
+                lastModified: DateTime.now(),
+              );
+              _isLoadingDefaultFolder = false;
+            });
+          } else {
+            setState(() => _isLoadingDefaultFolder = false);
+          }
+        },
+      );
+    } catch (_) {
+      setState(() => _isLoadingDefaultFolder = false);
+    }
+  }
+
+  Future<void> _selectDestinationFolder() async {
+    final selectedPath = await context.pushNamed<String>(
+      AppRouteName.folderPickScreen,
+      extra: _selectedDestinationFolder?.path,
+    );
+    if (selectedPath != null && mounted) {
+      // Update local state only for Split Page as per requirements
+      setState(() {
+        _selectedDestinationFolder = FileInfo(
+          name: p.basename(selectedPath),
+          path: selectedPath,
+          extension: '',
+          size: 0,
+          isDirectory: true,
+          lastModified: DateTime.now(),
+        );
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -112,6 +184,7 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
 
     _loadedPath = path;
     _loadPdfInfoForPath(path);
+    _loadDefaultDestination(path);
   }
 
   @override
@@ -286,6 +359,7 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
       sourcePdfPath: file.path,
       ranges: ranges,
       namingPattern: pattern.isNotEmpty ? pattern : null,
+      outputDirectory: _selectedDestinationFolder?.path,
     );
 
     setState(() => _isSplitting = false);
@@ -471,7 +545,22 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
                     ] else if (_isLoadingPreviews) ...[
                       const Center(child: CircularProgressIndicator()),
                       const SizedBox(height: 24),
+
+                      const SizedBox(height: 24),
                     ],
+
+                    Text(
+                      'Destination Folder',
+                      style: theme.textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    DestinationFolderSelector(
+                      selectedFolder: _selectedDestinationFolder,
+                      isLoading: _isLoadingDefaultFolder,
+                      onTap: _selectDestinationFolder,
+                      disabled: _isSplitting,
+                    ),
+                    const SizedBox(height: 24),
 
                     Text(
                       'Output naming pattern',
@@ -511,7 +600,7 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
                         onTap: () => _activateRange(index),
                         onRemove: () => _removeRange(index),
                       );
-                    }).toList(),
+                    }),
                   ] else ...[
                     Row(
                       children: [

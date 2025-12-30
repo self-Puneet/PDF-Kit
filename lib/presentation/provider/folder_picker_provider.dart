@@ -22,9 +22,12 @@ class FolderPickerProvider extends ChangeNotifier {
   bool get isLocked => _isLocked;
 
   /// Initialize with storage volumes and public directories
-  Future<void> initialize() async {
+  Future<void> initialize({String? initialPath}) async {
     _isLoading = true;
     _errorMessage = null;
+    if (initialPath != null) {
+      _selectedFolderPath = initialPath;
+    }
     notifyListeners();
 
     try {
@@ -59,6 +62,7 @@ class FolderPickerProvider extends ChangeNotifier {
                 fileInfo: fileInfo,
                 depth: 0,
                 isExpanded: true,
+                isSelected: _selectedFolderPath == fileInfo.path,
               );
               nodes.add(internalStorageNode);
               break; // Only add the first internal storage found
@@ -121,7 +125,11 @@ class FolderPickerProvider extends ChangeNotifier {
 
           // Convert FileInfo to FolderTreeNode
           final children = folders.map((info) {
-            return FolderTreeNode(fileInfo: info, depth: parentNode.depth + 1);
+            return FolderTreeNode(
+              fileInfo: info,
+              depth: parentNode.depth + 1,
+              isSelected: _selectedFolderPath == info.path,
+            );
           }).toList();
 
           // Update parent with children

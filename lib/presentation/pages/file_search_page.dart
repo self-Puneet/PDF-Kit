@@ -203,7 +203,6 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
                       );
                     }
                   },
-                  onMenuSelected: (_) {}, // Implement folder actions if needed
                 )
               : DocEntryCard(
                   info: f,

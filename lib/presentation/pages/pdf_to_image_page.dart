@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
 import 'package:pdf_kit/presentation/component/pdf_page_selector.dart';
+import 'package:pdf_kit/presentation/component/destination_folder_selector.dart';
 import 'package:pdf_kit/presentation/layouts/layout_export.dart';
 import 'package:pdf_kit/presentation/provider/selection_provider.dart';
 import 'package:pdf_kit/service/pdf_to_image_service.dart';
@@ -38,7 +39,7 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController();
-    _loadDefaultDestination();
+    // _loadDefaultDestination called in didChangeDependencies
     // PDF to image requires exactly 1 PDF file
     WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
@@ -54,11 +55,40 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
     super.dispose();
   }
 
-  /// Load default destination folder (Downloads)
-  Future<void> _loadDefaultDestination() async {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final files = context.read<SelectionProvider>().files;
+    if (files.isNotEmpty) {
+      _loadDefaultDestination(files.first.path);
+    } else {
+      _loadDefaultDestination(null);
+    }
+  }
+
+  /// Load default destination folder (Source Dir -> Downloads)
+  Future<void> _loadDefaultDestination(String? sourcePath) async {
     setState(() => _isLoadingDefaultFolder = true);
 
     try {
+      if (sourcePath != null) {
+        final parentDir = Directory(p.dirname(sourcePath));
+        if (await parentDir.exists()) {
+          setState(() {
+            _selectedDestinationFolder = FileInfo(
+              name: p.basename(parentDir.path),
+              path: parentDir.path,
+              extension: '',
+              size: 0,
+              isDirectory: true,
+              lastModified: DateTime.now(),
+            );
+            _isLoadingDefaultFolder = false;
+          });
+          return;
+        }
+      }
+
       final publicDirsResult = await PathService.publicDirs();
 
       publicDirsResult.fold(
@@ -95,12 +125,13 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
   Future<void> _selectDestinationFolder() async {
     final selectedPath = await context.pushNamed<String>(
       AppRouteName.folderPickScreen,
+      extra: _selectedDestinationFolder?.path,
     );
 
     if (selectedPath != null && mounted) {
       setState(() {
         _selectedDestinationFolder = FileInfo(
-          name: selectedPath.split('/').last,
+          name: p.basename(selectedPath),
           path: selectedPath,
           extension: '',
           size: 0,
@@ -415,7 +446,7 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          _DestinationFolderSelector(
+                          DestinationFolderSelector(
                             selectedFolder: _selectedDestinationFolder,
                             isLoading: _isLoadingDefaultFolder,
                             onTap: _selectDestinationFolder,
@@ -601,110 +632,6 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
           ),
         );
       },
-    );
-  }
-}
-
-// Destination Folder Selector Widget
-class _DestinationFolderSelector extends StatelessWidget {
-  final FileInfo? selectedFolder;
-  final bool isLoading;
-  final VoidCallback onTap;
-  final bool disabled;
-
-  const _DestinationFolderSelector({
-    required this.selectedFolder,
-    required this.isLoading,
-    required this.onTap,
-    this.disabled = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final t = AppLocalizations.of(context);
-
-    return InkWell(
-      onTap: disabled ? null : onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: disabled
-                ? theme.colorScheme.onSurfaceVariant.withOpacity(0.15)
-                : theme.colorScheme.primary.withOpacity(0.3),
-            width: 1,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: isLoading
-            ? Row(
-                children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        theme.colorScheme.primary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    t.t('pdf_to_image_loading_default_folder'),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              )
-            : Row(
-                children: [
-                  Icon(
-                    Icons.folder,
-                    color: disabled
-                        ? theme.colorScheme.onSurfaceVariant.withOpacity(0.4)
-                        : theme.colorScheme.primary,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          selectedFolder?.name ??
-                              t.t('pdf_to_image_select_folder_placeholder'),
-                          style: theme.textTheme.bodyLarge,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (selectedFolder != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            selectedFolder!.path,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.chevron_right,
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(
-                      disabled ? 0.3 : 1.0,
-                    ),
-                  ),
-                ],
-              ),
-      ),
     );
   }
 }
