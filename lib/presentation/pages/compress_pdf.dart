@@ -210,7 +210,7 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
         stage.value = 'Done';
       } catch (_) {}
 
-      smoothTimer?.cancel();
+      smoothTimer.cancel();
       if (mounted) {
         _progressDialog.dismiss(context);
       }

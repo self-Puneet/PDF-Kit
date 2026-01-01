@@ -200,7 +200,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> {
         stage.value = 'Done';
       } catch (_) {}
 
-      smoothTimer?.cancel();
+      smoothTimer.cancel();
       if (mounted) {
         setState(() => _isConverting = false);
       } else {
