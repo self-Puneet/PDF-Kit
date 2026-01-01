@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
@@ -12,6 +13,8 @@ import 'package:dartz/dartz.dart' show Either;
 import 'package:pdf_kit/service/pdf_merge_service.dart' show CustomException;
 
 import 'package:pdf_kit/service/path_service.dart';
+import 'package:pdf_kit/presentation/widgets/non_dismissible_progress_dialog.dart';
+import 'dart:async';
 import 'dart:io';
 
 class CompressPdfPage extends StatefulWidget {
@@ -26,6 +29,8 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
   bool _isWorking = false;
   int? _originalFileSize;
   FileInfo? _selectedDestinationFolder;
+
+  final ProgressDialogController _progressDialog = ProgressDialogController();
 
   /// Load default destination folder (User Pref -> Downloads)
   Future<void> _loadDefaultDestination() async {
@@ -80,11 +85,6 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
     });
   }
 
-  String get _estimatedReduction {
-    // Rasterization typically achieves 40-60% compression
-    return '40-60%';
-  }
-
   String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
@@ -107,6 +107,40 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
     }
     setState(() => _isWorking = true);
     final file = sel.files.first;
+
+    final progress = ValueNotifier<double>(0.02);
+    final stage = ValueNotifier<String>('Preparing…');
+    Timer? smoothTimer;
+
+    void bumpProgress(double value01) {
+      final next = value01.clamp(0.0, 1.0);
+      if (next > progress.value) progress.value = next;
+    }
+
+    _progressDialog.show(
+      context: context,
+      title: 'Compress PDF',
+      progress: progress,
+      stage: stage,
+    );
+
+    smoothTimer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+      if (progress.value < 0.92) {
+        bumpProgress(progress.value + 0.01);
+      }
+
+      // Keep a single realtime "currently doing…" line even when the
+      // underlying service can't report granular progress.
+      final p = progress.value;
+      if (p < 0.15) {
+        stage.value = 'Analyzing PDF…';
+      } else if (p < 0.85) {
+        stage.value = 'Compressing…';
+      } else {
+        stage.value = 'Finalizing…';
+      }
+    });
+
     try {
       final Either<CustomException, FileInfo> result =
           await PdfCompressService.compressFile(
@@ -171,6 +205,18 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
         },
       );
     } finally {
+      try {
+        bumpProgress(1.0);
+        stage.value = 'Done';
+      } catch (_) {}
+
+      smoothTimer?.cancel();
+      if (mounted) {
+        _progressDialog.dismiss(context);
+      }
+      progress.dispose();
+      stage.dispose();
+
       if (mounted) setState(() => _isWorking = false);
     }
   }
@@ -323,7 +369,19 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                                   children: [
                                     _buildInfoRow(
                                       context,
-                                      'Quality',
+                                      'Pipeline',
+                                      'Rasterize → JPEG → PDF',
+                                    ),
+                                    const SizedBox(height: 4),
+                                    _buildInfoRow(
+                                      context,
+                                      'Default preset',
+                                      'DPI ${preset.dpi}, Q ${preset.jpegQuality}%, Max ${preset.maxLongSidePx}px',
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _buildInfoRow(
+                                      context,
+                                      'JPEG Quality',
                                       '${preset.jpegQuality}%',
                                     ),
                                     const SizedBox(height: 4),
@@ -353,7 +411,7 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'Rasterization is enabled to ensure maximum compatibility. Expected reduction: $_estimatedReduction',
+                                    'These values come from the compression/rasterization services. If the output is not smaller than the original, the compressor may retry once with a stronger preset.',
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: theme.colorScheme.onSurfaceVariant,
                                     ),

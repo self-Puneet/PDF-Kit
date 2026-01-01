@@ -9,6 +9,16 @@ import 'package:flutter/foundation.dart';
 class PdfManipulationService {
   PdfManipulationService._();
 
+  static void _report(
+    void Function(double progress01, String stage)? onProgress,
+    double progress01,
+    String stage,
+  ) {
+    try {
+      onProgress?.call(progress01.clamp(0.0, 1.0), stage);
+    } catch (_) {}
+  }
+
   /// Rearranges PDF pages to new order (1-based indices), rotates specified pages, removes unwanted pages
   static Future<Either<String, String>> manipulatePdf({
     required String pdfPath,
@@ -17,8 +27,10 @@ class PdfManipulationService {
     List<int>? pagesToRemove,
     String?
     destinationPath, // 🆕 Optional: Save specific path instead of overwrite
+    void Function(double progress01, String stage)? onProgress,
   }) async {
     try {
+      _report(onProgress, 0.03, 'Validating inputs');
       // Validate inputs
       if (reorderPages != null && reorderPages.isEmpty) {
         return const Left('Reorder pages list cannot be empty');
@@ -29,6 +41,8 @@ class PdfManipulationService {
       if (!await pdfFile.exists()) {
         return const Left('PDF file not found');
       }
+
+      _report(onProgress, 0.10, 'Reading PDF');
 
       // Determine temporary output path
       // final String outputPath = _outputPathFor(pdfPath, '_manipulated');
@@ -62,14 +76,28 @@ class PdfManipulationService {
         return const Left('All pages were removed, PDF cannot be empty');
       }
 
+      _report(
+        onProgress,
+        0.15,
+        'Processing ${finalOrder.length} page${finalOrder.length == 1 ? '' : 's'}',
+      );
+
       // Create new PDF document
       final pw.Document newPdf = pw.Document();
 
       // Render and add each page in the desired order
-      for (int pageNum in finalOrder) {
+      for (var i = 0; i < finalOrder.length; i++) {
+        final pageNum = finalOrder[i];
         if (pageNum < 1 || pageNum > totalPages) {
           continue;
         }
+
+        final p = 0.18 + (0.72 * ((i + 1) / finalOrder.length));
+        _report(
+          onProgress,
+          p,
+          'Rendering page $pageNum (${i + 1}/${finalOrder.length})',
+        );
 
         try {
           final pdfxPage = await pdfxDoc.getPage(pageNum);
@@ -128,6 +156,8 @@ class PdfManipulationService {
 
       final bytes = await newPdf.save();
 
+      _report(onProgress, 0.92, 'Writing output');
+
       if (destinationPath != null && destinationPath.isNotEmpty) {
         // Save to specific destination (copy mode)
         final destFile = File(destinationPath);
@@ -137,6 +167,7 @@ class PdfManipulationService {
         }
         await destFile.writeAsBytes(bytes);
         debugPrint('💾 [PdfManipulationService] Saved to: $destinationPath');
+        _report(onProgress, 1.0, 'Done');
         return Right(destinationPath);
       } else {
         // Overwrite original
@@ -153,6 +184,7 @@ class PdfManipulationService {
         } catch (_) {}
 
         debugPrint('✅ [PdfManipulationService] Overwrote original: $pdfPath');
+        _report(onProgress, 1.0, 'Done');
         return Right(pdfPath);
       }
     } on FileSystemException catch (e) {

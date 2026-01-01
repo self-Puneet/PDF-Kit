@@ -1,10 +1,12 @@
 import 'dart:io';
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:pdf_kit/presentation/provider/provider_export.dart';
 import 'package:pdfx/pdfx.dart' as pdfx;
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/models/file_model.dart';
+import 'package:pdf_kit/presentation/widgets/non_dismissible_progress_dialog.dart';
 import 'package:pdf_kit/service/pdf_manipulation_service.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:pdf_kit/presentation/component/pdf_page_thumbnail.dart';
@@ -32,6 +34,8 @@ class _ReorderPdfPageState extends State<ReorderPdfPage> {
   int _totalPages = 0;
   final Map<int, Uint8List?> _pageCache = {};
   FileInfo? _selectedDestinationFolder;
+
+  final ProgressDialogController _progressDialog = ProgressDialogController();
 
   Future<void> _loadDefaultDestination() async {
     try {
@@ -188,7 +192,25 @@ class _ReorderPdfPageState extends State<ReorderPdfPage> {
 
     setState(() => _isProcessing = true);
 
+    final progress = ValueNotifier<double>(0.0);
+    final stage = ValueNotifier<String>('Starting…');
+    Timer? creepTimer;
+
     try {
+      _progressDialog.show(
+        context: context,
+        title: t.t('reorder_pdf_title'),
+        progress: progress,
+        stage: stage,
+      );
+
+      creepTimer = Timer.periodic(const Duration(milliseconds: 140), (_) {
+        if (!mounted) return;
+        if (progress.value < 0.98) {
+          progress.value = (progress.value + 0.003).clamp(0.0, 0.98).toDouble();
+        }
+      });
+
       // Convert rotation map from degrees to page numbers with rotation
       final Map<int, double> rotationMap = {};
       for (var entry in _rotations.entries) {
@@ -197,16 +219,32 @@ class _ReorderPdfPageState extends State<ReorderPdfPage> {
         }
       }
 
+      final destinationPath = _selectedDestinationFolder != null
+          ? p.join(
+              _selectedDestinationFolder!.path,
+              '${p.basenameWithoutExtension(file.name)}_reordered.pdf',
+            )
+          : null;
+
       // Call manipulation service
       final result = await PdfManipulationService.manipulatePdf(
         pdfPath: file.path,
         reorderPages: hasReordered ? _pageOrder : null,
         pagesToRotate: rotationMap.isEmpty ? null : rotationMap,
         pagesToRemove: _removedPages.isEmpty ? null : _removedPages.toList(),
-        destinationPath: _selectedDestinationFolder != null
-            ? p.join('${p.basenameWithoutExtension(file.name)}_reordered.pdf')
-            : null,
+        destinationPath: destinationPath,
+        onProgress: (p01, s) {
+          if (!mounted) return;
+          stage.value = s;
+          if (p01 > progress.value) progress.value = p01.clamp(0.0, 1.0);
+        },
       );
+
+      if (mounted) {
+        progress.value = 1.0;
+        stage.value = 'Done';
+        _progressDialog.dismiss(context);
+      }
 
       setState(() => _isProcessing = false);
 
@@ -250,6 +288,13 @@ class _ReorderPdfPageState extends State<ReorderPdfPage> {
       setState(() => _isProcessing = false);
       debugPrint('❌ [ReorderPdfPage] Exception: $e');
       _showError('Unexpected error: ${e.toString()}');
+    } finally {
+      creepTimer?.cancel();
+      progress.dispose();
+      stage.dispose();
+      if (mounted) {
+        _progressDialog.dismiss(context);
+      }
     }
   }
 

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
 import 'package:pdf_kit/presentation/provider/selection_provider.dart';
@@ -9,6 +10,7 @@ import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:path/path.dart' as p;
 import 'package:pdf_kit/presentation/pages/home_page.dart';
+import 'package:pdf_kit/presentation/widgets/non_dismissible_progress_dialog.dart';
 
 class ProtectPdfPage extends StatefulWidget {
   final String? selectionId;
@@ -35,6 +37,8 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
   bool _isPasswordVisible = true;
   bool _isProtecting = false;
 
+  final ProgressDialogController _progressDialog = ProgressDialogController();
+
   @override
   void dispose() {
     _passwordController.dispose();
@@ -56,16 +60,62 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
       return;
     }
 
+    if (_isProtecting) return;
     setState(() => _isProtecting = true);
+
+    final progress = ValueNotifier<double>(0.02);
+    final stage = ValueNotifier<String>('Preparing…');
+    late final Timer smoothTimer;
+
+    void bumpProgress(double value01) {
+      final next = value01.clamp(0.0, 1.0);
+      if (next > progress.value) progress.value = next;
+    }
+
+    _progressDialog.show(
+      context: context,
+      title: 'Protect PDF',
+      progress: progress,
+      stage: stage,
+    );
+
+    smoothTimer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+      if (progress.value < 0.92) {
+        bumpProgress(progress.value + 0.01);
+      }
+    });
 
     final file = selection.files.first;
 
-    final result = await PdfProtectionService.protectPdf(
-      pdfPath: file.path,
-      password: _passwordController.text,
-    );
+    late final result;
+    try {
+      result = await PdfProtectionService.protectPdf(
+        pdfPath: file.path,
+        password: _passwordController.text,
+        onProgress: (p01, s) {
+          stage.value = s;
+          bumpProgress(p01);
+        },
+      );
+    } finally {
+      try {
+        bumpProgress(1.0);
+        stage.value = 'Done';
+      } catch (_) {}
 
-    setState(() => _isProtecting = false);
+      smoothTimer.cancel();
+      if (mounted) {
+        _progressDialog.dismiss(context);
+      }
+      progress.dispose();
+      stage.dispose();
+
+      if (mounted) {
+        setState(() => _isProtecting = false);
+      } else {
+        _isProtecting = false;
+      }
+    }
 
     result.fold(
       (failure) {

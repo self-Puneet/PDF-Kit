@@ -1,5 +1,6 @@
 // lib/presentation/pages/pdf_to_image_page.dart
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
@@ -7,6 +8,7 @@ import 'package:pdf_kit/presentation/component/pdf_page_selector.dart';
 import 'package:pdf_kit/presentation/component/destination_folder_selector.dart';
 import 'package:pdf_kit/presentation/layouts/layout_export.dart';
 import 'package:pdf_kit/presentation/provider/selection_provider.dart';
+import 'package:pdf_kit/presentation/widgets/non_dismissible_progress_dialog.dart';
 import 'package:pdf_kit/service/pdf_to_image_service.dart';
 import 'package:pdf_kit/service/path_service.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
@@ -28,6 +30,7 @@ class PdfToImagePage extends StatefulWidget {
 class _PdfToImagePageState extends State<PdfToImagePage> {
   late final TextEditingController _nameCtrl;
   bool _isConverting = false;
+  final ProgressDialogController _progressDialog = ProgressDialogController();
   FileInfo? _selectedDestinationFolder;
   bool _isLoadingDefaultFolder = true;
   bool _isPageSelectorMode = false;
@@ -212,11 +215,17 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
   ) async {
     setState(() => _isConverting = true);
 
+    final progress = ValueNotifier<double>(0.0);
+    final stage = ValueNotifier<String>('Starting…');
+    Timer? creepTimer;
+
     final t = AppLocalizations.of(context);
     final files = selection.files;
 
     if (files.isEmpty) {
       setState(() => _isConverting = false);
+      progress.dispose();
+      stage.dispose();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -233,41 +242,74 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
         ? _suggestDefaultName(pdfFile)
         : _nameCtrl.text.trim();
 
-    // Get total page count for the PDF
-    int totalPages = 0;
+    late final result;
     try {
-      final pdfDoc = await pdfx.PdfDocument.openFile(pdfFile.path);
-      totalPages = pdfDoc.pagesCount;
-      await pdfDoc.close();
-    } catch (e) {
-      debugPrint('Error getting page count: $e');
+      _progressDialog.show(
+        context: context,
+        title: t.t('pdf_to_image_page_title'),
+        progress: progress,
+        stage: stage,
+      );
+
+      creepTimer = Timer.periodic(const Duration(milliseconds: 140), (_) {
+        if (!mounted) return;
+        if (progress.value < 0.98) {
+          progress.value = (progress.value + 0.003).clamp(0.0, 0.98).toDouble();
+        }
+      });
+
+      stage.value = 'Analyzing PDF…';
+
+      // Get total page count for the PDF
+      int totalPages = 0;
+      try {
+        final pdfDoc = await pdfx.PdfDocument.openFile(pdfFile.path);
+        totalPages = pdfDoc.pagesCount;
+        await pdfDoc.close();
+      } catch (e) {
+        debugPrint('Error getting page count: $e');
+      }
+
+      _totalPages = totalPages;
+
+      // Use selected pages if any selection was made; otherwise, use all pages.
+      List<int> pagesToConvert;
+      if (_selectedPages.isEmpty) {
+        pagesToConvert = List.generate(totalPages, (index) => index + 1);
+      } else {
+        pagesToConvert = _selectedPages.toList()..sort();
+      }
+
+      // Determine output directory - use the selected folder directly
+      Directory? outputDir;
+      if (_selectedDestinationFolder != null) {
+        outputDir = Directory(_selectedDestinationFolder!.path);
+      }
+
+      result =
+          await PdfSelectedPagesToImagesService.exportSelectedPagesToImages(
+            inputPdf: File(pdfFile.path),
+            pageNumbers: pagesToConvert,
+            outputDirectory: outputDir,
+            fileNamePrefix: outputName, // Pass the prefix separately
+            onProgress: (p, s) {
+              if (!mounted) return;
+              stage.value = s;
+              if (p > progress.value) progress.value = p.clamp(0.0, 1.0);
+            },
+          );
+
+      if (mounted) {
+        progress.value = 1.0;
+        stage.value = 'Done';
+        _progressDialog.dismiss(context);
+      }
+    } finally {
+      creepTimer?.cancel();
+      progress.dispose();
+      stage.dispose();
+      if (mounted) setState(() => _isConverting = false);
     }
-
-    _totalPages = totalPages;
-
-    // Use selected pages if any selection was made; otherwise, use all pages.
-    List<int> pagesToConvert;
-    if (_selectedPages.isEmpty) {
-      pagesToConvert = List.generate(totalPages, (index) => index + 1);
-    } else {
-      pagesToConvert = _selectedPages.toList()..sort();
-    }
-
-    // Determine output directory - use the selected folder directly
-    Directory? outputDir;
-    if (_selectedDestinationFolder != null) {
-      outputDir = Directory(_selectedDestinationFolder!.path);
-    }
-
-    final result =
-        await PdfSelectedPagesToImagesService.exportSelectedPagesToImages(
-          inputPdf: File(pdfFile.path),
-          pageNumbers: pagesToConvert,
-          outputDirectory: outputDir,
-          fileNamePrefix: outputName, // Pass the prefix separately
-        );
-
-    setState(() => _isConverting = false);
 
     result.fold(
       (error) {

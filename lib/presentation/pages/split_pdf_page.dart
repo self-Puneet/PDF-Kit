@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pdf_kit/models/file_model.dart';
@@ -8,6 +9,7 @@ import 'package:pdf_kit/service/pdf_split_service.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:pdf_kit/providers/file_system_provider.dart';
 import 'package:pdf_kit/core/app_export.dart';
+import 'package:pdf_kit/presentation/widgets/non_dismissible_progress_dialog.dart';
 import 'package:path/path.dart' as p;
 import 'package:pdf_kit/presentation/pages/home_page.dart';
 import 'package:pdf_kit/presentation/component/destination_folder_selector.dart';
@@ -58,6 +60,8 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
   final TextEditingController _namingPatternController =
       TextEditingController();
   final List<_RangeWidgetData> _rangeWidgets = [];
+
+  final ProgressDialogController _progressDialog = ProgressDialogController();
 
   bool _isSplitting = false;
   int? _totalPages;
@@ -360,14 +364,49 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
     final file = selection.files.first;
     final pattern = _namingPatternController.text.trim();
 
-    final result = await PdfSplitService.splitPdf(
-      sourcePdfPath: file.path,
-      ranges: ranges,
-      namingPattern: pattern.isNotEmpty ? pattern : null,
-      outputDirectory: _selectedDestinationFolder?.path,
-    );
+    final progress = ValueNotifier<double>(0.0);
+    final stage = ValueNotifier<String>('Starting…');
+    Timer? creepTimer;
 
-    setState(() => _isSplitting = false);
+    late final SplitResult result;
+    try {
+      _progressDialog.show(
+        context: context,
+        title: 'Split PDF',
+        progress: progress,
+        stage: stage,
+      );
+
+      creepTimer = Timer.periodic(const Duration(milliseconds: 140), (_) {
+        if (!mounted) return;
+        if (progress.value < 0.98) {
+          progress.value = (progress.value + 0.003).clamp(0.0, 0.98).toDouble();
+        }
+      });
+
+      result = await PdfSplitService.splitPdf(
+        sourcePdfPath: file.path,
+        ranges: ranges,
+        namingPattern: pattern.isNotEmpty ? pattern : null,
+        outputDirectory: _selectedDestinationFolder?.path,
+        onProgress: (p, s) {
+          if (!mounted) return;
+          stage.value = s;
+          if (p > progress.value) progress.value = p.clamp(0.0, 1.0);
+        },
+      );
+
+      if (mounted) {
+        progress.value = 1.0;
+        stage.value = 'Done';
+        _progressDialog.dismiss(context);
+      }
+    } finally {
+      creepTimer?.cancel();
+      progress.dispose();
+      stage.dispose();
+      if (mounted) setState(() => _isSplitting = false);
+    }
 
     if (!mounted) return;
 

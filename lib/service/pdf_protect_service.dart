@@ -6,12 +6,24 @@ import 'package:pdf_kit/core/exception/failures.dart';
 class PdfProtectionService {
   PdfProtectionService._();
 
+  static void _report(
+    void Function(double progress01, String stage)? onProgress,
+    double progress01,
+    String stage,
+  ) {
+    try {
+      onProgress?.call(progress01.clamp(0.0, 1.0), stage);
+    } catch (_) {}
+  }
+
   /// Protects a PDF file with a password using Syncfusion Flutter PDF
   static Future<Either<Failure, String>> protectPdf({
     required String pdfPath,
     required String password,
+    void Function(double progress01, String stage)? onProgress,
   }) async {
     try {
+      _report(onProgress, 0.03, 'Validating inputs');
       // Validate password
       if (password.isEmpty) {
         return const Left(InvalidPasswordFailure());
@@ -22,6 +34,8 @@ class PdfProtectionService {
       if (!await pdfFile.exists()) {
         return const Left(FileNotFoundFailure());
       }
+
+      _report(onProgress, 0.18, 'Encrypting PDF');
       // Use ares_defence_labs_lock_smith_pdf to protect the PDF.
       final String outputPath = _outputPathFor(pdfPath, '_protected');
 
@@ -30,6 +44,8 @@ class PdfProtectionService {
         outputPath: outputPath,
         password: password,
       );
+
+      _report(onProgress, 0.78, 'Writing output');
 
       // Replace original with protected output
       final File outFile = File(outputPath);
@@ -42,11 +58,14 @@ class PdfProtectionService {
       final List<int> bytes = await outFile.readAsBytes();
       await pdfFile.writeAsBytes(bytes);
 
+      _report(onProgress, 0.92, 'Cleaning up');
+
       // Clean up temporary file
       try {
         await outFile.delete();
       } catch (_) {}
 
+      _report(onProgress, 1.0, 'Done');
       return Right(pdfPath);
     } on FileSystemException catch (e) {
       return Left(FileReadWriteFailure('File error: ${e.message}'));
@@ -134,8 +153,10 @@ class PdfProtectionService {
   static Future<Either<Failure, String>> unlockPdf({
     required String pdfPath,
     required String password,
+    void Function(double progress01, String stage)? onProgress,
   }) async {
     try {
+      _report(onProgress, 0.03, 'Validating inputs');
       // Validate password
       if (password.isEmpty) {
         return const Left(InvalidPasswordFailure());
@@ -149,6 +170,7 @@ class PdfProtectionService {
 
       // Try to load the PDF with password
       try {
+        _report(onProgress, 0.18, 'Decrypting PDF');
         final String outputPath = _outputPathFor(pdfPath, '_unlocked');
 
         await AresDefenceLabsLocksmithPdf.decryptPdf(
@@ -156,6 +178,8 @@ class PdfProtectionService {
           outputPath: outputPath,
           password: password,
         );
+
+        _report(onProgress, 0.78, 'Writing output');
 
         final File outFile = File(outputPath);
         if (!await outFile.exists()) {
@@ -167,10 +191,13 @@ class PdfProtectionService {
         final List<int> bytes = await outFile.readAsBytes();
         await pdfFile.writeAsBytes(bytes);
 
+        _report(onProgress, 0.92, 'Cleaning up');
+
         try {
           await outFile.delete();
         } catch (_) {}
 
+        _report(onProgress, 1.0, 'Done');
         return Right(pdfPath);
       } catch (e) {
         // Handle incorrect password or loading errors

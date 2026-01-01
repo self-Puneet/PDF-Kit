@@ -340,9 +340,8 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
           context: context,
           fileName: f.name,
           onDelete: () async {
-            context.read<FileSystemProvider>().deleteFile(f).then((_) {
-              RecentFilesSection.refreshNotifier.value++;
-            });
+            await context.read<FileSystemProvider>().deleteFile(f);
+            RecentFilesSection.refreshNotifier.value++;
           },
         );
         break;

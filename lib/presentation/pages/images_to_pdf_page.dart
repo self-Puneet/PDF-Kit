@@ -1,6 +1,8 @@
 // lib/presentation/pages/images_to_pdf_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'dart:io';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
@@ -11,6 +13,7 @@ import 'package:pdf_kit/service/path_service.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/presentation/layouts/selection_layout.dart';
 import 'package:pdf_kit/presentation/pages/home_page.dart';
+import 'package:pdf_kit/presentation/widgets/non_dismissible_progress_dialog.dart';
 
 import 'package:path/path.dart' as p;
 // import 'dart:io'; // Assuming it's already there or needed
@@ -31,6 +34,8 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> {
   FileInfo? _selectedDestinationFolder;
 
   bool _reorderMode = false;
+
+  final ProgressDialogController _progressDialog = ProgressDialogController();
 
   @override
   void initState() {
@@ -141,7 +146,32 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> {
     BuildContext context,
     SelectionProvider selection,
   ) async {
+    if (_isConverting) return;
+
     setState(() => _isConverting = true);
+
+    final progress = ValueNotifier<double>(0.02);
+    final stage = ValueNotifier<String>('Preparing…');
+
+    Timer? smoothTimer;
+    void bumpProgress(double value01) {
+      final next = value01.clamp(0.0, 1.0);
+      if (next > progress.value) progress.value = next;
+    }
+
+    _progressDialog.show(
+      context: context,
+      title: 'Images to PDF',
+      progress: progress,
+      stage: stage,
+    );
+
+    smoothTimer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+      // Smoothly creep forward between real updates (never reach 100%).
+      if (progress.value < 0.92) {
+        bumpProgress(progress.value + 0.01);
+      }
+    });
 
     final t = AppLocalizations.of(context);
     final defaultName = t.t('images_to_pdf_default_file_name');
@@ -152,14 +182,39 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> {
 
     final files = selection.files;
 
-    // Pass destination folder to merge service
-    final result = await PdfMergeService.mergePdfs(
-      files: files,
-      outputFileName: outName,
-      destinationPath: _selectedDestinationFolder?.path,
-    );
+    late final result;
+    try {
+      // Pass destination folder to merge service
+      result = await PdfMergeService.mergePdfs(
+        files: files,
+        outputFileName: outName,
+        destinationPath: _selectedDestinationFolder?.path,
+        onProgress: (p01, s) {
+          stage.value = s;
+          bumpProgress(p01);
+        },
+      );
+    } finally {
+      try {
+        bumpProgress(1.0);
+        stage.value = 'Done';
+      } catch (_) {}
 
-    setState(() => _isConverting = false);
+      smoothTimer?.cancel();
+      if (mounted) {
+        setState(() => _isConverting = false);
+      } else {
+        _isConverting = false;
+      }
+
+      if (mounted) {
+        _progressDialog.dismiss(context);
+      }
+
+      smoothTimer = null;
+      progress.dispose();
+      stage.dispose();
+    }
 
     result.fold(
       (error) {

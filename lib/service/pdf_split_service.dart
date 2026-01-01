@@ -68,6 +68,16 @@ class SplitResult {
 class PdfSplitService {
   PdfSplitService._();
 
+  static void _report(
+    void Function(double progress01, String stage)? onProgress,
+    double progress01,
+    String stage,
+  ) {
+    try {
+      onProgress?.call(progress01.clamp(0.0, 1.0), stage);
+    } catch (_) {}
+  }
+
   /// Get total page count of a PDF file
   static Future<Either<String, int>> getPageCount({
     required String pdfPath,
@@ -128,8 +138,10 @@ class PdfSplitService {
     required List<PageRange> ranges,
     String? outputDirectory,
     String? namingPattern, // e.g., "document_____" where _____ will be replaced
+    void Function(double progress01, String stage)? onProgress,
   }) async {
     try {
+      _report(onProgress, 0.03, 'Validating inputs');
       debugPrint('📊 [PdfSplitService] Splitting PDF: $sourcePdfPath');
       debugPrint('   Ranges: ${ranges.length}');
 
@@ -138,6 +150,8 @@ class PdfSplitService {
       if (!await sourceFile.exists()) {
         return SplitResult.failure('Source PDF file not found');
       }
+
+      _report(onProgress, 0.10, 'Reading PDF');
 
       // Get total page count
       final pageCountResult = await getPageCount(pdfPath: sourcePdfPath);
@@ -165,6 +179,12 @@ class PdfSplitService {
       );
       debugPrint('   Output directory: ${targetDir.path}');
 
+      final totalPagesToProcess = ranges.fold<int>(
+        0,
+        (sum, r) => sum + (r.endPage - r.startPage + 1),
+      );
+      var processedPages = 0;
+
       // Get base file name for naming pattern
       final baseFileName =
           namingPattern ?? p.basenameWithoutExtension(sourcePdfPath);
@@ -176,6 +196,12 @@ class PdfSplitService {
       for (int i = 0; i < ranges.length; i++) {
         final range = ranges[i];
         debugPrint('   Processing range ${i + 1}: ${range.toString()}');
+
+        _report(
+          onProgress,
+          0.15,
+          'Preparing range ${i + 1}/${ranges.length}: ${range.startPage}–${range.endPage}',
+        );
 
         // Generate output file name
         final String outputFileName =
@@ -191,6 +217,23 @@ class PdfSplitService {
             outputPath: outputPath,
             startPage: range.startPage,
             endPage: range.endPage,
+            onProgress: (p, s) {
+              // Map inner progress (0..1) to overall progress (0.20..0.90)
+              final overall = 0.20 + (0.70 * p);
+              _report(onProgress, overall, s);
+            },
+            onPageDone: () {
+              processedPages++;
+              if (totalPagesToProcess > 0) {
+                final p = processedPages / totalPagesToProcess;
+                final overall = 0.20 + (0.70 * p);
+                _report(
+                  onProgress,
+                  overall,
+                  'Splitting… ($processedPages/$totalPagesToProcess pages)',
+                );
+              }
+            },
           );
 
           outputPaths.add(outputPath);
@@ -206,10 +249,13 @@ class PdfSplitService {
         return SplitResult.failure('Failed to create any split files');
       }
 
+      _report(onProgress, 0.95, 'Finalizing');
+
       debugPrint(
         '✅ [PdfSplitService] Split completed: ${outputPaths.length} files created',
       );
 
+      _report(onProgress, 1.0, 'Done');
       return SplitResult.success(
         outputPaths: outputPaths,
         outputFileNames: outputFileNames,
@@ -230,9 +276,14 @@ class PdfSplitService {
     required String outputPath,
     required int startPage,
     required int endPage,
+    void Function(double progress01, String stage)? onProgress,
+    void Function()? onPageDone,
   }) async {
     try {
       debugPrint('   📄 Extracting pages $startPage-$endPage');
+
+      final totalPages = (endPage - startPage + 1);
+      _report(onProgress, 0.0, 'Extracting pages $startPage–$endPage');
 
       // Open source PDF using pdfx
       final sourceDoc = await pdfx.PdfDocument.openFile(sourcePath);
@@ -243,6 +294,9 @@ class PdfSplitService {
       // Extract each page in the range
       for (int pageNum = startPage; pageNum <= endPage; pageNum++) {
         try {
+          final done = (pageNum - startPage);
+          final p = totalPages <= 0 ? 0.0 : (done / totalPages);
+          _report(onProgress, p, 'Rendering page $pageNum');
           final page = await sourceDoc.getPage(pageNum);
 
           // Render page to high-quality image
@@ -273,6 +327,13 @@ class PdfSplitService {
             ),
           );
 
+          final done2 = (pageNum - startPage + 1);
+          final p2 = totalPages <= 0 ? 1.0 : (done2 / totalPages);
+          _report(onProgress, p2, 'Added page $pageNum');
+          try {
+            onPageDone?.call();
+          } catch (_) {}
+
           debugPrint('      ✅ Extracted page $pageNum');
         } catch (e) {
           debugPrint('      ❌ Error extracting page $pageNum: $e');
@@ -283,8 +344,11 @@ class PdfSplitService {
       await sourceDoc.close();
 
       // Save new PDF to output path
+      _report(onProgress, 0.95, 'Saving split PDF');
       final bytes = await newPdf.save();
       await File(outputPath).writeAsBytes(bytes);
+
+      _report(onProgress, 1.0, 'Saved');
 
       debugPrint('   💾 Saved ${endPage - startPage + 1} pages to output');
     } catch (e) {
