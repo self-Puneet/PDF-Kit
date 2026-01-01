@@ -417,16 +417,6 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
                   }
                 },
               ),
-              actions: _isPageSelectorMode
-                  ? [
-                      TextButton(
-                        onPressed: () {
-                          setState(() => _isPageSelectorMode = false);
-                        },
-                        child: Text(t.t('common_done')),
-                      ),
-                    ]
-                  : null,
             ),
             body: SafeArea(
               child: _isPageSelectorMode && files.isNotEmpty

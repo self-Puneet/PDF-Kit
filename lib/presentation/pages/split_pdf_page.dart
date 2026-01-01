@@ -67,7 +67,9 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
   int? _totalPages;
   pdfx.PdfDocument? _pdfDocument;
   final List<Uint8List?> _pagePreviews = [];
-  bool _isLoadingPreviews = false;
+
+  int _previewGenerationId = 0;
+  bool _isAdjustingRange = false;
 
   String? _loadedPath;
   FileInfo? _selectedDestinationFolder;
@@ -208,7 +210,6 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
 
   Future<void> _loadPdfInfoForPath(String pdfPath) async {
     setState(() {
-      _isLoadingPreviews = true;
       _pagePreviews.clear();
       _totalPages = null;
     });
@@ -237,6 +238,10 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
           setState(() {
             _totalPages = count;
             _namingPatternController.text = p.basenameWithoutExtension(pdfPath);
+            // Show the preview strip immediately; pages will fill in progressively.
+            _pagePreviews
+              ..clear()
+              ..addAll(List<Uint8List?>.filled(count, null));
           });
 
           _pdfDocument = await pdfx.PdfDocument.openFile(pdfPath);
@@ -253,14 +258,16 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isLoadingPreviews = false);
+      if (mounted) setState(() {});
     }
   }
 
   Future<void> _generatePagePreviews() async {
     if (_pdfDocument == null || _totalPages == null || _totalPages == 0) return;
 
+    final generationId = ++_previewGenerationId;
     for (int i = 1; i <= _totalPages!; i++) {
+      if (!mounted || generationId != _previewGenerationId) return;
       try {
         final page = await _pdfDocument!.getPage(i);
         final pageImage = await page.render(
@@ -270,12 +277,21 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
           backgroundColor: '#FFFFFF',
         );
         await page.close();
-        _pagePreviews.add(pageImage?.bytes);
+        if (!mounted || generationId != _previewGenerationId) return;
+
+        if (i - 1 >= 0 && i - 1 < _pagePreviews.length) {
+          _pagePreviews[i - 1] = pageImage?.bytes;
+        }
+
+        if (mounted) setState(() {});
       } catch (e) {
-        _pagePreviews.add(null);
+        if (!mounted || generationId != _previewGenerationId) return;
+        if (i - 1 >= 0 && i - 1 < _pagePreviews.length) {
+          _pagePreviews[i - 1] = null;
+        }
+        if (mounted) setState(() {});
       }
     }
-    if (mounted) setState(() {});
   }
 
   void _activateRange(int index) {
@@ -300,8 +316,28 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
 
   /// Called when any range controller value changes
   void _onRangeChanged() {
+    if (_isAdjustingRange) return;
+    _isAdjustingRange = true;
+    try {
+      for (final range in _rangeWidgets) {
+        if (!range.isActive) continue;
+        final start = int.tryParse(range.startController.text.trim());
+        final end = int.tryParse(range.endController.text.trim());
+        if (start == null || end == null) continue;
+
+        if (end < start) {
+          range.endController.text = start.toString();
+          range.endController.selection = TextSelection.fromPosition(
+            TextPosition(offset: range.endController.text.length),
+          );
+        }
+      }
+    } finally {
+      _isAdjustingRange = false;
+    }
+
     setState(() {
-      // This will trigger a rebuild and update button state
+      // trigger rebuild and update button state
     });
   }
 
@@ -527,16 +563,18 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
                     // const SizedBox(height: 24),
 
                     // Page Previews Section
-                    if (_pagePreviews.isNotEmpty) ...[
+                    if (_totalPages != null && _totalPages! > 0) ...[
                       Text('Page Preview', style: theme.textTheme.titleSmall),
                       const SizedBox(height: 12),
                       SizedBox(
                         height: 100,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
-                          itemCount: _pagePreviews.length,
+                          itemCount: _totalPages!,
                           itemBuilder: (context, index) {
-                            final preview = _pagePreviews[index];
+                            final preview = index < _pagePreviews.length
+                                ? _pagePreviews[index]
+                                : null;
                             return Container(
                               width: 70,
                               margin: const EdgeInsets.only(right: 8),
@@ -549,20 +587,21 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
                               child: Column(
                                 children: [
                                   Expanded(
-                                    child: preview != null
-                                        ? ClipRRect(
-                                            borderRadius:
-                                                const BorderRadius.vertical(
-                                                  top: Radius.circular(7),
-                                                ),
-                                            child: Image.memory(
+                                    child: ClipRRect(
+                                      borderRadius: const BorderRadius.vertical(
+                                        top: Radius.circular(7),
+                                      ),
+                                      child: preview != null
+                                          ? Image.memory(
                                               preview,
                                               fit: BoxFit.cover,
+                                            )
+                                          : Container(
+                                              color: theme
+                                                  .colorScheme
+                                                  .surfaceVariant,
                                             ),
-                                          )
-                                        : const Center(
-                                            child: Icon(Icons.error_outline),
-                                          ),
+                                    ),
                                   ),
                                   Container(
                                     padding: const EdgeInsets.all(4),
@@ -585,11 +624,6 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
                           },
                         ),
                       ),
-                      const SizedBox(height: 24),
-                    ] else if (_isLoadingPreviews) ...[
-                      const Center(child: CircularProgressIndicator()),
-                      const SizedBox(height: 24),
-
                       const SizedBox(height: 24),
                     ],
 
@@ -785,6 +819,7 @@ class _RangeInputWidget extends StatelessWidget {
                 controller: rangeWidget.endController,
                 enabled: isActive && !isSplitting,
                 totalPages: totalPages,
+                minController: rangeWidget.startController,
               ),
               const SizedBox(width: 4),
 
@@ -816,6 +851,7 @@ class _CommonTextField extends StatelessWidget {
   final TextEditingController controller;
   final bool enabled;
   final int? totalPages;
+  final TextEditingController? minController;
 
   const _CommonTextField({
     required this.labelText,
@@ -823,6 +859,7 @@ class _CommonTextField extends StatelessWidget {
     required this.controller,
     required this.enabled,
     this.totalPages,
+    this.minController,
   });
 
   @override
@@ -860,6 +897,18 @@ class _CommonTextField extends StatelessWidget {
                 );
               } else if (num > totalPages!) {
                 controller.text = totalPages.toString();
+                controller.selection = TextSelection.fromPosition(
+                  TextPosition(offset: controller.text.length),
+                );
+              }
+            }
+
+            final minText = minController?.text.trim();
+            final minValue = minText == null ? null : int.tryParse(minText);
+            if (minValue != null) {
+              final current = int.tryParse(controller.text.trim());
+              if (current != null && current < minValue) {
+                controller.text = minValue.toString();
                 controller.selection = TextSelection.fromPosition(
                   TextPosition(offset: controller.text.length),
                 );

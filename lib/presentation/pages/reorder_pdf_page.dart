@@ -309,14 +309,20 @@ class _ReorderPdfPageState extends State<ReorderPdfPage> {
     );
   }
 
-  Future<void> _previewPage(int pageNum, String pdfPath) async {
+  Future<void> _previewPage(
+    int pageNum,
+    String pdfPath, {
+    double rotationDegrees = 0.0,
+  }) async {
     // Open a full-screen preview dialog for the page
     try {
       final doc = await pdfx.PdfDocument.openFile(pdfPath);
       final page = await doc.getPage(pageNum);
+      final pageWidth = page.width;
+      final pageHeight = page.height;
       final pageImage = await page.render(
-        width: page.width * 2,
-        height: page.height * 2,
+        width: pageWidth * 2,
+        height: pageHeight * 2,
         format: pdfx.PdfPageImageFormat.png,
         backgroundColor: '#FFFFFF',
       );
@@ -325,25 +331,60 @@ class _ReorderPdfPageState extends State<ReorderPdfPage> {
 
       if (!mounted || pageImage == null) return;
 
+      final quarterTurns =
+          (((rotationDegrees / 90).round() % 4) + 4) % 4; // 0..3
+      final rotatedAspectRatio = (quarterTurns % 2 == 0)
+          ? (pageWidth / pageHeight)
+          : (pageHeight / pageWidth);
+
       showDialog(
         context: context,
-        builder: (context) => Dialog(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppBar(
-                title: Text('Page $pageNum Preview'),
-                leading: IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
+        builder: (context) {
+          final screenSize = MediaQuery.sizeOf(context);
+          final maxBodyHeight = screenSize.height * 0.78;
+          final maxBodyWidth = screenSize.width - 32;
+
+          // Choose the body size that fits within screen while respecting aspect ratio.
+          var bodyWidth = maxBodyWidth;
+          var bodyHeight = bodyWidth / rotatedAspectRatio;
+          if (bodyHeight > maxBodyHeight) {
+            bodyHeight = maxBodyHeight;
+            bodyWidth = bodyHeight * rotatedAspectRatio;
+          }
+
+          final image = Image.memory(pageImage.bytes, fit: BoxFit.contain);
+          final rotated = quarterTurns == 0
+              ? image
+              : RotatedBox(quarterTurns: quarterTurns, child: image);
+
+          return Dialog(
+            insetPadding: const EdgeInsets.all(16),
+            child: SizedBox(
+              width: double.infinity,
+              height: screenSize.height * 0.85,
+              child: Column(
+                children: [
+                  AppBar(
+                    title: Text('Page $pageNum Preview'),
+                    leading: IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: SizedBox(
+                        width: bodyWidth,
+                        height: bodyHeight,
+                        child: InteractiveViewer(child: rotated),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              Expanded(
-                child: InteractiveViewer(child: Image.memory(pageImage.bytes)),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       );
     } catch (e) {
       debugPrint('❌ [ReorderPdfPage] Preview error: $e');
@@ -436,7 +477,7 @@ class _ReorderPdfPageState extends State<ReorderPdfPage> {
                   children: [
                     // Header section (non-scrollable)
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -489,7 +530,6 @@ class _ReorderPdfPageState extends State<ReorderPdfPage> {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 24),
                         ],
                       ),
                     ),
@@ -561,6 +601,7 @@ class _ReorderPdfPageState extends State<ReorderPdfPage> {
                                       : () => _previewPage(
                                           pageNum,
                                           files.first.path,
+                                          rotationDegrees: rotation,
                                         ),
                                   isRemoved: isRemoved,
                                   showRotateButton: true,
