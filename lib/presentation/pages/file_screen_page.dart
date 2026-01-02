@@ -282,6 +282,8 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
               margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
               child: DocEntryCard(
                 info: f,
+                showViewerOptionsSheet:
+                    !(widget.selectable || widget.isFullscreenRoute == true),
                 selectable: _selectionEnabled,
                 selected: (pvd?.isSelected(f.path) ?? false),
                 onToggleSelected: _selectionEnabled

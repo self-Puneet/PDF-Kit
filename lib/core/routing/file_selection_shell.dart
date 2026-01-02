@@ -7,6 +7,93 @@ import 'package:pdf_kit/service/action_callback_manager.dart';
 import 'package:pdf_kit/presentation/pages/files_root_page.dart'; // [NEW]
 import 'package:pdf_kit/presentation/layouts/file_browser_shell.dart'; // [NEW]
 
+final Set<String> _autoOpenedSelectionIds = <String>{};
+
+String _normalizeOp(String? op) => (op ?? '').trim().toLowerCase();
+
+String _opFromActionText(String? actionText) {
+  final action = (actionText ?? '').toLowerCase();
+  if (action.contains('unlock')) return 'unlock';
+  if (action.contains('protect')) return 'protect';
+  if (action.contains('compress')) return 'compress';
+  if (action.contains('sign')) return 'sign';
+  if (action.contains('images to pdf')) return 'images_to_pdf';
+  if (action.contains('reorder')) return 'reorder';
+  if (action.contains('split')) return 'split';
+  if (action.contains('image')) return 'pdf_to_image';
+  return 'merge';
+}
+
+void _pushOperationRoute({
+  required GlobalKey<NavigatorState> rootNavKey,
+  required String op,
+  required String selectionId,
+  int? minSelectable,
+  int? maxSelectable,
+}) {
+  final q = <String, String>{'selectionId': selectionId};
+  if (minSelectable != null) q['min'] = minSelectable.toString();
+  if (maxSelectable != null) q['max'] = maxSelectable.toString();
+
+  switch (_normalizeOp(op)) {
+    case 'unlock':
+      rootNavKey.currentContext!.pushNamed(
+        AppRouteName.unlockPdf,
+        queryParameters: q,
+      );
+      return;
+    case 'protect':
+      rootNavKey.currentContext!.pushNamed(
+        AppRouteName.protectPdf,
+        queryParameters: q,
+      );
+      return;
+    case 'compress':
+      rootNavKey.currentContext!.pushNamed(
+        AppRouteName.compressPdf,
+        queryParameters: q,
+      );
+      return;
+    case 'sign':
+      rootNavKey.currentContext!.pushNamed(
+        AppRouteName.signPdf,
+        queryParameters: q,
+      );
+      return;
+    case 'images_to_pdf':
+      rootNavKey.currentContext!.pushNamed(
+        AppRouteName.imagesToPdf,
+        queryParameters: q,
+      );
+      return;
+    case 'reorder':
+      rootNavKey.currentContext!.pushNamed(
+        AppRouteName.reorderPdf,
+        queryParameters: q,
+      );
+      return;
+    case 'split':
+      rootNavKey.currentContext!.pushNamed(
+        AppRouteName.splitPdf,
+        queryParameters: q,
+      );
+      return;
+    case 'pdf_to_image':
+      rootNavKey.currentContext!.pushNamed(
+        AppRouteName.pdfToImage,
+        queryParameters: q,
+      );
+      return;
+    case 'merge':
+    default:
+      rootNavKey.currentContext!.pushNamed(
+        AppRouteName.mergePdf,
+        queryParameters: q,
+      );
+      return;
+  }
+}
+
 ShellRoute buildSelectionShellRoute({
   required GlobalKey<NavigatorState> rootNavKey,
 }) {
@@ -21,6 +108,8 @@ ShellRoute buildSelectionShellRoute({
       final maxStr = state.uri.queryParameters['max'];
       final minStr = state.uri.queryParameters['min'];
       final allowed = state.uri.queryParameters['allowed'];
+      final opParam = state.uri.queryParameters['op'];
+      final auto = state.uri.queryParameters['auto'];
       // final fileType = state.uri.queryParameters['fileType'];
       final maxSelectable = int.tryParse(maxStr ?? '');
       final minSelectable = int.tryParse(minStr ?? '');
@@ -34,6 +123,29 @@ ShellRoute buildSelectionShellRoute({
         }
       }
 
+      final op = _normalizeOp(opParam).isNotEmpty
+          ? _normalizeOp(opParam)
+          : _opFromActionText(actionText);
+
+      // Auto-open operation page (used by the viewer options sheet) while
+      // keeping the selection UI underneath for "Add more" flows.
+      if (selectionId != null && auto == '1') {
+        final key = '$selectionId:$op';
+        if (!_autoOpenedSelectionIds.contains(key)) {
+          _autoOpenedSelectionIds.add(key);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (rootNavKey.currentContext == null) return;
+            _pushOperationRoute(
+              rootNavKey: rootNavKey,
+              op: op,
+              selectionId: selectionId,
+              minSelectable: minSelectable,
+              maxSelectable: maxSelectable,
+            );
+          });
+        }
+      }
+
       return SelectionScaffold(
         provider: provided,
         actionText: actionText,
@@ -42,92 +154,13 @@ ShellRoute buildSelectionShellRoute({
         allowed: allowed,
         onAction: (files) {
           if (selectionId != null) {
-            // Decide target route based on actionText
-            final action = actionText?.toLowerCase() ?? '';
-
-            // Check for specific actions in order (most specific first)
-            if (action.contains('unlock')) {
-              rootNavKey.currentContext!.pushNamed(
-                AppRouteName.unlockPdf,
-                queryParameters: {
-                  'selectionId': selectionId,
-                  if (minSelectable != null) 'min': minSelectable.toString(),
-                  if (maxSelectable != null) 'max': maxSelectable.toString(),
-                },
-              );
-            } else if (action.contains('protect')) {
-              rootNavKey.currentContext!.pushNamed(
-                AppRouteName.protectPdf,
-                queryParameters: {
-                  'selectionId': selectionId,
-                  if (minSelectable != null) 'min': minSelectable.toString(),
-                  if (maxSelectable != null) 'max': maxSelectable.toString(),
-                },
-              );
-            } else if (action.contains('compress')) {
-              rootNavKey.currentContext!.pushNamed(
-                AppRouteName.compressPdf,
-                queryParameters: {
-                  'selectionId': selectionId,
-                  if (minSelectable != null) 'min': minSelectable.toString(),
-                  if (maxSelectable != null) 'max': maxSelectable.toString(),
-                },
-              );
-            } else if (action.contains('sign')) {
-              rootNavKey.currentContext!.pushNamed(
-                AppRouteName.signPdf,
-                queryParameters: {
-                  'selectionId': selectionId,
-                  if (minSelectable != null) 'min': minSelectable.toString(),
-                  if (maxSelectable != null) 'max': maxSelectable.toString(),
-                },
-              );
-            } else if (action.contains('images to pdf')) {
-              rootNavKey.currentContext!.pushNamed(
-                AppRouteName.imagesToPdf,
-                queryParameters: {
-                  'selectionId': selectionId,
-                  if (minSelectable != null) 'min': minSelectable.toString(),
-                  if (maxSelectable != null) 'max': maxSelectable.toString(),
-                },
-              );
-            } else if (action.contains('reorder')) {
-              rootNavKey.currentContext!.pushNamed(
-                AppRouteName.reorderPdf,
-                queryParameters: {
-                  'selectionId': selectionId,
-                  if (minSelectable != null) 'min': minSelectable.toString(),
-                  if (maxSelectable != null) 'max': maxSelectable.toString(),
-                },
-              );
-            } else if (action.contains('split')) {
-              rootNavKey.currentContext!.pushNamed(
-                AppRouteName.splitPdf,
-                queryParameters: {
-                  'selectionId': selectionId,
-                  if (minSelectable != null) 'min': minSelectable.toString(),
-                  if (maxSelectable != null) 'max': maxSelectable.toString(),
-                },
-              );
-            } else if (action.contains('image')) {
-              rootNavKey.currentContext!.pushNamed(
-                AppRouteName.pdfToImage,
-                queryParameters: {
-                  'selectionId': selectionId,
-                  if (minSelectable != null) 'min': minSelectable.toString(),
-                  if (maxSelectable != null) 'max': maxSelectable.toString(),
-                },
-              );
-            } else {
-              rootNavKey.currentContext!.pushNamed(
-                AppRouteName.mergePdf,
-                queryParameters: {
-                  'selectionId': selectionId,
-                  if (minSelectable != null) 'min': minSelectable.toString(),
-                  if (maxSelectable != null) 'max': maxSelectable.toString(),
-                },
-              );
-            }
+            _pushOperationRoute(
+              rootNavKey: rootNavKey,
+              op: op,
+              selectionId: selectionId,
+              minSelectable: minSelectable,
+              maxSelectable: maxSelectable,
+            );
             return;
           }
 

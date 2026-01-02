@@ -61,14 +61,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         leadingIcon: Icons.text_fields,
         onTap: () {},
       ),
-      SettingsItem(
-        id: 'pdf_compression',
-        title: t.t('settings_pdf_compression_title'),
-        subtitle: t.t('settings_pdf_compression_subtitle'),
-        type: SettingsItemType.navigation,
-        leadingIcon: Icons.compress,
-        onTap: () {},
-      ),
+      // SettingsItem(
+      //   id: 'pdf_compression',
+      //   title: t.t('settings_pdf_compression_title'),
+      //   subtitle: t.t('settings_pdf_compression_subtitle'),
+      //   type: SettingsItemType.navigation,
+      //   leadingIcon: Icons.compress,
+      //   onTap: () {},
+      // ),
       SettingsItem(
         id: 'filter_options',
         title: t.t('settings_filter_options_title'),
@@ -77,14 +77,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         leadingIcon: Icons.filter_list,
         onTap: () {},
       ),
-      SettingsItem(
-        id: 'grid_view_layout',
-        title: t.t('settings_grid_view_layout_title'),
-        subtitle: t.t('settings_grid_view_layout_subtitle'),
-        type: SettingsItemType.navigation,
-        leadingIcon: Icons.grid_view,
-        onTap: () {},
-      ),
+      // SettingsItem(
+      //   id: 'grid_view_layout',
+      //   title: t.t('settings_grid_view_layout_title'),
+      //   subtitle: t.t('settings_grid_view_layout_subtitle'),
+      //   type: SettingsItemType.navigation,
+      //   leadingIcon: Icons.grid_view,
+      //   onTap: () {},
+      // ),
       SettingsItem(
         id: 'pdf_content_fit',
         title: t.t('settings_pdf_content_fit_title'),
@@ -130,6 +130,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildHeader(context),
               Expanded(
                 child: ListView.separated(
+                  padding: EdgeInsets.zero,
                   itemCount: items.length,
                   separatorBuilder: (_, __) => SizedBox.shrink(),
                   itemBuilder: (context, index) {

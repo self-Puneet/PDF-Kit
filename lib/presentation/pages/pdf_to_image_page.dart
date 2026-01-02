@@ -579,6 +579,7 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
                           else ...[
                             DocEntryCard(
                               info: files.first,
+                              showViewerOptionsSheet: false,
                               onOpen: null,
                               onMenu: null,
                             ),

@@ -91,8 +91,16 @@ final appRouter = GoRouter(
       name: AppRouteName.pdfViewer,
       path: '/pdf/viewer',
       parentNavigatorKey: _rootNavKey,
-      builder: (context, state) =>
-          FileViewerPage(path: state.uri.queryParameters['path']),
+      builder: (context, state) {
+        final raw = state.uri.queryParameters['showOptionsSheet'];
+        final showOptionsSheet =
+            raw == null || (raw != '0' && raw.toLowerCase() != 'false');
+
+        return FileViewerPage(
+          path: state.uri.queryParameters['path'],
+          showOptionsSheet: showOptionsSheet,
+        );
+      },
     ),
     GoRoute(
       name: AppRouteName.mergePdf,

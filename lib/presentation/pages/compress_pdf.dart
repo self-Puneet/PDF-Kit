@@ -296,6 +296,7 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                               }
                               return DocEntryCard(
                                 info: file,
+                                showViewerOptionsSheet: false,
                                 showEdit: false,
                                 showRemove: true,
                                 selectable: false,

@@ -229,6 +229,7 @@ class _UnlockPdfPageState extends State<UnlockPdfPage> {
                     const SizedBox(height: 12),
                     DocEntryCard(
                       info: files.first,
+                      showViewerOptionsSheet: false,
                       showRemove: true,
                       selectable: false,
                       reorderable: false,

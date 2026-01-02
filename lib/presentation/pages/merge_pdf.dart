@@ -482,8 +482,9 @@ class _MergePdfPageState extends State<MergePdfPage> {
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                         child: DocEntryCard(
                           info: f,
-                          showEdit: true,
-                          showRemove: true,
+                          showViewerOptionsSheet: false,
+                          showEdit: false,
+                          showRemove: false,
                           reorderable: _reorderMode,
                           disabled: _isMerging,
                           onEdit: () => null,

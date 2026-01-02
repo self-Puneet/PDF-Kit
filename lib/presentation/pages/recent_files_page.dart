@@ -304,6 +304,9 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
                                 ),
                                 child: DocEntryCard(
                                   info: _files[i],
+                                  showViewerOptionsSheet:
+                                      !(widget.selectable ||
+                                          widget.isFullscreenRoute == true),
                                   selectable: _selectionEnabled,
                                   selected:
                                       (_maybeProvider()?.isSelected(

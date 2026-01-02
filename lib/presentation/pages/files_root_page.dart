@@ -1131,6 +1131,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
         final file = filteredFiles[index];
         return DocEntryCard(
           info: file,
+          showViewerOptionsSheet: !widget.isFullscreenRoute,
           selectable: _selectionEnabled,
           selected: (pvd?.isSelected(file.path) ?? false),
           onToggleSelected: _selectionEnabled ? () => pvd?.toggle(file) : null,

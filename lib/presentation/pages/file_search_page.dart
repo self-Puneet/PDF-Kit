@@ -294,6 +294,8 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
           margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
           child: DocEntryCard(
             info: f,
+            showViewerOptionsSheet:
+                !(widget.selectable || widget.isFullscreenRoute == true),
             selectable: enabled,
             selected: (p?.isSelected(f.path) ?? false),
             onInteract: () {

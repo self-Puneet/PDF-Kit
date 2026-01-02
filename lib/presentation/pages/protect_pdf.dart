@@ -227,6 +227,7 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
                     const SizedBox(height: 12),
                     DocEntryCard(
                       info: files.first,
+                      showViewerOptionsSheet: false,
                       showEdit: false,
                       showRemove: true,
                       // showVertOption: true,

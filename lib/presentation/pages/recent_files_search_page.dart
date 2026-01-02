@@ -423,6 +423,8 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
             margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
             child: DocEntryCard(
               info: f,
+              showViewerOptionsSheet:
+                  !(widget.selectable || widget.isFullscreenRoute == true),
               selectable: _selectionEnabled,
               selected: (_maybeProvider()?.isSelected(f.path) ?? false),
               onInteract: () {

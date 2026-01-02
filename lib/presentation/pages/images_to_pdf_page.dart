@@ -58,8 +58,6 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> {
 
   /// Load default destination folder (User Pref -> Downloads)
   Future<void> _loadDefaultDestination() async {
-
-
     try {
       // 1. Check for saved preference
       final savedPath = Prefs.getString(Constants.pdfOutputFolderPathKey);
@@ -415,6 +413,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> {
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                         child: DocEntryCard(
                           info: f,
+                          showViewerOptionsSheet: false,
                           showEdit: true,
                           showRemove: true,
                           reorderable: _reorderMode,
