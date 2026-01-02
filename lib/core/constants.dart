@@ -9,6 +9,13 @@ class Constants {
   /// Recent files storage key (used by RecentFilesService)
   static const String recentFilesKey = 'recent_files';
 
+  /// File search previous terms storage key (used by SearchFilesScreen)
+  static const String fileSearchPreviousTermsKey = 'file_search_previous_terms';
+
+  /// Recent files search previous terms storage key (used by RecentFilesSearchPage)
+  static const String recentFilesSearchPreviousTermsKey =
+      'recent_files_search_previous_terms';
+
   /// PDF content fit mode preference key
   static const String pdfContentFitModeKey = 'pdf_content_fit_mode';
 

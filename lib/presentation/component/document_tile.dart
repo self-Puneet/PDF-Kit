@@ -22,6 +22,8 @@ class DocEntryCard extends StatefulWidget {
   final FileInfo info;
   final VoidCallback? onOpen;
   final ValueChanged<String>? onMenu;
+  final VoidCallback? onInteract;
+  final VoidCallback? onMenuOpened;
   final bool selectable;
   final bool selected;
   final VoidCallback? onToggleSelected;
@@ -39,6 +41,8 @@ class DocEntryCard extends StatefulWidget {
     required this.info,
     this.onOpen,
     this.onMenu,
+    this.onInteract,
+    this.onMenuOpened,
     this.selectable = false,
     this.selected = false,
     this.onToggleSelected,
@@ -178,6 +182,8 @@ class _DocEntryCardState extends State<DocEntryCard> {
   Future<void> _handleTap(BuildContext context) async {
     if (widget.disabled) return;
 
+    widget.onInteract?.call();
+
     if (_isPdf) {
       final isProtectedResult = await PdfProtectionService.isPdfProtected(
         pdfPath: widget.info.path,
@@ -212,6 +218,7 @@ class _DocEntryCardState extends State<DocEntryCard> {
 
   void _handleThumbnailTap(BuildContext context) {
     if (widget.disabled) return;
+    widget.onInteract?.call();
     // Thumbnail tap always opens the viewer, even in selection mode
     _handleTap(context);
   }
@@ -234,7 +241,10 @@ class _DocEntryCardState extends State<DocEntryCard> {
         onTap: widget.disabled
             ? null
             : widget.selectable
-            ? widget.onToggleSelected
+            ? () {
+                widget.onInteract?.call();
+                widget.onToggleSelected?.call();
+              }
             : () => _handleTap(context),
         child: Padding(
           padding:
@@ -450,7 +460,12 @@ class _DocEntryCardState extends State<DocEntryCard> {
                 Padding(
                   padding: const EdgeInsets.only(left: 12, right: 8),
                   child: InkResponse(
-                    onTap: widget.disabled ? null : widget.onToggleSelected,
+                    onTap: widget.disabled
+                        ? null
+                        : () {
+                            widget.onInteract?.call();
+                            widget.onToggleSelected?.call();
+                          },
                     child: Icon(
                       widget.selected
                           ? Icons.check_box
@@ -489,6 +504,9 @@ class _DocEntryCardState extends State<DocEntryCard> {
                         ).colorScheme.onSurfaceVariant.withOpacity(0.3),
                       )
                     : PopupMenuButton<String>(
+                        onOpened: () {
+                          (widget.onMenuOpened ?? widget.onInteract)?.call();
+                        },
                         onSelected: widget.onMenu,
                         itemBuilder: (c) => [
                           PopupMenuItem(
