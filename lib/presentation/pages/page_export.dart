@@ -16,3 +16,5 @@ export 'unlock_pdf_page.dart';
 export 'splash_scren.dart';
 export 'onboarding_shell_page.dart';
 export 'split_pdf_page.dart';
+export 'help_support_page.dart';
+export 'about_pdf_kit_page.dart';

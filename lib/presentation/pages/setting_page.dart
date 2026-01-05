@@ -3,6 +3,7 @@ import 'package:pdf_kit/presentation/component/setting_tile.dart';
 import 'package:pdf_kit/presentation/models/setting_info_type.dart';
 import 'package:pdf_kit/providers/locale_provider.dart';
 import 'package:pdf_kit/core/app_export.dart';
+import 'package:pdf_kit/service/path_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -12,6 +13,24 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  Future<String?> _resolveDefaultSaveInitialPath() async {
+    final storedPdf = Prefs.getString(Constants.pdfOutputFolderPathKey);
+    if (storedPdf != null && storedPdf.trim().isNotEmpty) {
+      return storedPdf;
+    }
+
+    final storedDownloads = Prefs.getString(Constants.downloadsFolderPathKey);
+    if (storedDownloads != null && storedDownloads.trim().isNotEmpty) {
+      return storedDownloads;
+    }
+
+    final downloadsEither = await PathService.downloads();
+    return downloadsEither.fold(
+      (_) => '/storage/emulated/0/Download',
+      (dir) => dir.path,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
@@ -39,8 +58,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
         subtitle: t.t('settings_default_save_location_subtitle'),
         type: SettingsItemType.navigation,
         leadingIcon: Icons.folder,
-        onTap: () {
-          // open choose folder screen
+        onTap: () async {
+          final initialPath = await _resolveDefaultSaveInitialPath();
+          if (!context.mounted) return;
+
+          final res = await context.pushNamed(
+            AppRouteName.folderPickScreen,
+            extra: {
+              'path': initialPath,
+              'title': t.t('files_pdfs_folder'),
+              'description': t.t('folder_picker_description_pdfs'),
+            },
+          );
+
+          final selectedPath = res is String ? res : null;
+          if (selectedPath == null || selectedPath.trim().isEmpty) return;
+          await Prefs.setString(Constants.pdfOutputFolderPathKey, selectedPath);
         },
       ),
       SettingsItem(
@@ -101,7 +134,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         subtitle: t.t('settings_help_center_subtitle'),
         type: SettingsItemType.navigation,
         leadingIcon: Icons.help_outline,
-        onTap: () {},
+        onTap: () {
+          context.push('/settings/help-support');
+        },
       ),
       SettingsItem(
         id: 'about_pdfkit',
@@ -109,7 +144,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         subtitle: t.t('settings_about_pdf_kit_subtitle'),
         type: SettingsItemType.navigation,
         leadingIcon: Icons.info_outline,
-        onTap: () {},
+        onTap: () {
+          context.push('/settings/about-pdf-kit');
+        },
       ),
       SettingsItem(
         id: 'about_us',

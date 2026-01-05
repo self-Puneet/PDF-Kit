@@ -1,6 +1,6 @@
 // app_router.dart
 import 'package:flutter/material.dart';
-import 'package:pdf_kit/providers/locale_provider.dart';
+import 'package:pdf_kit/presentation/pages/language_setting_page.dart';
 import 'package:pdf_kit/core/routing/file_selection_shell.dart';
 import 'package:pdf_kit/core/routing/home_shell.dart';
 import 'package:pdf_kit/presentation/pages/page_export.dart';
@@ -53,7 +53,7 @@ final appRouter = GoRouter(
       name: 'language-settings',
       path: '/settings/language',
       parentNavigatorKey: _rootNavKey,
-      builder: (context, state) => const LanguageSettingsPage(),
+      builder: (context, state) => LanguageSettingsPage(),
     ),
 
     GoRoute(
@@ -68,6 +68,20 @@ final appRouter = GoRouter(
       path: '/settings/pdf-content-fit',
       parentNavigatorKey: _rootNavKey,
       builder: (context, state) => const PdfContentFitSettingsPage(),
+    ),
+
+    GoRoute(
+      name: 'help-support',
+      path: '/settings/help-support',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) => const HelpSupportPage(),
+    ),
+
+    GoRoute(
+      name: 'about-pdfkit',
+      path: '/settings/about-pdf-kit',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) => const AboutPdfKitPage(),
     ),
 
     buildHomeShellRoute(
@@ -343,60 +357,6 @@ class PreferencesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(body: Center(child: Text(t.t('preferences_title'))));
-  }
-}
-
-class LanguageSettingsPage extends StatelessWidget {
-  const LanguageSettingsPage({super.key});
-
-  static const _languages = [
-    {'code': 'en', 'key': 'language_option_english'},
-    {'code': 'hi', 'key': 'language_option_hindi'},
-    {'code': 'es', 'key': 'language_option_spanish'},
-    {'code': 'ar', 'key': 'language_option_arabic'},
-    {'code': 'bn', 'key': 'language_option_bengali'},
-    {'code': 'de', 'key': 'language_option_german'},
-    {'code': 'fr', 'key': 'language_option_french'},
-    {'code': 'ja', 'key': 'language_option_japanese'},
-    {'code': 'pt', 'key': 'language_option_portuguese'},
-    {'code': 'zh', 'key': 'language_option_chinese'},
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
-    final provider = context.watch<LocaleProvider>();
-    final current = provider.locale?.languageCode ?? 'en';
-    return Scaffold(
-      appBar: AppBar(title: Text(t.t('language_settings_page_title'))),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              t.t('language_settings_choose_label'),
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ),
-          ..._languages.map(
-            (lang) => RadioListTile<String>(
-              title: Text(t.t(lang['key']!)),
-              value: lang['code']!,
-              groupValue: current,
-              onChanged: (v) {
-                provider.setLocale(lang['code']!);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(t.t('language_settings_applied_snackbar')),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

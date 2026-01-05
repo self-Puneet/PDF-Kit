@@ -6,6 +6,10 @@
   "app_nav_settings": "सेटिंग्स",
   "settings_title": "सेटिंग्स",
 
+  "settings_language_title": "भाषा",
+  "settings_language_label": "ऐप की भाषा",
+  "settings_language_description": "ऐप में उपयोग होने वाली भाषा चुनें।",
+
   "common_cancel": "रद्द करें",
   "common_clear_all": "सभी साफ़ करें",
   "common_clear": "साफ़ करें",
@@ -301,8 +305,8 @@
   ,"settings_pdf_content_fit_subtitle": "चित्र और PDF कैसे फिट हों"
   ,"settings_help_center_title": "सहायता केंद्र"
   ,"settings_help_center_subtitle": "मदद, प्रश्न और उत्तर"
-  ,"settings_about_pdf_kit_title": "About PDF-Kit"
-  ,"settings_about_pdf_kit_subtitle": "इस ऐप का विवरण देखें"
+  ,"settings_about_pdf_kit_title": "PDF Seva के बारे में"
+  ,"settings_about_pdf_kit_subtitle": "PDF Seva क्या करता है और अनुमतियों का उपयोग कैसे करता है"
   ,"settings_about_us_title": "हमारे बारे में"
 
   ,"action_watermark_label": "वॉटरमार्क"

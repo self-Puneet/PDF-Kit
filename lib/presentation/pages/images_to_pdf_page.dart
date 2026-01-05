@@ -414,8 +414,8 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> {
                         child: DocEntryCard(
                           info: f,
                           showViewerOptionsSheet: false,
-                          showEdit: true,
-                          showRemove: true,
+                          // showEdit: true,
+                          // showRemove: true,
                           reorderable: _reorderMode,
                           disabled: _isConverting,
                           onEdit: () => null,

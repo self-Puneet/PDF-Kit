@@ -6,6 +6,10 @@
   "app_nav_settings": "Settings",
   "settings_title": "Settings",
 
+  "settings_language_title": "Language",
+  "settings_language_label": "App language",
+  "settings_language_description": "Choose the language used in the app.",
+
   "common_cancel": "Cancel",
   "common_clear_all": "Clear All",
   "common_clear": "Clear",
@@ -341,8 +345,8 @@
   ,"settings_pdf_content_fit_subtitle": "Choose how images and PDFs should fit"
   ,"settings_help_center_title": "Help Center"
   ,"settings_help_center_subtitle": "Get help, FAQs, and answers"
-  ,"settings_about_pdf_kit_title": "About PDF-Kit"
-  ,"settings_about_pdf_kit_subtitle": "View details about this app"
+  ,"settings_about_pdf_kit_title": "About PDF Seva"
+  ,"settings_about_pdf_kit_subtitle": "Learn what PDF Seva does and how it uses permissions"
   ,"settings_about_us_title": "About Us"
 
   ,"action_watermark_label": "Watermark"
