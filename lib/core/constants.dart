@@ -19,6 +19,9 @@ class Constants {
   /// PDF content fit mode preference key
   static const String pdfContentFitModeKey = 'pdf_content_fit_mode';
 
+  /// Default sort option for file browser (name/modified)
+  static const String filesSortOptionKey = 'files_sort_option';
+
   /// Default PDF content fit mode (use PdfContentFitMode enum for actual values)
   static const String defaultPdfContentFitMode = 'original';
 

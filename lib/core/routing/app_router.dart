@@ -84,6 +84,20 @@ final appRouter = GoRouter(
       builder: (context, state) => const AboutPdfKitPage(),
     ),
 
+    GoRoute(
+      name: AppRouteName.aboutUs,
+      path: '/settings/about-us',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) => const AboutUsPage(),
+    ),
+
+    GoRoute(
+      name: AppRouteName.filterOptions,
+      path: '/settings/filter-options',
+      parentNavigatorKey: _rootNavKey,
+      builder: (context, state) => const FilterOptionsPage(),
+    ),
+
     buildHomeShellRoute(
       homeNavKey: _homeNavKey,
       fileNavKey: _filesNavKey,

@@ -18,3 +18,5 @@ export 'onboarding_shell_page.dart';
 export 'split_pdf_page.dart';
 export 'help_support_page.dart';
 export 'about_pdf_kit_page.dart';
+export 'about_us_page.dart';
+export 'filter_options_page.dart';

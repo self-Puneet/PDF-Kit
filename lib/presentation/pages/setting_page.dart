@@ -86,14 +86,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           context.push('/settings/theme');
         },
       ),
-      SettingsItem(
-        id: 'file_naming',
-        title: t.t('settings_file_naming_title'),
-        subtitle: t.t('settings_file_naming_subtitle'),
-        type: SettingsItemType.navigation,
-        leadingIcon: Icons.text_fields,
-        onTap: () {},
-      ),
       // SettingsItem(
       //   id: 'pdf_compression',
       //   title: t.t('settings_pdf_compression_title'),
@@ -108,7 +100,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         subtitle: t.t('settings_filter_options_subtitle'),
         type: SettingsItemType.navigation,
         leadingIcon: Icons.filter_list,
-        onTap: () {},
+        onTap: () {
+          context.push('/settings/filter-options');
+        },
       ),
       // SettingsItem(
       //   id: 'grid_view_layout',
@@ -154,7 +148,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         subtitle: t.t('settings_about_us_subtitle'),
         type: SettingsItemType.navigation,
         leadingIcon: Icons.group_outlined,
-        onTap: () {},
+        onTap: () {
+          context.push('/settings/about-us');
+        },
       ),
     ];
 

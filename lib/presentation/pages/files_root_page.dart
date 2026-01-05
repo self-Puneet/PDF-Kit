@@ -1121,6 +1121,26 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
       );
     }
 
+    // Apply saved sort option (name/date)
+    final sortPref = Prefs.getString(Constants.filesSortOptionKey);
+    final sortOption = sortPref == 'modified'
+        ? SortOption.modified
+        : SortOption.name;
+
+    filteredFiles.sort((a, b) {
+      switch (sortOption) {
+        case SortOption.modified:
+          final aTime = a.lastModified ?? DateTime(0);
+          final bTime = b.lastModified ?? DateTime(0);
+          return bTime.compareTo(aTime);
+        case SortOption.name:
+        case SortOption.type:
+          if (a.isDirectory && !b.isDirectory) return -1;
+          if (!a.isDirectory && b.isDirectory) return 1;
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      }
+    });
+
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
