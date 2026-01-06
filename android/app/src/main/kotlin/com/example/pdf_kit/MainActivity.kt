@@ -1,4 +1,4 @@
-package com.example.pdf_kit
+package cloud.nexiotech.pdfseva
 
 import android.content.Intent
 import android.net.Uri
