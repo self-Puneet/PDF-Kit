@@ -1,7 +1,10 @@
 import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:ares_defence_labs_lock_smith_pdf/ares_defence_labs_lock_smith_pdf.dart';
+import 'package:pdfx/pdfx.dart' as pdfx;
 import 'package:pdf_kit/core/exception/failures.dart';
+import 'package:pdf_kit/service/analytics_service.dart';
+import 'package:flutter/foundation.dart';
 
 class PdfProtectionService {
   PdfProtectionService._();
@@ -22,6 +25,7 @@ class PdfProtectionService {
     required String password,
     void Function(double progress01, String stage)? onProgress,
   }) async {
+    final stopwatch = Stopwatch()..start();
     try {
       _report(onProgress, 0.03, 'Validating inputs');
       // Validate password
@@ -66,11 +70,25 @@ class PdfProtectionService {
       } catch (_) {}
 
       _report(onProgress, 1.0, 'Done');
+
+      stopwatch.stop();
+      int pageCount = 0;
+      try {
+        var doc = await pdfx.PdfDocument.openFile(pdfPath);
+        pageCount = doc.pagesCount;
+        await doc.close();
+      } catch (_) {}
+
+      AnalyticsService.logProtectPdf(
+        totalPageNumber: pageCount,
+        timeTaken: stopwatch.elapsed.inMilliseconds / 1000.0,
+      );
+
       return Right(pdfPath);
     } on FileSystemException catch (e) {
       return Left(FileReadWriteFailure('File error: ${e.message}'));
     } catch (e) {
-      print('Error protecting PDF: $e');
+      debugPrint('❌ [PdfProtectionService] Error protecting PDF: $e');
       return Left(
         PdfProtectionFailure('Failed to protect PDF: ${e.toString()}'),
       );
@@ -155,6 +173,7 @@ class PdfProtectionService {
     required String password,
     void Function(double progress01, String stage)? onProgress,
   }) async {
+    final stopwatch = Stopwatch()..start();
     try {
       _report(onProgress, 0.03, 'Validating inputs');
       // Validate password
@@ -198,6 +217,25 @@ class PdfProtectionService {
         } catch (_) {}
 
         _report(onProgress, 1.0, 'Done');
+
+        stopwatch.stop();
+        // Get page count
+        int pageCount = 0;
+        try {
+          final doc = await pdfx.PdfDocument.openFile(
+            pdfPath,
+          ); // Using original usually works after unlock?
+          // Wait, we just overwrote pdfPath with UNLOCKED bytes in lines 191-192.
+          // So pdfPath is now unlocked.
+          pageCount = doc.pagesCount;
+          await doc.close();
+        } catch (_) {}
+
+        AnalyticsService.logUnlockPdf(
+          totalPageNumber: pageCount,
+          timeTaken: stopwatch.elapsed.inMilliseconds / 1000.0,
+        );
+
         return Right(pdfPath);
       } catch (e) {
         // Handle incorrect password or loading errors

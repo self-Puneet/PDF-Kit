@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pdf_kit/core/app_export.dart';
+import 'package:pdf_kit/service/remote_config_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AboutUsPage extends StatelessWidget {
@@ -9,12 +10,6 @@ class AboutUsPage extends StatelessWidget {
 
   static const _description =
       'We provide the digital backbone for modern organizations. NexioTech Cloud specializes in optimizing your workflow through tailored cloud solutions and forward-thinking IT services. Our mission is to bridge the gap between advanced technology and daily efficiency, creating a seamless digital environment where your business can thrive.';
-
-  static const _websiteUrl = 'https://nexiotech.cloud/';
-  static const _helpEmail = 'help@nexiotech.cloud';
-  static const _connectEmail = 'connect@nexiotech.cloud';
-  static const _phone = '+917877452256';
-  static const _githubOrgUrl = 'https://github.com/Nexio-Developer-Group';
 
   Future<void> _launchUri(BuildContext context, Uri uri) async {
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -148,59 +143,70 @@ class AboutUsPage extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: screenPadding,
-          child: ListView(
-            children: [
-              _headerCard(context),
-              const SizedBox(height: 12),
-              _sectionCard(
-                context,
-                title: 'Links',
+          child: FutureBuilder<AppRemoteConfig>(
+            future: RemoteConfigService.instance.getConfig(),
+            builder: (context, snapshot) {
+              final cfg = snapshot.data ?? AppRemoteConfig.defaults;
+
+              return ListView(
                 children: [
-                  _linkTile(
+                  _headerCard(context),
+                  const SizedBox(height: 12),
+                  _sectionCard(
                     context,
-                    icon: Icons.language,
-                    title: 'Website',
-                    subtitle: _websiteUrl,
-                    onTap: () => _launchUri(context, Uri.parse(_websiteUrl)),
-                  ),
-                  _linkTile(
-                    context,
-                    icon: Icons.help_outline,
-                    title: 'Help',
-                    subtitle: _helpEmail,
-                    onTap: () => _launchUri(
-                      context,
-                      Uri(scheme: 'mailto', path: _helpEmail),
-                    ),
-                  ),
-                  _linkTile(
-                    context,
-                    icon: Icons.connect_without_contact,
-                    title: 'Connect',
-                    subtitle: _connectEmail,
-                    onTap: () => _launchUri(
-                      context,
-                      Uri(scheme: 'mailto', path: _connectEmail),
-                    ),
-                  ),
-                  _linkTile(
-                    context,
-                    icon: Icons.call,
-                    title: 'Call',
-                    subtitle: _phone,
-                    onTap: () =>
-                        _launchUri(context, Uri(scheme: 'tel', path: _phone)),
-                  ),
-                  _linkTile(
-                    context,
-                    icon: Icons.code,
-                    title: 'GitHub Organization',
-                    subtitle: _githubOrgUrl,
-                    onTap: () => _launchUri(context, Uri.parse(_githubOrgUrl)),
+                    title: 'Links',
+                    children: [
+                      _linkTile(
+                        context,
+                        icon: Icons.language,
+                        title: 'Website',
+                        subtitle: cfg.orgWebsiteLink,
+                        onTap: () =>
+                            _launchUri(context, Uri.parse(cfg.orgWebsiteLink)),
+                      ),
+                      _linkTile(
+                        context,
+                        icon: Icons.help_outline,
+                        title: 'Help',
+                        subtitle: cfg.orgHelpMail,
+                        onTap: () => _launchUri(
+                          context,
+                          Uri(scheme: 'mailto', path: cfg.orgHelpMail),
+                        ),
+                      ),
+                      _linkTile(
+                        context,
+                        icon: Icons.connect_without_contact,
+                        title: 'Connect',
+                        subtitle: cfg.orgConnectMail,
+                        onTap: () => _launchUri(
+                          context,
+                          Uri(scheme: 'mailto', path: cfg.orgConnectMail),
+                        ),
+                      ),
+                      _linkTile(
+                        context,
+                        icon: Icons.call,
+                        title: 'Call',
+                        subtitle: cfg.orgContactNumber,
+                        onTap: () => _launchUri(
+                          context,
+                          Uri(scheme: 'tel', path: cfg.orgContactNumber),
+                        ),
+                      ),
+                      _linkTile(
+                        context,
+                        icon: Icons.code,
+                        title: 'GitHub Organization',
+                        subtitle: cfg.orgGithubLink,
+                        onTap: () =>
+                            _launchUri(context, Uri.parse(cfg.orgGithubLink)),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),

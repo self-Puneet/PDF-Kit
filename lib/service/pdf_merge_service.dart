@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 // Keep pdf_combiner only for PDF <-> PDF merging
 import 'package:pdf_combiner/pdf_combiner.dart';
+import 'package:pdfx/pdfx.dart' as pdfx;
 
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/core/constants.dart';
@@ -18,6 +19,8 @@ import 'package:pdf_kit/core/enums/pdf_content_fit_mode.dart';
 import 'package:pdf/pdf.dart' as pw_pdf;
 import 'package:pdf/widgets.dart' as pw;
 import 'package:image/image.dart' as img;
+
+import 'package:pdf_kit/service/analytics_service.dart';
 
 typedef MergeProgressCallback = void Function(double progress01, String stage);
 
@@ -216,6 +219,7 @@ class PdfMergeService {
     String? destinationPath,
     MergeProgressCallback? onProgress,
   }) async {
+    final stopwatch = Stopwatch()..start();
     try {
       void report(double progress01, String stage) {
         try {
@@ -383,6 +387,13 @@ class PdfMergeService {
         report(0.92, 'Finalizing output');
         final fileInfoResult = await _createFileInfoFromPath(imagesOnlyPdfPath);
         report(1.0, 'Done');
+
+        stopwatch.stop();
+        AnalyticsService.logImagesToPdf(
+          numberOfImages: imageFiles.length,
+          timeTaken: stopwatch.elapsed.inMilliseconds / 1000.0,
+        );
+
         return fileInfoResult;
       } else {
         // PDFs only: do not touch PDF pages at all
@@ -422,6 +433,38 @@ class PdfMergeService {
           docResponse.outputPath,
         );
         report(1.0, 'Done');
+
+        stopwatch.stop();
+
+        // Calculate page counts for analytics
+        final pageCounts = <int>[];
+        for (final f in files) {
+          if (_isImageFile(f)) {
+            pageCounts.add(0);
+          } else {
+            try {
+              final doc = await pdfx.PdfDocument.openFile(f.path);
+              pageCounts.add(doc.pagesCount);
+              await doc.close();
+            } catch (_) {
+              pageCounts.add(1); // Default/Fallback
+            }
+          }
+        }
+
+        if (files.isEmpty || (files.every((f) => _isImageFile(f)))) {
+          // Should be covered by imagesToPdf logic but if mixed ended up here:
+          AnalyticsService.logImagesToPdf(
+            numberOfImages: imageFiles.length,
+            timeTaken: stopwatch.elapsed.inMilliseconds / 1000.0,
+          );
+        } else {
+          AnalyticsService.logMergePdf(
+            pdfPageNumberList: pageCounts,
+            timeTaken: stopwatch.elapsed.inMilliseconds / 1000.0,
+          );
+        }
+
         return fileInfoResult;
       } else {
         final errorMessage = docResponse.message;

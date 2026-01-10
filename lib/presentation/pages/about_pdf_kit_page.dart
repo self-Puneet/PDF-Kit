@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/service/permission_service.dart';
+import 'package:pdf_kit/service/remote_config_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AboutPdfKitPage extends StatelessWidget {
   const AboutPdfKitPage({super.key});
 
-  static const _privacyPolicyUrl = 'https://nexiotech.cloud/privacy';
   static const _appName = 'PDF Seva';
 
   Future<List<_AboutPermissionItem>> _loadPermissionItems() async {
@@ -59,8 +59,8 @@ class AboutPdfKitPage extends StatelessWidget {
     }
   }
 
-  Future<void> _openPrivacyPolicy(BuildContext context) async {
-    final uri = Uri.tryParse(_privacyPolicyUrl);
+  Future<void> _openPrivacyPolicy(BuildContext context, String url) async {
+    final uri = Uri.tryParse(url);
     if (uri == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Invalid privacy policy URL')),
@@ -573,191 +573,207 @@ class AboutPdfKitPage extends StatelessWidget {
 
     final isAndroid =
         !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
-
-    const buildName = String.fromEnvironment(
-      'FLUTTER_BUILD_NAME',
-      defaultValue: '1.0.0',
-    );
     const buildNumber = String.fromEnvironment(
       'FLUTTER_BUILD_NUMBER',
       defaultValue: '1',
     );
 
-    final versionText = 'v$buildName+$buildNumber';
+    final defaultCfg = AppRemoteConfig.defaults;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          t.t('settings_about_pdf_kit_title'),
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-        ),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: screenPadding,
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              _headerCard(context, versionText: versionText),
-              // const SizedBox(height: 8),
+    return FutureBuilder<AppRemoteConfig>(
+      future: RemoteConfigService.instance.getConfig(),
+      builder: (context, snapshot) {
+        final cfg = snapshot.data ?? defaultCfg;
 
-              _sectionCard(
+        final versionText = 'v${cfg.appVersion}+$buildNumber';
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              t.t('settings_about_pdf_kit_title'),
+              style: Theme.of(
                 context,
-                title: 'App information',
-                children: [
-                  _kvRow(context, k: 'App name', v: _appName),
-                  _kvRow(context, k: 'Package name', v: 'cloud.nexiotech.pdfseva'),
-                  _kvRow(context, k: 'Version', v: versionText),
-                  _kvRow(context, k: 'API levels', v: '24+'),
-                  _kvRow(context, k: 'Target SDK', v: '36'),
-                ],
-              ),
-
-              // const SizedBox(height: 16),
-              _sectionCard(
-                context,
-                title: 'What is PDF Seva?',
-                children: [
-                  _paragraph(
-                    context,
-                    'PDF Seva is a lightweight PDF utility app that lets you view, manage, and perform essential operations on PDF files stored on your device.',
-                  ),
-                  const SizedBox(height: 12),
-                  _paragraph(
-                    context,
-                    'Document operations are performed locally to keep things fast, simple, and in your control.',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              _sectionCard(
-                context,
-                title: 'Features',
-                children: [
-                  _bullet(
-                    context,
-                    'Access and browse PDF files from device storage',
-                  ),
-                  _bullet(context, 'View PDF documents smoothly'),
-                  _bullet(context, 'Split PDF files into smaller PDFs'),
-                  _bullet(
-                    context,
-                    'Merge multiple PDF files into a single document',
-                  ),
-                  _bullet(context, 'Organize and manage PDF documents'),
-                  _bullet(context, 'Quickly access recent PDF files'),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              _sectionCard(
-                context,
-                title: 'Permissions used',
-                headerAction: !isAndroid
-                    ? null
-                    : IconButton(
-                        onPressed: () => openAppSettings(),
-                        icon: const Icon(Icons.settings, size: 20),
-                        // label: Text('Settings', style: Theme.of(context).textTheme.labelMedium,),
-                        // style: OutlinedButton.styleFrom(
-                        //   shape: const StadiumBorder(),
-                        //   padding: const EdgeInsets.symmetric(
-                        //     horizontal: 12,
-                        //     vertical: 8,
-                        //   ),
-                        //   side: BorderSide(
-                        //     color: Theme.of(
-                        //       context,
-                        //     ).colorScheme.primary.withValues(alpha: 0.35),
-                        //   ),
-                        //   foregroundColor: Theme.of(
-                        //     context,
-                        //   ).colorScheme.primary,
-                        // ),
-                      ),
-                children: [
-                  _paragraph(
-                    context,
-                    'PDF Seva may request storage/media permissions so it can show your PDFs and save newly created files. Tap any permission below to open this app\'s permission settings.',
-                  ),
-                  const SizedBox(height: 12),
-                  if (!isAndroid)
-                    _paragraph(
-                      context,
-                      'Permission status is shown on Android only.',
-                    )
-                  else
-                    FutureBuilder<List<_AboutPermissionItem>>(
-                      future: _loadPermissionItems(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const LinearProgressIndicator();
-                        }
-
-                        final items = snapshot.data ?? const [];
-                        if (items.isEmpty) {
-                          return _paragraph(
-                            context,
-                            'Could not read permission status on this device.',
-                          );
-                        }
-
-                        return Column(
-                          children: [
-                            for (var i = 0; i < items.length; i++) ...[
-                              _permissionStatusTile(context, items[i]),
-                              if (i != items.length - 1)
-                                const SizedBox(height: 10),
-                            ],
-                          ],
-                        );
-                      },
-                    ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              _sectionCard(
-                context,
-                title: 'Data & privacy',
-                children: [
-                  _bullet(context, 'No account required'),
-                  _bullet(
-                    context,
-                    'No documents are uploaded to external servers',
-                  ),
-                  _bullet(context, 'No personal data is collected or tracked'),
-                  _bullet(
-                    context,
-                    'All processing happens locally on your device',
-                  ),
-                  const SizedBox(height: 12),
-                  Card(
-                    margin: EdgeInsets.zero,
-                    elevation: 0,
-                    child: _simpleTile(
-                      context,
-                      icon: Icons.privacy_tip_outlined,
-                      title: 'Privacy policy',
-                      subtitle: 'Privacy policy link is here',
-                      trailing: Icon(
-                        Icons.open_in_new,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        size: 18,
-                      ),
-                      onTap: () => _openPrivacyPolicy(context),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
           ),
-        ),
-      ),
+          body: SafeArea(
+            child: Padding(
+              padding: screenPadding,
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  _headerCard(context, versionText: versionText),
+
+                  // const SizedBox(height: 8),
+                  _sectionCard(
+                    context,
+                    title: 'App information',
+                    children: [
+                      _kvRow(context, k: 'App name', v: _appName),
+                      _kvRow(
+                        context,
+                        k: 'Package name',
+                        v: 'cloud.nexiotech.pdfseva',
+                      ),
+                      _kvRow(context, k: 'Version', v: versionText),
+                      _kvRow(context, k: 'API levels', v: '${cfg.apiLevel}+'),
+                      _kvRow(context, k: 'Target SDK', v: cfg.targetSdkVersion),
+                    ],
+                  ),
+
+                  // const SizedBox(height: 16),
+                  _sectionCard(
+                    context,
+                    title: 'What is PDF Seva?',
+                    children: [
+                      _paragraph(
+                        context,
+                        'PDF Seva is a lightweight PDF utility app that lets you view, manage, and perform essential operations on PDF files stored on your device.',
+                      ),
+                      const SizedBox(height: 12),
+                      _paragraph(
+                        context,
+                        'Document operations are performed locally to keep things fast, simple, and in your control.',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  _sectionCard(
+                    context,
+                    title: 'Features',
+                    children: [
+                      _bullet(
+                        context,
+                        'Access and browse PDF files from device storage',
+                      ),
+                      _bullet(context, 'View PDF documents smoothly'),
+                      _bullet(context, 'Split PDF files into smaller PDFs'),
+                      _bullet(
+                        context,
+                        'Merge multiple PDF files into a single document',
+                      ),
+                      _bullet(context, 'Organize and manage PDF documents'),
+                      _bullet(context, 'Quickly access recent PDF files'),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  _sectionCard(
+                    context,
+                    title: 'Permissions used',
+                    headerAction: !isAndroid
+                        ? null
+                        : IconButton(
+                            onPressed: () => openAppSettings(),
+                            icon: const Icon(Icons.settings, size: 20),
+                            // label: Text('Settings', style: Theme.of(context).textTheme.labelMedium,),
+                            // style: OutlinedButton.styleFrom(
+                            //   shape: const StadiumBorder(),
+                            //   padding: const EdgeInsets.symmetric(
+                            //     horizontal: 12,
+                            //     vertical: 8,
+                            //   ),
+                            //   side: BorderSide(
+                            //     color: Theme.of(
+                            //       context,
+                            //     ).colorScheme.primary.withValues(alpha: 0.35),
+                            //   ),
+                            //   foregroundColor: Theme.of(
+                            //     context,
+                            //   ).colorScheme.primary,
+                            // ),
+                          ),
+                    children: [
+                      _paragraph(
+                        context,
+                        'PDF Seva may request storage/media permissions so it can show your PDFs and save newly created files. Tap any permission below to open this app\'s permission settings.',
+                      ),
+                      const SizedBox(height: 12),
+                      if (!isAndroid)
+                        _paragraph(
+                          context,
+                          'Permission status is shown on Android only.',
+                        )
+                      else
+                        FutureBuilder<List<_AboutPermissionItem>>(
+                          future: _loadPermissionItems(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const LinearProgressIndicator();
+                            }
+
+                            final items = snapshot.data ?? const [];
+                            if (items.isEmpty) {
+                              return _paragraph(
+                                context,
+                                'Could not read permission status on this device.',
+                              );
+                            }
+
+                            return Column(
+                              children: [
+                                for (var i = 0; i < items.length; i++) ...[
+                                  _permissionStatusTile(context, items[i]),
+                                  if (i != items.length - 1)
+                                    const SizedBox(height: 10),
+                                ],
+                              ],
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  _sectionCard(
+                    context,
+                    title: 'Data & privacy',
+                    children: [
+                      _bullet(context, 'No account required'),
+                      _bullet(
+                        context,
+                        'No documents are uploaded to external servers',
+                      ),
+                      _bullet(
+                        context,
+                        'No personal data is collected or tracked',
+                      ),
+                      _bullet(
+                        context,
+                        'All processing happens locally on your device',
+                      ),
+                      const SizedBox(height: 12),
+                      Card(
+                        margin: EdgeInsets.zero,
+                        elevation: 0,
+                        child: _simpleTile(
+                          context,
+                          icon: Icons.privacy_tip_outlined,
+                          title: 'Privacy policy',
+                          subtitle: 'Privacy policy link is here',
+                          trailing: Icon(
+                            Icons.open_in_new,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                            size: 18,
+                          ),
+                          onTap: () => _openPrivacyPolicy(
+                            context,
+                            cfg.privacyPolicyLink,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

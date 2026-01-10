@@ -1,0 +1,11 @@
+{
+    "app_version" : "1.0.0",
+    "api_level" : 24,
+    "target_sdk_version" : 36,
+    "privacy_policy_link": "https://pdf.kit/privacy-policy",
+    "org_website_link" : "nexiotech.cloud",
+    "org_help_mail" : "",
+    "org_connect_mail" : "",
+    "org_contact_number" : "",
+    "org_github_org_link" : ""
+}
