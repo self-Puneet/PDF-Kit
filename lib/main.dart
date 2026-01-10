@@ -1,6 +1,8 @@
 // main.dart
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pdf_kit/firebase_options.dart';
 import 'core/app_export.dart';
 import 'providers/locale_provider.dart';
 import 'package:pdf_kit/providers/theme_provider.dart';
@@ -8,6 +10,10 @@ import 'package:pdf_kit/providers/file_system_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FlutterError.onError = (errorDetails) {
+    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  };
   await Prefs.init();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await initDI();
