@@ -61,6 +61,7 @@ class AppRemoteConfig {
   final String orgConnectMail;
   final String orgContactNumber;
   final String orgGithubLink;
+  final String versionCode;
 
   const AppRemoteConfig({
     required this.appVersion,
@@ -72,6 +73,7 @@ class AppRemoteConfig {
     required this.orgConnectMail,
     required this.orgContactNumber,
     required this.orgGithubLink,
+    required this.versionCode,
   });
 
   /// Hardcoded fallback (used when Remote Config is unavailable).
@@ -85,6 +87,7 @@ class AppRemoteConfig {
     orgConnectMail: 'connect@nexiotech.cloud',
     orgContactNumber: '7877452256',
     orgGithubLink: 'https://github.com/Nexio-Developer-Group',
+    versionCode: '2',
   );
 
   /// The keys must match your Firebase Remote Config parameter names.
@@ -97,6 +100,7 @@ class AppRemoteConfig {
   static const _kOrgConnectMail = 'org_connect_mail';
   static const _kOrgContactNumber = 'org_contact_number';
   static const _kOrgGithubLink = 'org_github_link';
+  static const _kVersionCode = 'version_code';
 
   static String _getString(
     FirebaseRemoteConfig rc,
@@ -149,6 +153,11 @@ class AppRemoteConfig {
         _kOrgGithubLink,
         fallback: fallback.orgGithubLink,
       ),
+      versionCode: _getString(
+        rc,
+        _kVersionCode,
+        fallback: fallback.versionCode,
+      ),
     );
   }
 
@@ -163,6 +172,7 @@ class AppRemoteConfig {
       _kOrgConnectMail: orgConnectMail,
       _kOrgContactNumber: orgContactNumber,
       _kOrgGithubLink: orgGithubLink,
+      _kVersionCode: versionCode,
     };
   }
 }

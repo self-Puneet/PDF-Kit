@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/models/functionality_list.dart';
@@ -19,6 +20,8 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
+  static final Random _rng = Random();
+
   static void _toast(BuildContext c, String key) {
     final t = AppLocalizations.of(c);
     ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text(t.t(key))));
@@ -41,9 +44,7 @@ class _HomeTabState extends State<HomeTab> {
           // Only the recent files section should be scrollable now.
           Expanded(
             child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: screenPadding.left,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: screenPadding.left),
               child: RecentFilesSection(
                 onGetStartedPrimary: () =>
                     _toast(context, 'home_get_started_scan'),
@@ -99,6 +100,31 @@ class _HomeTabState extends State<HomeTab> {
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
           const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.bug_report_outlined),
+            onPressed: () async {
+              final exception = Exception(
+                'Crashlytics test exception #${_rng.nextInt(1000000)}',
+              );
+
+              debugPrint(
+                '🧪 [HomeTab] Recording Crashlytics test error: $exception',
+              );
+              throw exception;
+            },
+            tooltip: 'Send test error to Crashlytics',
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_sweep_outlined),
+            onPressed: () async {
+              try {
+                await Prefs.clear();
+              } catch (e) {
+                debugPrint('⚠️ [HomeTab] Prefs.clear failed: $e');
+              }
+            },
+            tooltip: 'Clear local storage',
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => context.go('/settings'),
@@ -314,7 +340,7 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
 
     return FutureBuilder<List<FileInfo>>(
       future: _recentFilesFuture,
-      
+
       builder: (context, snapshot) {
         debugPrint(
           '🔧 [RecentFilesSection] FutureBuilder state: ${snapshot.connectionState}',

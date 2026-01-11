@@ -6,6 +6,50 @@ class AnalyticsService {
 
   static final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
 
+  static Future<void> setSelectedLanguage(
+    String languageCode, {
+    String? source,
+  }) async {
+    final code = languageCode.trim();
+    final src = (source == null || source.trim().isEmpty) ? 'unknown' : source;
+
+    if (code.isEmpty) {
+      _log(
+        '⚠️ [Analytics] user_property selected_language skipped (empty) source=$src',
+      );
+      return;
+    }
+
+    try {
+      _log(
+        '📊 [Analytics] setting user_property selected_language="$code" source=$src',
+      );
+      await _analytics.setUserProperty(name: 'selected_language', value: code);
+      _log(
+        '✅ [Analytics] set user_property selected_language="$code" source=$src',
+      );
+    } catch (e, st) {
+      _log(
+        '❌ [Analytics] failed user_property selected_language="$code" source=$src error=$e',
+      );
+      _log('   stack=$st');
+    }
+  }
+
+  static Future<void> logLanguageChanged(
+    String languageCode, {
+    String? source,
+  }) async {
+    final code = languageCode.trim();
+    final src = (source == null || source.trim().isEmpty) ? 'unknown' : source;
+    if (code.isEmpty) {
+      _log('⚠️ [Analytics] language_changed skipped (empty) source=$src');
+      return;
+    }
+
+    await _logEvent('language_changed', {'language_code': code, 'source': src});
+  }
+
   static Map<String, Object> _sanitizeParams(Map<String, Object> parameters) {
     final sanitized = <String, Object>{};
     parameters.forEach((key, value) {
@@ -24,16 +68,31 @@ class AnalyticsService {
     return sanitized;
   }
 
+  static void _log(String message) {
+    if (!kDebugMode) return;
+    debugPrint(message);
+  }
+
+  static String _formatParamsForLog(Map<String, Object> params) {
+    // Keep logs readable; avoid dumping huge payloads.
+    final jsonLike = params.toString();
+    if (jsonLike.length <= 220) return jsonLike;
+    return '${jsonLike.substring(0, 220)}…';
+  }
+
   static Future<void> _logEvent(
     String name,
     Map<String, Object> parameters,
   ) async {
     try {
       final sanitized = _sanitizeParams(parameters);
-      debugPrint('📊 [Analytics] Logging $name: $sanitized');
+      _log(
+        '📊 [Analytics] event="$name" params=${_formatParamsForLog(sanitized)}',
+      );
       await _analytics.logEvent(name: name, parameters: sanitized);
+      _log('✅ [Analytics] logged event="$name"');
     } catch (e) {
-      debugPrint('⚠️ [Analytics] Failed to log event $name: $e');
+      _log('⚠️ [Analytics] failed event="$name" error=$e');
     }
   }
 
