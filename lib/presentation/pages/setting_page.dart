@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/presentation/component/setting_tile.dart';
 import 'package:pdf_kit/presentation/models/setting_info_type.dart';
 import 'package:pdf_kit/providers/locale_provider.dart';
-import 'package:pdf_kit/core/app_export.dart';
-import 'package:pdf_kit/service/path_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -13,22 +12,28 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  Future<String?> _resolveDefaultSaveInitialPath() async {
-    final storedPdf = Prefs.getString(Constants.pdfOutputFolderPathKey);
-    if (storedPdf != null && storedPdf.trim().isNotEmpty) {
-      return storedPdf;
+  Future<String?> _resolveDefaultPdfInitialPath() async {
+    final stored = Prefs.getString(Constants.pdfOutputFolderPathKey);
+    if (stored != null && stored.trim().isNotEmpty) {
+      return stored;
     }
+    return null;
+  }
 
-    final storedDownloads = Prefs.getString(Constants.downloadsFolderPathKey);
-    if (storedDownloads != null && storedDownloads.trim().isNotEmpty) {
-      return storedDownloads;
+  Future<String?> _resolveDefaultCameraInitialPath() async {
+    final stored = Prefs.getString(Constants.imagesFolderPathKey);
+    if (stored != null && stored.trim().isNotEmpty) {
+      return stored;
     }
+    return null;
+  }
 
-    final downloadsEither = await PathService.downloads();
-    return downloadsEither.fold(
-      (_) => '/storage/emulated/0/Download',
-      (dir) => dir.path,
-    );
+  Future<String?> _resolveDefaultScreenshotInitialPath() async {
+    final stored = Prefs.getString(Constants.screenshotsFolderPathKey);
+    if (stored != null && stored.trim().isNotEmpty) {
+      return stored;
+    }
+    return null;
   }
 
   @override
@@ -36,9 +41,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final t = AppLocalizations.of(context);
     final localeCode =
         context.watch<LocaleProvider>().locale?.languageCode ?? 'en';
-    final languageDisplay = localeCode == 'hi'
-        ? t.t('language_option_hindi')
-        : t.t('language_option_english');
+    final languageDisplay =
+        localeCode == 'hi' ? t.t('language_option_hindi') : t.t('language_option_english');
 
     final items = <SettingsItem>[
       SettingsItem(
@@ -57,23 +61,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: t.t('settings_default_save_location_title'),
         subtitle: t.t('settings_default_save_location_subtitle'),
         type: SettingsItemType.navigation,
-        leadingIcon: Icons.folder,
+        leadingIcon: Icons.folder_outlined,
         onTap: () async {
-          final initialPath = await _resolveDefaultSaveInitialPath();
+          final initialPath = await _resolveDefaultPdfInitialPath();
           if (!context.mounted) return;
+
+          final extra = <String, dynamic>{
+            'title': t.t('files_pdfs_folder'),
+            'description': t.t('folder_picker_description_pdfs'),
+            if (initialPath != null) 'path': initialPath,
+          };
 
           final res = await context.pushNamed(
             AppRouteName.folderPickScreen,
-            extra: {
-              'path': initialPath,
-              'title': t.t('files_pdfs_folder'),
-              'description': t.t('folder_picker_description_pdfs'),
-            },
+            extra: extra,
           );
 
           final selectedPath = res is String ? res : null;
           if (selectedPath == null || selectedPath.trim().isEmpty) return;
           await Prefs.setString(Constants.pdfOutputFolderPathKey, selectedPath);
+        },
+      ),
+      SettingsItem(
+        id: 'default_camera_save',
+        title: t.t('settings_default_camera_location_title'),
+        subtitle: t.t('settings_default_camera_location_subtitle'),
+        type: SettingsItemType.navigation,
+        leadingIcon: Icons.camera_alt_outlined,
+        onTap: () async {
+          final initialPath = await _resolveDefaultCameraInitialPath();
+          if (!context.mounted) return;
+
+          final extra = <String, dynamic>{
+            'title': t.t('files_images_folder'),
+            'description': t.t('folder_picker_description_images'),
+            if (initialPath != null) 'path': initialPath,
+          };
+
+          final res = await context.pushNamed(
+            AppRouteName.folderPickScreen,
+            extra: extra,
+          );
+
+          final selectedPath = res is String ? res : null;
+          if (selectedPath == null || selectedPath.trim().isEmpty) return;
+          await Prefs.setString(Constants.imagesFolderPathKey, selectedPath);
+        },
+      ),
+      SettingsItem(
+        id: 'default_screenshot_save',
+        title: t.t('settings_default_screenshot_location_title'),
+        subtitle: t.t('settings_default_screenshot_location_subtitle'),
+        type: SettingsItemType.navigation,
+        leadingIcon: Icons.screenshot,
+        onTap: () async {
+          final initialPath = await _resolveDefaultScreenshotInitialPath();
+          if (!context.mounted) return;
+
+          final extra = <String, dynamic>{
+            'title': t.t('files_screenshots_folder'),
+            'description': t.t('folder_picker_description_screenshots'),
+            if (initialPath != null) 'path': initialPath,
+          };
+
+          final res = await context.pushNamed(
+            AppRouteName.folderPickScreen,
+            extra: extra,
+          );
+
+          final selectedPath = res is String ? res : null;
+          if (selectedPath == null || selectedPath.trim().isEmpty) return;
+          await Prefs.setString(
+            Constants.screenshotsFolderPathKey,
+            selectedPath,
+          );
         },
       ),
       SettingsItem(
@@ -86,14 +147,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           context.push('/settings/theme');
         },
       ),
-      // SettingsItem(
-      //   id: 'pdf_compression',
-      //   title: t.t('settings_pdf_compression_title'),
-      //   subtitle: t.t('settings_pdf_compression_subtitle'),
-      //   type: SettingsItemType.navigation,
-      //   leadingIcon: Icons.compress,
-      //   onTap: () {},
-      // ),
       SettingsItem(
         id: 'filter_options',
         title: t.t('settings_filter_options_title'),
@@ -104,14 +157,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           context.push('/settings/filter-options');
         },
       ),
-      // SettingsItem(
-      //   id: 'grid_view_layout',
-      //   title: t.t('settings_grid_view_layout_title'),
-      //   subtitle: t.t('settings_grid_view_layout_subtitle'),
-      //   type: SettingsItemType.navigation,
-      //   leadingIcon: Icons.grid_view,
-      //   onTap: () {},
-      // ),
       SettingsItem(
         id: 'pdf_content_fit',
         title: t.t('settings_pdf_content_fit_title'),
@@ -165,7 +210,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: ListView.separated(
                   padding: EdgeInsets.zero,
                   itemCount: items.length,
-                  separatorBuilder: (_, __) => SizedBox.shrink(),
+                  separatorBuilder: (_, __) => const SizedBox.shrink(),
                   itemBuilder: (context, index) {
                     return SettingsTile(item: items[index]);
                   },
@@ -185,7 +230,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       alignment: Alignment.center,
       child: Row(
         children: [
-          // Left: app glyph
           Container(
             width: 40,
             height: 40,
@@ -214,18 +258,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(width: 12),
           Text(
             AppLocalizations.of(context).t('home_brand_title'),
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(fontWeight: FontWeight.w600),
           ),
-          // const Spacer(),
-          // IconButton(
-          //   icon: const Icon(Icons.settings),
-          //   onPressed: () {
-          //     context.push('/settings');
-          //   },
-          //   tooltip: 'Settings',
-          // ),
         ],
       ),
     );

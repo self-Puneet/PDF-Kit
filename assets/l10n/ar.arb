@@ -407,6 +407,15 @@
 "onboarding_button_get_started": "البدء",
 "onboarding_button_back": "رجوع",
 "onboarding_tagline": "مجموعة الأدوات الكاملة لكل مهمة PDF.",
-"selection_min_error": "يجب تحديد ما لا يقل عن {count} عناصر."
+"selection_min_error": "يجب تحديد ما لا يقل عن {count} عناصر.",
+
+"snackbar_merge_done": "Merge completed successfully",
+"snackbar_compress_done": "Compression completed successfully",
+"snackbar_images_to_pdf_done": "PDF created successfully",
+"snackbar_pdf_to_image_done": "Images created successfully",
+"snackbar_split_done": "Split completed successfully",
+"snackbar_protect_done": "PDF protected successfully",
+"snackbar_unlock_done": "PDF unlocked successfully",
+"snackbar_reorder_done": "Reorder completed successfully"
 
 }

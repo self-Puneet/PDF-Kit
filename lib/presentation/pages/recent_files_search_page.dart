@@ -185,7 +185,7 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
           final msg = t
               .t('snackbar_error')
               .replaceAll('{message}', error.toString());
-          ScaffoldMessenger.of(context).showSnackBar(
+          AppSnackbar.showSnackBar(
             SnackBar(
               content: Text(msg),
               backgroundColor: Theme.of(context).colorScheme.error,
@@ -201,9 +201,7 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
         RecentFilesSection.refreshNotifier.value++;
         if (mounted) {
           _loadRecentFiles();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(t.t('snackbar_removed_recent'))),
-          );
+          AppSnackbar.show(t.t('snackbar_removed_recent'));
         }
       },
     );
@@ -223,7 +221,7 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
               '❌ [RecentFilesSearch] Rename failed: ${exception.message}',
             );
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
+              AppSnackbar.showSnackBar(
                 SnackBar(
                   content: Text(exception.message),
                   backgroundColor: Theme.of(context).colorScheme.error,
@@ -244,9 +242,7 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
               });
               // Trigger home page refresh
               RecentFilesSection.refreshNotifier.value++;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('File renamed successfully')),
-              );
+              AppSnackbar.show('File renamed successfully');
             }
           },
         );

@@ -225,7 +225,7 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
       await pageCountResult.fold(
         (error) async {
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
+          AppSnackbar.showSnackBar(
             SnackBar(
               content: Text('Error: $error'),
               backgroundColor: Theme.of(context).colorScheme.error,
@@ -250,7 +250,7 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppSnackbar.showSnackBar(
           SnackBar(
             content: Text('Error: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
@@ -368,11 +368,7 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
     final ranges = _getValidRanges();
 
     if (ranges.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please add at least one valid page range'),
-        ),
-      );
+      AppSnackbar.show('Please add at least one valid page range');
       return;
     }
 
@@ -385,7 +381,7 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
 
       final error = validationResult.fold((err) => err, (_) => null);
       if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppSnackbar.showSnackBar(
           SnackBar(
             content: Text(error),
             backgroundColor: Theme.of(context).colorScheme.error,
@@ -481,26 +477,22 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
         }
       }
 
+      final successMsg = AppLocalizations.of(context).t('snackbar_split_done');
+
       selection.disable();
       context.go('/');
       RecentFilesSection.refreshNotifier.value++;
 
       // Show simple success snackbar instead of dialog
       Future.delayed(const Duration(milliseconds: 300), () {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Successfully split PDF into ${result.outputPaths.length} files',
-              ),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        }
+        if (result.outputPaths.isEmpty) return;
+        AppSnackbar.showSuccessWithOpen(
+          message: successMsg,
+          path: result.outputPaths.first,
+        );
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppSnackbar.showSnackBar(
         SnackBar(
           content: Text(result.errorMessage ?? 'Failed to split PDF'),
           backgroundColor: Theme.of(context).colorScheme.error,

@@ -51,7 +51,7 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
   ) async {
     final t = AppLocalizations.of(context);
     if (_passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppSnackbar.showSnackBar(
         SnackBar(
           content: Text(t.t('protect_pdf_error_enter_password')),
           backgroundColor: Theme.of(context).colorScheme.error,
@@ -123,7 +123,7 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
         final msg = t
             .t('snackbar_error')
             .replaceAll('{message}', failure.message);
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppSnackbar.showSnackBar(
           SnackBar(
             content: Text(msg),
             backgroundColor: Theme.of(context).colorScheme.error,
@@ -131,6 +131,8 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
         );
       },
       (protectedPath) async {
+        final successMsg = t.t('snackbar_protect_done');
+
         // Get updated file stats after protection
         final protectedFileOnDisk = File(protectedPath);
         final stats = await protectedFileOnDisk.stat();
@@ -150,22 +152,10 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
         await RecentFilesService.addRecentFile(updatedFile);
 
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Successfully protected ${p.basename(protectedPath)}',
-            ),
-            backgroundColor: Colors.green,
-            action: SnackBarAction(
-              label: 'Open',
-              onPressed: () {
-                context.pushNamed(
-                  AppRouteName.showPdf,
-                  queryParameters: {'path': protectedPath},
-                );
-              },
-            ),
-          ),
+        AppSnackbar.showSuccessWithOpen(
+          message: successMsg,
+          path: protectedPath,
+          openProtectedInNativeViewer: true,
         );
         selection.disable();
 

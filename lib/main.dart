@@ -57,6 +57,7 @@ class MyApp extends StatelessWidget {
       child: Consumer2<LocaleProvider, ThemeProvider>(
         builder: (context, localeProvider, themeProvider, _) {
           return MaterialApp.router(
+            scaffoldMessengerKey: snackbarKey,
             title: 'PDF Kit',
             locale: localeProvider.locale,
             supportedLocales: AppLocalizations.supportedLocales,

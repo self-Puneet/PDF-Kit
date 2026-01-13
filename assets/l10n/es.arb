@@ -402,6 +402,15 @@
 "onboarding_button_get_started": "Comenzar",
 "onboarding_button_back": "Atrás"
 , "onboarding_tagline": "Su kit completo para cada tarea de PDF."
-, "selection_min_error": "Seleccione al menos {count} elementos."
+, "selection_min_error": "Seleccione al menos {count} elementos.",
+
+"snackbar_merge_done": "Merge completed successfully",
+"snackbar_compress_done": "Compression completed successfully",
+"snackbar_images_to_pdf_done": "PDF created successfully",
+"snackbar_pdf_to_image_done": "Images created successfully",
+"snackbar_split_done": "Split completed successfully",
+"snackbar_protect_done": "PDF protected successfully",
+"snackbar_unlock_done": "PDF unlocked successfully",
+"snackbar_reorder_done": "Reorder completed successfully"
 
 }

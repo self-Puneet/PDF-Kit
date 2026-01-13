@@ -407,7 +407,16 @@
 "onboarding_button_get_started": "Loslegen",
 "onboarding_button_back": "Zurück"
 , "onboarding_tagline": "Ihr komplettes Toolkit für jede PDF-Aufgabe."
-, "selection_min_error": "Wählen Sie mindestens {count} Elemente aus."
+, "selection_min_error": "Wählen Sie mindestens {count} Elemente aus.",
+
+"snackbar_merge_done": "Merge completed successfully",
+"snackbar_compress_done": "Compression completed successfully",
+"snackbar_images_to_pdf_done": "PDF created successfully",
+"snackbar_pdf_to_image_done": "Images created successfully",
+"snackbar_split_done": "Split completed successfully",
+"snackbar_protect_done": "PDF protected successfully",
+"snackbar_unlock_done": "PDF unlocked successfully",
+"snackbar_reorder_done": "Reorder completed successfully"
 
 
 }

@@ -73,16 +73,39 @@ class LanguageSettingsPage extends StatelessWidget {
                   onTap: () async {
                     if (isSelected) return;
                     await provider.setLocale(code);
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context)
-                      ..hideCurrentSnackBar()
-                      ..showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            t.t('language_settings_applied_snackbar'),
-                          ),
-                        ),
+
+                    // IMPORTANT:
+                    // `context` here may still be under the old `Localizations`
+                    // because the locale change rebuilds the app above this page.
+                    // Show the snackbar using the app-level context from
+                    // `snackbarKey`, after it reflects the new locale.
+                    for (var i = 0; i < 10; i++) {
+                      final appCtx = snackbarKey.currentContext;
+                      final appLocale = appCtx != null
+                          ? Localizations.maybeLocaleOf(appCtx)
+                          : null;
+
+                      if (appCtx != null && appLocale?.languageCode == code) {
+                        final msg = AppLocalizations.of(
+                          appCtx,
+                        ).t('language_settings_applied_snackbar');
+                        AppSnackbar.show(msg);
+                        return;
+                      }
+
+                      // Wait ~1 frame and try again.
+                      await Future<void>.delayed(
+                        const Duration(milliseconds: 16),
                       );
+                    }
+
+                    // Fallback: show using whatever app context is available.
+                    final appCtx = snackbarKey.currentContext;
+                    if (appCtx == null) return;
+                    final msg = AppLocalizations.of(
+                      appCtx,
+                    ).t('language_settings_applied_snackbar');
+                    AppSnackbar.show(msg);
                   },
                 ),
               );

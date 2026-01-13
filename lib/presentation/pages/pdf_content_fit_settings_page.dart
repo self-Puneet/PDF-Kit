@@ -36,11 +36,9 @@ class _PdfContentFitSettingsPageState extends State<PdfContentFitSettingsPage> {
 
     if (mounted) {
       final t = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t.t('pdf_content_fit_settings_applied_snackbar')),
-          duration: const Duration(seconds: 2),
-        ),
+      AppSnackbar.show(
+        t.t('pdf_content_fit_settings_applied_snackbar'),
+        duration: const Duration(seconds: 2),
       );
     }
   }

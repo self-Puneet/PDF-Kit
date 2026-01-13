@@ -155,9 +155,7 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
         final msg = t
             .t('pdf_to_image_destination_snackbar')
             .replaceAll('{folderName}', _selectedDestinationFolder!.name);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), duration: const Duration(seconds: 2)),
-        );
+        AppSnackbar.show(msg, duration: const Duration(seconds: 2));
       }
     }
   }
@@ -227,7 +225,7 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
       progress.dispose();
       stage.dispose();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppSnackbar.showSnackBar(
           SnackBar(
             content: Text(t.t('pdf_to_image_no_file_error')),
             backgroundColor: Theme.of(context).colorScheme.error,
@@ -317,7 +315,7 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
         final msg = t
             .t('snackbar_error')
             .replaceAll('{message}', error.message);
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppSnackbar.showSnackBar(
           SnackBar(
             content: Text(msg),
             backgroundColor: Theme.of(context).colorScheme.error,
@@ -353,6 +351,10 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
 
         if (!mounted) return;
 
+        final successMsg = AppLocalizations.of(
+          context,
+        ).t('snackbar_pdf_to_image_done');
+
         // Navigate to home and clear all routes
         selection.disable();
         context.go('/');
@@ -362,19 +364,11 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
 
         // Show success message after navigation
         Future.delayed(const Duration(milliseconds: 300), () {
-          if (context.mounted) {
-            final msg = t
-                .t('snackbar_success_pdf_to_image')
-                .replaceAll('{count}', imageFiles.length.toString())
-                .replaceAll('{folderName}', outputName);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(msg),
-                backgroundColor: Colors.green,
-                duration: const Duration(seconds: 3),
-              ),
-            );
-          }
+          if (imageFiles.isEmpty) return;
+          AppSnackbar.showSuccessWithOpen(
+            message: successMsg,
+            path: imageFiles.first.path,
+          );
         });
       },
     );

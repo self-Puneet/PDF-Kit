@@ -97,7 +97,7 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
   ) async {
     final t = AppLocalizations.of(context);
     if (sel.files.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppSnackbar.showSnackBar(
         SnackBar(
           content: Text(t.t('compress_pdf_select_first_error')),
           backgroundColor: Theme.of(context).colorScheme.error,
@@ -150,7 +150,7 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
       if (!mounted) return;
       result.fold(
         (err) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          AppSnackbar.showSnackBar(
             SnackBar(
               content: Text(err.message),
               backgroundColor: Theme.of(context).colorScheme.error,
@@ -158,6 +158,9 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
           );
         },
         (compressed) async {
+          final t = AppLocalizations.of(context);
+          final successMsg = t.t('snackbar_compress_done');
+
           // Store resulting compressed file to recent files
           debugPrint(
             '📝 [CompressPDF] Storing compressed file: ${compressed.name}',
@@ -183,24 +186,10 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
 
           // Show success message after navigation
           Future.delayed(const Duration(milliseconds: 300), () {
-            if (context.mounted) {
-              final originalName = p.basename(file.path);
-              final resultName = p.basename(compressed.path);
-              final pattern = t
-                  .t('compress_pdf_result_pattern')
-                  .replaceFirst('{original}', originalName)
-                  .replaceFirst('{level}', 'optimized')
-                  .replaceFirst('{result}', resultName);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(pattern),
-                  action: SnackBarAction(
-                    label: t.t('common_open_snackbar'),
-                    onPressed: () {},
-                  ),
-                ),
-              );
-            }
+            AppSnackbar.showSuccessWithOpen(
+              message: successMsg,
+              path: compressed.path,
+            );
           });
         },
       );

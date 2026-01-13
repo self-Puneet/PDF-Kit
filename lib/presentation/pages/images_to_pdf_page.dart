@@ -221,7 +221,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> {
         final msg = t
             .t('snackbar_error')
             .replaceAll('{message}', error.message);
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppSnackbar.showSnackBar(
           SnackBar(
             content: Text(msg),
             backgroundColor: Theme.of(context).colorScheme.error,
@@ -229,6 +229,10 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> {
         );
       },
       (convertedFile) async {
+        final successMsg = AppLocalizations.of(
+          context,
+        ).t('snackbar_images_to_pdf_done');
+
         // Store the converted PDF in recent files
         debugPrint(
           '📝 [ImagesToPDF] Storing converted file: ${convertedFile.name}',
@@ -253,27 +257,10 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> {
 
         // Show success message after navigation
         Future.delayed(const Duration(milliseconds: 300), () {
-          if (context.mounted) {
-            final t = AppLocalizations.of(context);
-            final msg = t
-                .t('snackbar_success_images_to_pdf')
-                .replaceAll('{fileName}', convertedFile.name);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(msg),
-                backgroundColor: Colors.green,
-                action: SnackBarAction(
-                  label: t.t('common_open_snackbar'),
-                  onPressed: () {
-                    context.pushNamed(
-                      AppRouteName.showPdf,
-                      queryParameters: {'path': convertedFile.path},
-                    );
-                  },
-                ),
-              ),
-            );
-          }
+          AppSnackbar.showSuccessWithOpen(
+            message: successMsg,
+            path: convertedFile.path,
+          );
         });
       },
     );

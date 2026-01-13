@@ -407,6 +407,15 @@
 "onboarding_button_get_started": "Começar",
 "onboarding_button_back": "Voltar"
 , "onboarding_tagline": "Seu kit completo para qualquer tarefa em PDF."
-, "selection_min_error": "Selecione pelo menos {count} itens."
+, "selection_min_error": "Selecione pelo menos {count} itens.",
+
+"snackbar_merge_done": "Merge completed successfully",
+"snackbar_compress_done": "Compression completed successfully",
+"snackbar_images_to_pdf_done": "PDF created successfully",
+"snackbar_pdf_to_image_done": "Images created successfully",
+"snackbar_split_done": "Split completed successfully",
+"snackbar_protect_done": "PDF protected successfully",
+"snackbar_unlock_done": "PDF unlocked successfully",
+"snackbar_reorder_done": "Reorder completed successfully"
 
 }

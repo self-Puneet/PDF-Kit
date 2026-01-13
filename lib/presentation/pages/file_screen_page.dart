@@ -321,9 +321,7 @@ class _AndroidFilesScreenState extends State<AndroidFilesScreen> {
       onRename: (newName) async {
         context.read<FileSystemProvider>().renameFile(file, newName).then((_) {
           RecentFilesSection.refreshNotifier.value++;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('File renamed successfully')),
-          );
+          AppSnackbar.show('File renamed successfully');
         });
       },
     );

@@ -407,6 +407,15 @@
 "onboarding_button_get_started": "Commencer",
 "onboarding_button_back": "Retour"
 , "onboarding_tagline": "Votre boîte à outils complète pour chaque tâche PDF."
-, "selection_min_error": "Sélectionnez au moins {count} éléments."
+, "selection_min_error": "Sélectionnez au moins {count} éléments.",
+
+"snackbar_merge_done": "Merge completed successfully",
+"snackbar_compress_done": "Compression completed successfully",
+"snackbar_images_to_pdf_done": "PDF created successfully",
+"snackbar_pdf_to_image_done": "Images created successfully",
+"snackbar_split_done": "Split completed successfully",
+"snackbar_protect_done": "PDF protected successfully",
+"snackbar_unlock_done": "PDF unlocked successfully",
+"snackbar_reorder_done": "Reorder completed successfully"
 
 }

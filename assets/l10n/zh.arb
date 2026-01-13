@@ -407,7 +407,16 @@
 "onboarding_button_get_started": "开始使用",
 "onboarding_button_back": "返回"
 , "onboarding_tagline": "满足所有 PDF 任务的完整工具包。"
-, "selection_min_error": "请至少选择 {count} 个项目。"
+, "selection_min_error": "请至少选择 {count} 个项目。",
+
+"snackbar_merge_done": "Merge completed successfully",
+"snackbar_compress_done": "Compression completed successfully",
+"snackbar_images_to_pdf_done": "PDF created successfully",
+"snackbar_pdf_to_image_done": "Images created successfully",
+"snackbar_split_done": "Split completed successfully",
+"snackbar_protect_done": "PDF protected successfully",
+"snackbar_unlock_done": "PDF unlocked successfully",
+"snackbar_reorder_done": "Reorder completed successfully"
 
 
 }

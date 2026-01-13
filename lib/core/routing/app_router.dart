@@ -10,16 +10,12 @@ import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/presentation/provider/provider_export.dart';
 
 // Navigator keys
-final _rootNavKey = GlobalKey<NavigatorState>(debugLabel: 'root');
-final _homeNavKey = GlobalKey<NavigatorState>(debugLabel: 'home');
-final _filesNavKey = GlobalKey<NavigatorState>(debugLabel: 'files');
-final _settingsNavKey = GlobalKey<NavigatorState>(debugLabel: 'settings');
 
 /// Global route observer to track page visibility
 final routeObserver = RouteObserver<ModalRoute>();
 
 final appRouter = GoRouter(
-  navigatorKey: _rootNavKey,
+  navigatorKey: rootNavKey,
   initialLocation: '/splash',
   observers: [routeObserver],
   errorBuilder: (context, state) =>
@@ -28,19 +24,19 @@ final appRouter = GoRouter(
     GoRoute(
       name: AppRouteName.splash,
       path: '/splash',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) => const PdfKitSplashPage(),
     ),
     GoRoute(
       name: AppRouteName.onboardingShell,
       path: '/onboarding-shell',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) => const OnboardingShellPage(),
     ),
     GoRoute(
       name: AppRouteName.recentFiles,
       path: '/recent-files',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) => const RecentFilesPage(),
     ),
     GoRoute(
@@ -52,65 +48,65 @@ final appRouter = GoRouter(
     GoRoute(
       name: 'language-settings',
       path: '/settings/language',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) => LanguageSettingsPage(),
     ),
 
     GoRoute(
       name: 'theme-settings',
       path: '/settings/theme',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) => const ThemeSettingsPage(),
     ),
 
     GoRoute(
       name: 'pdf-content-fit-settings',
       path: '/settings/pdf-content-fit',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) => const PdfContentFitSettingsPage(),
     ),
 
     GoRoute(
       name: 'help-support',
       path: '/settings/help-support',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) => const HelpSupportPage(),
     ),
 
     GoRoute(
       name: 'about-pdfkit',
       path: '/settings/about-pdf-kit',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) => const AboutPdfKitPage(),
     ),
 
     GoRoute(
       name: AppRouteName.aboutUs,
       path: '/settings/about-us',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) => const AboutUsPage(),
     ),
 
     GoRoute(
       name: AppRouteName.filterOptions,
       path: '/settings/filter-options',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) => const FilterOptionsPage(),
     ),
 
     buildHomeShellRoute(
-      homeNavKey: _homeNavKey,
-      fileNavKey: _filesNavKey,
-      settingsNavKey: _settingsNavKey,
+      homeNavKey: homeNavKey,
+      fileNavKey: filesNavKey,
+      settingsNavKey: settingsNavKey,
     ),
 
-    buildSelectionShellRoute(rootNavKey: _rootNavKey),
+    buildSelectionShellRoute(rootNavKey: rootNavKey),
 
     // App-wide overlays (above shell)
     GoRoute(
       name: AppRouteName.showPdf,
       path: '/pdf/view',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) =>
           ShowPdfPage(path: state.uri.queryParameters['path']),
     ),
@@ -118,7 +114,7 @@ final appRouter = GoRouter(
     GoRoute(
       name: AppRouteName.pdfViewer,
       path: '/pdf/viewer',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) {
         final raw = state.uri.queryParameters['showOptionsSheet'];
         final showOptionsSheet =
@@ -133,7 +129,7 @@ final appRouter = GoRouter(
     GoRoute(
       name: AppRouteName.mergePdf,
       path: '/pdf/merge',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) {
         final selectionId = state.uri.queryParameters['selectionId'];
         if (selectionId != null) {
@@ -154,7 +150,7 @@ final appRouter = GoRouter(
     GoRoute(
       name: AppRouteName.protectPdf,
       path: '/pdf/protect',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) {
         final selectionId = state.uri.queryParameters['selectionId'];
         if (selectionId != null) {
@@ -176,7 +172,7 @@ final appRouter = GoRouter(
     GoRoute(
       name: AppRouteName.unlockPdf,
       path: '/pdf/unlock',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) {
         final selectionId = state.uri.queryParameters['selectionId'];
         if (selectionId != null) {
@@ -227,7 +223,7 @@ final appRouter = GoRouter(
     GoRoute(
       name: AppRouteName.compressPdf,
       path: '/pdf/compress',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) {
         final selectionId = state.uri.queryParameters['selectionId'];
         if (selectionId != null) {
@@ -248,7 +244,7 @@ final appRouter = GoRouter(
     GoRoute(
       name: AppRouteName.pdfToImage,
       path: '/pdf/to-image',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) {
         final selectionId = state.uri.queryParameters['selectionId'];
         if (selectionId != null) {
@@ -269,7 +265,7 @@ final appRouter = GoRouter(
     GoRoute(
       name: AppRouteName.imagesToPdf,
       path: '/images/to-pdf',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) {
         final selectionId = state.uri.queryParameters['selectionId'];
         if (selectionId != null) {
@@ -290,7 +286,7 @@ final appRouter = GoRouter(
     GoRoute(
       name: AppRouteName.reorderPdf,
       path: '/pdf/reorder',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) {
         final selectionId = state.uri.queryParameters['selectionId'];
         if (selectionId != null) {
@@ -311,7 +307,7 @@ final appRouter = GoRouter(
     GoRoute(
       name: AppRouteName.splitPdf,
       path: '/pdf/split',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) {
         final selectionId = state.uri.queryParameters['selectionId'];
         if (selectionId != null) {
@@ -332,7 +328,7 @@ final appRouter = GoRouter(
     GoRoute(
       name: AppRouteName.recentFilesSearch,
       path: '/recent-files/search',
-      parentNavigatorKey: _rootNavKey,
+      parentNavigatorKey: rootNavKey,
       builder: (context, state) => const RecentFilesSearchPage(),
     ),
   ],

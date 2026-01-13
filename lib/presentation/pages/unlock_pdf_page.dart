@@ -51,7 +51,7 @@ class _UnlockPdfPageState extends State<UnlockPdfPage> {
   ) async {
     final t = AppLocalizations.of(context);
     if (_passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppSnackbar.showSnackBar(
         SnackBar(
           content: Text(t.t('unlock_pdf_error_enter_password')),
           backgroundColor: Theme.of(context).colorScheme.error,
@@ -123,7 +123,7 @@ class _UnlockPdfPageState extends State<UnlockPdfPage> {
         final msg = t
             .t('snackbar_error')
             .replaceAll('{message}', failure.message);
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppSnackbar.showSnackBar(
           SnackBar(
             content: Text(msg),
             backgroundColor: Theme.of(context).colorScheme.error,
@@ -131,6 +131,8 @@ class _UnlockPdfPageState extends State<UnlockPdfPage> {
         );
       },
       (unlockedPath) async {
+        final successMsg = t.t('snackbar_unlock_done');
+
         // Get updated file stats after unlocking
         final unlockedFileOnDisk = File(unlockedPath);
         final stats = await unlockedFileOnDisk.stat();
@@ -150,20 +152,9 @@ class _UnlockPdfPageState extends State<UnlockPdfPage> {
         await RecentFilesService.addRecentFile(updatedFile);
 
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Successfully unlocked ${p.basename(unlockedPath)}'),
-            backgroundColor: Colors.green,
-            action: SnackBarAction(
-              label: 'Open',
-              onPressed: () {
-                context.pushNamed(
-                  AppRouteName.showPdf,
-                  queryParameters: {'path': unlockedPath},
-                );
-              },
-            ),
-          ),
+        AppSnackbar.showSuccessWithOpen(
+          message: successMsg,
+          path: unlockedPath,
         );
         selection.disable();
 

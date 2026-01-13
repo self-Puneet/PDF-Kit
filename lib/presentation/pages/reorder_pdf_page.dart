@@ -269,11 +269,12 @@ class _ReorderPdfPageState extends State<ReorderPdfPage> {
           await RecentFilesService.addRecentFile(fileInfo);
 
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(t.t('reorder_pdf_success')),
-                duration: const Duration(seconds: 3),
-              ),
+            final successMsg = AppLocalizations.of(
+              context,
+            ).t('snackbar_reorder_done');
+            AppSnackbar.showSuccessWithOpen(
+              message: successMsg,
+              path: outputPath,
             );
 
             // Trigger home page refresh
@@ -300,7 +301,7 @@ class _ReorderPdfPageState extends State<ReorderPdfPage> {
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
+    AppSnackbar.showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,

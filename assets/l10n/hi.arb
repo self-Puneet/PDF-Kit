@@ -406,7 +406,16 @@
 "onboarding_button_get_started": "प्रारंभ करें",
 "onboarding_button_back": "वापस"
 , "onboarding_tagline": "हर PDF कार्य के लिए आपका संपूर्ण टूलकिट।"
-, "selection_min_error": "कम से कम {count} आइटम चुनें।"
+, "selection_min_error": "कम से कम {count} आइटम चुनें।",
+
+"snackbar_merge_done": "Merge completed successfully",
+"snackbar_compress_done": "Compression completed successfully",
+"snackbar_images_to_pdf_done": "PDF created successfully",
+"snackbar_pdf_to_image_done": "Images created successfully",
+"snackbar_split_done": "Split completed successfully",
+"snackbar_protect_done": "PDF protected successfully",
+"snackbar_unlock_done": "PDF unlocked successfully",
+"snackbar_reorder_done": "Reorder completed successfully"
 
 
 }

@@ -281,7 +281,7 @@ class _MergePdfPageState extends State<MergePdfPage> {
           final msg = t
               .t('snackbar_error')
               .replaceAll('{message}', error.message);
-          ScaffoldMessenger.of(context).showSnackBar(
+          AppSnackbar.showSnackBar(
             SnackBar(
               content: Text(msg),
               backgroundColor: Theme.of(context).colorScheme.error,
@@ -289,6 +289,10 @@ class _MergePdfPageState extends State<MergePdfPage> {
           );
         },
         (mergedFile) async {
+          final successMsg = AppLocalizations.of(
+            context,
+          ).t('snackbar_merge_done');
+
           progress.value = 1.0;
           stage.value = 'Done';
           _dismissMergeProgressDialog();
@@ -314,27 +318,10 @@ class _MergePdfPageState extends State<MergePdfPage> {
 
           // Show success message after navigation
           Future.delayed(const Duration(milliseconds: 300), () {
-            if (context.mounted) {
-              final t = AppLocalizations.of(context);
-              final msg = t
-                  .t('snackbar_success_merge')
-                  .replaceAll('{fileName}', mergedFile.name);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(msg),
-                  backgroundColor: Colors.green,
-                  action: SnackBarAction(
-                    label: t.t('common_open_snackbar'),
-                    onPressed: () {
-                      context.pushNamed(
-                        AppRouteName.showPdf,
-                        queryParameters: {'path': mergedFile.path},
-                      );
-                    },
-                  ),
-                ),
-              );
-            }
+            AppSnackbar.showSuccessWithOpen(
+              message: successMsg,
+              path: mergedFile.path,
+            );
           });
         },
       );

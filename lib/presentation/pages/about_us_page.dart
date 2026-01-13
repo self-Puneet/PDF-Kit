@@ -14,9 +14,7 @@ class AboutUsPage extends StatelessWidget {
   Future<void> _launchUri(BuildContext context, Uri uri) async {
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Could not open the link')));
+      AppSnackbar.show('Could not open the link');
     }
   }
 

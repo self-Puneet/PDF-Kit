@@ -352,9 +352,7 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
           onRename: (newName) async {
             await context.read<FileSystemProvider>().renameFile(f, newName);
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Renamed successfully')),
-            );
+            AppSnackbar.show('Renamed successfully');
           },
         );
         break;
@@ -367,9 +365,7 @@ class _SearchFilesScreenState extends State<SearchFilesScreen> {
             await context.read<FileSystemProvider>().deleteFile(f);
             RecentFilesSection.refreshNotifier.value++;
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Deleted successfully')),
-            );
+            AppSnackbar.show('Deleted successfully');
           },
         );
         break;

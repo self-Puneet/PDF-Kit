@@ -62,17 +62,13 @@ class AboutPdfKitPage extends StatelessWidget {
   Future<void> _openPrivacyPolicy(BuildContext context, String url) async {
     final uri = Uri.tryParse(url);
     if (uri == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid privacy policy URL')),
-      );
+      AppSnackbar.show('Invalid privacy policy URL');
       return;
     }
 
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Could not open the link')));
+      AppSnackbar.show('Could not open the link');
     }
   }
 

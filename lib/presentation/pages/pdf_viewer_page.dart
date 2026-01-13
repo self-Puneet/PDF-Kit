@@ -257,9 +257,7 @@ class _FileViewerPageState extends State<FileViewerPage> {
     result.fold(
       (err) {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(err.message)));
+        AppSnackbar.show(err.message);
       },
       (updated) {
         if (!mounted) return;
@@ -291,9 +289,7 @@ class _FileViewerPageState extends State<FileViewerPage> {
     result.fold(
       (err) {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(err.message)));
+        AppSnackbar.show(err.message);
       },
       (_) {
         if (!mounted) return;
@@ -331,9 +327,7 @@ class _FileViewerPageState extends State<FileViewerPage> {
     moved.fold(
       (err) {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(err.message)));
+        AppSnackbar.show(err.message);
       },
       (updated) {
         if (!mounted) return;
@@ -542,7 +536,7 @@ class _FileViewerPageState extends State<FileViewerPage> {
                                 if (_password == null) {
                                   _showPasswordDialog();
                                 } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
+                                  AppSnackbar.showSnackBar(
                                     const SnackBar(
                                       content: Text(
                                         'Incorrect password or file error.',

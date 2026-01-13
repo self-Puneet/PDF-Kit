@@ -75,11 +75,10 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
   void _handleProviderUpdate() {
     // Handle validation errors first (show snackbar)
     if (provider.lastValidationError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppSnackbar.showSnackBar(
         SnackBar(
           content: Text(provider.lastValidationError!),
           backgroundColor: Theme.of(context).colorScheme.error,
-          duration: const Duration(seconds: 3),
         ),
       );
       provider.clearValidationError();

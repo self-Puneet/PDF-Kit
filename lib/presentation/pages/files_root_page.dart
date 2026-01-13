@@ -596,21 +596,19 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
                   children: [
                     Text(
                       storageName,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     // const SizedBox(height: 4),
-                    Text(
-                      root.path,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.color?.withOpacity(0.7),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    // Text(
+                    //   root.path,
+                    //   style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    //     color: Theme.of(
+                    //       context,
+                    //     ).textTheme.bodySmall?.color?.withOpacity(0.7),
+                    //   ),
+                    //   maxLines: 1,
+                    //   overflow: TextOverflow.ellipsis,
+                    // ),
                   ],
                 ),
               ),
@@ -1030,19 +1028,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
     final files = _cachedRecentFiles ?? [];
 
     if (files.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: Text(
-            AppLocalizations.of(context).t('recent_files_empty'),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(
-                context,
-              ).textTheme.bodySmall?.color?.withOpacity(0.7),
-            ),
-          ),
-        ),
-      );
+      return _buildCompactRecentEmptyState(context);
     }
 
     final pvd = _maybeProvider();
@@ -1170,6 +1156,44 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
     );
   }
 
+  Widget _buildCompactRecentEmptyState(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    // A smaller/compact version of RecentFilesPage._buildEmptyState.
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.history,
+              size: 40,
+              color: theme.colorScheme.onSurface.withOpacity(0.3),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              t.t('recent_files_empty_title'),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              t.t('recent_files_empty_message'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _handleFileMenu(FileInfo file, String action) async {
     switch (action) {
       case 'open':
@@ -1180,7 +1204,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
         result.fold(
           (error) {
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
+              AppSnackbar.showSnackBar(
                 SnackBar(
                   content: Text('Error: $error'),
                   backgroundColor: Theme.of(context).colorScheme.error,
@@ -1191,9 +1215,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
           (updatedFiles) {
             if (mounted) {
               _loadRecentFiles();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Removed from recent files')),
-              );
+              AppSnackbar.show('Removed from recent files');
             }
           },
         );
@@ -1207,7 +1229,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
             result.fold(
               (exception) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  AppSnackbar.showSnackBar(
                     SnackBar(
                       content: Text(exception.message),
                       backgroundColor: Theme.of(context).colorScheme.error,
@@ -1218,9 +1240,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
               (renamedFileInfo) {
                 if (mounted) {
                   _loadRecentFiles();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('File renamed successfully')),
-                  );
+                  AppSnackbar.show('File renamed successfully');
                 }
               },
             );

@@ -496,6 +496,14 @@
   ,"pdf_to_image_loading_default_folder": "Loading default folder..."
   ,"pdf_to_image_select_folder_placeholder": "Select destination folder"
   ,"common_done": "Done"
+  ,"snackbar_merge_done": "Merge completed successfully"
+  ,"snackbar_compress_done": "Compression completed successfully"
+  ,"snackbar_images_to_pdf_done": "PDF created successfully"
+  ,"snackbar_pdf_to_image_done": "Images created successfully"
+  ,"snackbar_split_done": "Split completed successfully"
+  ,"snackbar_protect_done": "PDF protected successfully"
+  ,"snackbar_unlock_done": "PDF unlocked successfully"
+  ,"snackbar_reorder_done": "Reorder completed successfully"
   ,"snackbar_success_pdf_to_image": "Successfully converted {count} pages to images in {folderName}"
   ,"@snackbar_success_pdf_to_image": {"placeholders": {"count": {"type": "String"}, "folderName": {"type": "String"}}}
 

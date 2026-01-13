@@ -22,11 +22,6 @@ class HomeTab extends StatefulWidget {
 class _HomeTabState extends State<HomeTab> {
   static final Random _rng = Random();
 
-  static void _toast(BuildContext c, String key) {
-    final t = AppLocalizations.of(c);
-    ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text(t.t(key))));
-  }
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -45,12 +40,7 @@ class _HomeTabState extends State<HomeTab> {
           Expanded(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: screenPadding.left),
-              child: RecentFilesSection(
-                onGetStartedPrimary: () =>
-                    _toast(context, 'home_get_started_scan'),
-                onGetStartedSecondary: () =>
-                    _toast(context, 'home_get_started_import'),
-              ),
+              child: RecentFilesSection(),
             ),
           ),
         ],
@@ -170,14 +160,7 @@ class QuickActionsGrid extends StatelessWidget {
 
 /// Section that renders either a recent files list or a "Get Started" card.
 class RecentFilesSection extends StatefulWidget {
-  final VoidCallback onGetStartedPrimary;
-  final VoidCallback onGetStartedSecondary;
-
-  const RecentFilesSection({
-    Key? key,
-    required this.onGetStartedPrimary,
-    required this.onGetStartedSecondary,
-  }) : super(key: key);
+  const RecentFilesSection({Key? key}) : super(key: key);
 
   /// External trigger to ask the section to reload its contents.
   /// Increment this notifier's value to request a refresh from other parts of the app.
@@ -242,7 +225,7 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
       (error) {
         debugPrint('❌ [RecentFilesSection] Delete failed: $error');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          AppSnackbar.showSnackBar(
             SnackBar(
               content: Text('Error: $error'),
               backgroundColor: Theme.of(context).colorScheme.error,
@@ -256,9 +239,7 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
         );
         if (mounted) {
           setState(() => _loadRecentFiles());
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Removed from recent files')),
-          );
+          AppSnackbar.show('Removed from recent files');
         }
       },
     );
@@ -277,7 +258,7 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
               '❌ [RecentFilesSection] Rename failed: ${exception.message}',
             );
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
+              AppSnackbar.showSnackBar(
                 SnackBar(
                   content: Text(exception.message),
                   backgroundColor: Theme.of(context).colorScheme.error,
@@ -291,9 +272,7 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
             );
             if (mounted) {
               setState(() => _loadRecentFiles());
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('File renamed successfully')),
-              );
+              AppSnackbar.show('File renamed successfully');
             }
           },
         );
@@ -372,10 +351,7 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
             children: [
               title,
               const SizedBox(height: 8),
-              _GetStartedCard(
-                primary: widget.onGetStartedPrimary,
-                secondary: widget.onGetStartedSecondary,
-              ),
+              const _GetStartedCard(),
             ],
           );
         }
@@ -392,14 +368,7 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
           );
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              title,
-              const SizedBox(height: 8),
-              _GetStartedCard(
-                primary: widget.onGetStartedPrimary,
-                secondary: widget.onGetStartedSecondary,
-              ),
-            ],
+            children: [title, const SizedBox(height: 8), _GetStartedCard()],
           );
         }
 
@@ -444,10 +413,7 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
 
 /// Beautiful empty state card for "Get Started".
 class _GetStartedCard extends StatelessWidget {
-  final VoidCallback primary;
-  final VoidCallback secondary;
-
-  const _GetStartedCard({required this.primary, required this.secondary});
+  const _GetStartedCard();
 
   @override
   Widget build(BuildContext context) {
