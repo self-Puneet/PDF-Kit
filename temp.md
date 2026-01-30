@@ -1,4 +1,4 @@
-# Device registration / FCM token sync API
+<!-- # Device registration / FCM token sync API
 
 This backend exposes a single endpoint that upserts a device record into **Firestore**.
 
@@ -147,4 +147,27 @@ export async function upsertDevice(payload) {
 
 - `os` must be exactly `Android` or `iOS` (case-sensitive).
 - The backend uses Firestore server time; don’t send your own `timestamp` (it will be overwritten by backend data anyway).
-- If Firestore credentials are missing/misconfigured (`firebase/secret_key.json`), this endpoint will fail with a server error.
+- If Firestore credentials are missing/misconfigured (`firebase/secret_key.json`), this endpoint will fail with a server error. -->
+
+
+
+
+action_images_to_pdf_label,
+action_reorder_label,
+action_pdf_to_image_label,
+not included in other langauges other than en
+
+
+file_quick_access_tile, files_storage_title, files_internal_storage, files_search_type_prompt, files_pdfs_folder, files_downloads_folder, files_images_folder not created in any language for the file root page, file search page
+
+
+settings_default_camera_location_title, settings_default_camera_location-subtitle
+
+settings_default_screenshot_location_title, settings_default_camera_location-subtitle
+
+settings_default_camera_location_title, settings_default_camera_location-subtitle fields not in the any language file for the setting page.
+
+
+folder_picker_description_pdfs, 
+
+settings_default_camera_location_subtitle,

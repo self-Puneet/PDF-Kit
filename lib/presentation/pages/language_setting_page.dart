@@ -24,16 +24,28 @@ class LanguageSettingsPage extends StatelessWidget {
     final provider = context.watch<LocaleProvider>();
     final current = provider.locale?.languageCode ?? 'en';
     return Scaffold(
-      appBar: AppBar(title: Text(t.t('language_settings_page_title'))),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+      ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: screenPadding,
           children: [
             Text(
-              t.t('language_settings_choose_label'),
-              style: Theme.of(context).textTheme.titleMedium,
+              t.t('language_settings_page_title'),
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
+            Text(
+              t.t('language_settings_choose_label'),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(height: 1.4),
+            ),
+            const SizedBox(height: 16),
             ..._languages.map((lang) {
               final code = lang['code']!;
               final isSelected = code == current;

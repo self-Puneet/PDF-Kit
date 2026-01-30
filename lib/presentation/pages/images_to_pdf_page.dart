@@ -159,7 +159,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> {
 
     _progressDialog.show(
       context: context,
-      title: 'Images to PDF',
+      title: AppLocalizations.of(context).t('images_to_pdf_title'),
       progress: progress,
       stage: stage,
     );

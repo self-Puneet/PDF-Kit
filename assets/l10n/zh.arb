@@ -416,7 +416,23 @@
 "snackbar_split_done": "Split completed successfully",
 "snackbar_protect_done": "PDF protected successfully",
 "snackbar_unlock_done": "PDF unlocked successfully",
-"snackbar_reorder_done": "Reorder completed successfully"
+"snackbar_reorder_done": "Reorder completed successfully",
+
+"action_images_to_pdf_label": "图片转 PDF",
+"action_pdf_to_image_label": "PDF 转图片",
+"action_reorder_label": "重排 PDF",
+
+"files_quick_access_title": "快速访问",
+"file_quick_access_tile": "快速访问",
+"files_storage_title": "存储",
+"files_loading_storage": "正在加载存储...",
+"files_internal_storage": "内部存储",
+"files_sd_card": "SD 卡",
+"files_search_type_prompt": "输入以搜索",
+"files_pdfs_folder": "PDF",
+"files_downloads_folder": "下载",
+"files_images_folder": "图片",
+"files_screenshots_folder": "截图"
 
 
 }

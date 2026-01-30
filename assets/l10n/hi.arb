@@ -415,7 +415,23 @@
 "snackbar_split_done": "Split completed successfully",
 "snackbar_protect_done": "PDF protected successfully",
 "snackbar_unlock_done": "PDF unlocked successfully",
-"snackbar_reorder_done": "Reorder completed successfully"
+"snackbar_reorder_done": "Reorder completed successfully",
+
+"action_images_to_pdf_label": "छवियों से PDF",
+"action_pdf_to_image_label": "PDF से छवि",
+"action_reorder_label": "PDF पुनर्व्यवस्थित करें",
+
+"files_quick_access_title": "त्वरित पहुँच",
+"file_quick_access_tile": "त्वरित पहुँच",
+"files_storage_title": "स्टोरेज",
+"files_loading_storage": "स्टोरेज लोड हो रहा है...",
+"files_internal_storage": "आंतरिक स्टोरेज",
+"files_sd_card": "SD कार्ड",
+"files_search_type_prompt": "खोजने के लिए टाइप करें",
+"files_pdfs_folder": "PDF",
+"files_downloads_folder": "डाउनलोड",
+"files_images_folder": "छवियाँ",
+"files_screenshots_folder": "स्क्रीनशॉट"
 
 
 }

@@ -404,7 +404,7 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
     try {
       _progressDialog.show(
         context: context,
-        title: 'Split PDF',
+        title: AppLocalizations.of(context).t('split_pdf_title'),
         progress: progress,
         stage: stage,
       );

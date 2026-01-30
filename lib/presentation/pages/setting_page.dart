@@ -41,10 +41,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final t = AppLocalizations.of(context);
     final localeCode =
         context.watch<LocaleProvider>().locale?.languageCode ?? 'en';
-    final languageDisplay =
-        localeCode == 'hi' ? t.t('language_option_hindi') : t.t('language_option_english');
+
+    const languageKeyByCode = <String, String>{
+      'en': 'language_option_english',
+      'hi': 'language_option_hindi',
+      'es': 'language_option_spanish',
+      'ar': 'language_option_arabic',
+      'bn': 'language_option_bengali',
+      'de': 'language_option_german',
+      'fr': 'language_option_french',
+      'ja': 'language_option_japanese',
+      'pt': 'language_option_portuguese',
+      'zh': 'language_option_chinese',
+    };
+    final languageDisplay = t.t(
+      languageKeyByCode[localeCode] ?? 'language_option_english',
+    );
 
     final items = <SettingsItem>[
+      // langauge
       SettingsItem(
         id: 'language',
         title: t.t('settings_language_item_title'),
@@ -56,6 +71,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           context.push('/settings/language');
         },
       ),
+
+      // default save locations
       SettingsItem(
         id: 'default_save',
         title: t.t('settings_default_save_location_title'),
@@ -67,7 +84,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (!context.mounted) return;
 
           final extra = <String, dynamic>{
-            'title': t.t('files_pdfs_folder'),
+            'title': t.t('settings_default_save_location_title'),
             'description': t.t('folder_picker_description_pdfs'),
             if (initialPath != null) 'path': initialPath,
           };
@@ -82,6 +99,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           await Prefs.setString(Constants.pdfOutputFolderPathKey, selectedPath);
         },
       ),
+      
+      // camera location
       SettingsItem(
         id: 'default_camera_save',
         title: t.t('settings_default_camera_location_title'),
@@ -93,7 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (!context.mounted) return;
 
           final extra = <String, dynamic>{
-            'title': t.t('files_images_folder'),
+            'title': t.t('settings_default_camera_location_title'),
             'description': t.t('folder_picker_description_images'),
             if (initialPath != null) 'path': initialPath,
           };
@@ -108,6 +127,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           await Prefs.setString(Constants.imagesFolderPathKey, selectedPath);
         },
       ),
+      
+      // screenshot location
       SettingsItem(
         id: 'default_screenshot_save',
         title: t.t('settings_default_screenshot_location_title'),
@@ -119,7 +140,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (!context.mounted) return;
 
           final extra = <String, dynamic>{
-            'title': t.t('files_screenshots_folder'),
+            'title': t.t('settings_default_screenshot_location_title'),
             'description': t.t('folder_picker_description_screenshots'),
             if (initialPath != null) 'path': initialPath,
           };
@@ -200,70 +221,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ];
 
     return Scaffold(
+      appBar: AppBar(title: Text(t.t('settings_title'))),
       body: SafeArea(
-        child: Padding(
+        child: ListView.separated(
           padding: screenPadding,
-          child: Column(
-            children: [
-              _buildHeader(context),
-              Expanded(
-                child: ListView.separated(
-                  padding: EdgeInsets.zero,
-                  itemCount: items.length,
-                  separatorBuilder: (_, __) => const SizedBox.shrink(),
-                  itemBuilder: (context, index) {
-                    return SettingsTile(item: items[index]);
-                  },
-                ),
-              ),
-            ],
-          ),
+          itemCount: items.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemBuilder: (context, index) {
+            return SettingsTile(item: items[index]);
+          },
         ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      alignment: Alignment.center,
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
-              shape: BoxShape.circle,
-            ),
-            child: ClipOval(
-              child: SizedBox(
-                width: 40,
-                height: 40,
-                child: Image.asset(
-                  'assets/app_icon.png',
-                  width: 40,
-                  height: 40,
-                  fit: BoxFit.cover,
-                  errorBuilder: (c, e, s) => Icon(
-                    Icons.widgets_rounded,
-                    size: 40,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            AppLocalizations.of(context).t('home_brand_title'),
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.w600),
-          ),
-        ],
       ),
     );
   }

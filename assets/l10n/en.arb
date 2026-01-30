@@ -339,10 +339,23 @@
   ,"settings_pdf_compression_subtitle": "Set how new files are compressed automatically"
   ,"settings_filter_options_title": "Filter Options"
   ,"settings_filter_options_subtitle": "Choose which filters the app applies by default"
+  ,"settings_filter_options_description": "Choose which filters are applied by default when viewing files and folders whole over the app."
   ,"settings_grid_view_layout_title": "Grid View Layout"
   ,"settings_grid_view_layout_subtitle": "Control how files and folders appear"
   ,"settings_pdf_content_fit_title": "PDF Content Fit Mode"
   ,"settings_pdf_content_fit_subtitle": "Choose how images and PDFs should fit"
+
+  ,"pdf_content_fit_settings_page_title": "PDF Content Fit"
+  ,"pdf_content_fit_settings_description": "Choose how PDFs and images fit inside the viewer. This affects how content is displayed on screen only."
+  ,"pdf_content_fit_settings_choose_mode_label": "Choose mode"
+  ,"pdf_content_fit_settings_applied_snackbar": "Content fit updated"
+
+  ,"pdf_content_fit_mode_original_title": "Original"
+  ,"pdf_content_fit_mode_original_description": "Show content at its original size."
+  ,"pdf_content_fit_mode_fit_title": "Fit"
+  ,"pdf_content_fit_mode_fit_description": "Fit the entire content within the available space."
+  ,"pdf_content_fit_mode_crop_title": "Crop"
+  ,"pdf_content_fit_mode_crop_description": "Fill the space and crop any overflow."
   ,"settings_help_center_title": "Help Center"
   ,"settings_help_center_subtitle": "Get help, FAQs, and answers"
   ,"settings_about_pdf_kit_title": "About PDF Seva"
@@ -496,6 +509,16 @@
   ,"pdf_to_image_loading_default_folder": "Loading default folder..."
   ,"pdf_to_image_select_folder_placeholder": "Select destination folder"
   ,"common_done": "Done"
+
+  ,"progress_dialog_keep_open": "Please keep the app open while we finish."
+  ,"progress_dialog_merging_title": "Merging PDF"
+
+  ,"progress_stage_preparing": "Preparing…"
+  ,"progress_stage_starting": "Starting…"
+  ,"progress_stage_analyzing_pdf": "Analyzing PDF…"
+  ,"progress_stage_compressing": "Compressing…"
+  ,"progress_stage_finalizing": "Finalizing…"
+  ,"progress_stage_done": "Done"
   ,"snackbar_merge_done": "Merge completed successfully"
   ,"snackbar_compress_done": "Compression completed successfully"
   ,"snackbar_images_to_pdf_done": "PDF created successfully"
@@ -513,5 +536,29 @@
   ,"pdf_options_protect": "Protect / Remove Password"
   ,"pdf_options_compress": "Compress PDF"
   ,"pdf_options_move_to_folder": "Move to Folder"
+
+  ,"files_quick_access_title": "Quick Access"
+  ,"file_quick_access_tile": "Quick Access"
+  ,"files_storage_title": "Storage"
+  ,"files_loading_storage": "Loading storage..."
+  ,"files_internal_storage": "Internal storage"
+  ,"files_sd_card": "SD Card"
+  ,"files_search_type_prompt": "Type to search"
+  ,"files_pdfs_folder": "PDFs"
+  ,"files_downloads_folder": "Downloads"
+  ,"files_images_folder": "Images"
+  ,"files_screenshots_folder": "Screenshots"
+
+  ,"folder_picker_description_pdfs": "All generated and imported files will be stored here unless you choose a different location."
   
+  
+  ,"folder_picker_description_images":"Select the folder where photos taken by your device’s camera are saved. This allows the app to easily access and manage camera images when needed."
+  
+  ,"folder_picker_description_screenshots":"Choose the folder where screenshots are stored on your device. This helps the app correctly detect and organize screenshots separately from camera photos."
+  ,"settings_default_camera_location_title":" Default Camera Location"
+
+  ,"settings_default_screenshot_location_title":"Default Screenshot Location"
+  ,"settings_default_camera_location_subtitle" : "Choose where camera photos are saved"
+  ,"settings_default_save_location_subtitle":"Choose where all PDFs will be saved"
+  ,"settings_default_screenshot_location_subtitle":"Choose where screenshots are saved"
 }

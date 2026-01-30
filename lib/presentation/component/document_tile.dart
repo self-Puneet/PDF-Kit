@@ -481,7 +481,7 @@ class _DocEntryCardState extends State<DocEntryCard> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '${_pageCount} page${_pageCount == 1 ? '' : 's'}',
+                                '$_pageCount page${_pageCount == 1 ? '' : 's'}',
                                 style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
                                       color: Theme.of(

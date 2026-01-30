@@ -416,7 +416,23 @@
 "snackbar_split_done": "Split completed successfully",
 "snackbar_protect_done": "PDF protected successfully",
 "snackbar_unlock_done": "PDF unlocked successfully",
-"snackbar_reorder_done": "Reorder completed successfully"
+"snackbar_reorder_done": "Reorder completed successfully",
+
+"action_images_to_pdf_label": "Bilder zu PDF",
+"action_pdf_to_image_label": "PDF zu Bild",
+"action_reorder_label": "PDF neu anordnen",
+
+"files_quick_access_title": "Schnellzugriff",
+"file_quick_access_tile": "Schnellzugriff",
+"files_storage_title": "Speicher",
+"files_loading_storage": "Speicher wird geladen...",
+"files_internal_storage": "Interner Speicher",
+"files_sd_card": "SD-Karte",
+"files_search_type_prompt": "Tippen, um zu suchen",
+"files_pdfs_folder": "PDFs",
+"files_downloads_folder": "Downloads",
+"files_images_folder": "Bilder",
+"files_screenshots_folder": "Screenshots"
 
 
 }

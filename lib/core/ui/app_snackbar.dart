@@ -33,7 +33,10 @@ class AppSnackbar {
     final ctx = snackbarKey.currentContext;
     final t = ctx != null ? AppLocalizations.of(ctx) : null;
 
-    final openLabel = t?.t('common_open') ?? 'Open';
+    final openSnack = t?.t('common_open_snackbar') ?? 'common_open_snackbar';
+    final openLabel = openSnack != 'common_open_snackbar'
+        ? openSnack
+        : (t?.t('common_open') ?? 'Open');
 
     bool _isImagePath(String p) {
       final lower = p.toLowerCase();

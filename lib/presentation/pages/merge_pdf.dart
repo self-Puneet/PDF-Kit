@@ -157,7 +157,15 @@ class _MergePdfPageState extends State<MergePdfPage> {
           return PopScope(
             canPop: false,
             child: AlertDialog(
-              title: const Text('Merging PDF'),
+              title: Text(
+                (() {
+                  final t = AppLocalizations.of(context);
+                  final v = t.t('progress_dialog_merging_title');
+                  return v == 'progress_dialog_merging_title'
+                      ? 'Merging PDF'
+                      : v;
+                })(),
+              ),
               content: SizedBox(
                 width: 420,
                 child: Column(
@@ -194,7 +202,15 @@ class _MergePdfPageState extends State<MergePdfPage> {
                       },
                     ),
                     const SizedBox(height: 12),
-                    const Text('Please keep the app open while we finish.'),
+                    Text(
+                      (() {
+                        final t = AppLocalizations.of(context);
+                        final v = t.t('progress_dialog_keep_open');
+                        return v == 'progress_dialog_keep_open'
+                            ? 'Please keep the app open while we finish.'
+                            : v;
+                      })(),
+                    ),
                   ],
                 ),
               ),

@@ -119,7 +119,7 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
 
     _progressDialog.show(
       context: context,
-      title: 'Compress PDF',
+      title: t.t('compress_pdf_title'),
       progress: progress,
       stage: stage,
     );

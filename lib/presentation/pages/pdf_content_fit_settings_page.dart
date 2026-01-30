@@ -52,40 +52,27 @@ class _PdfContentFitSettingsPageState extends State<PdfContentFitSettingsPage> {
     const previewOriginalHeight = 56.0;
 
     return Scaffold(
-      appBar: AppBar(title: Text(t.t('pdf_content_fit_settings_page_title'))),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+      ),
       body: SafeArea(
         child: ListView(
           padding: screenPadding,
           children: [
-            Card(
-              elevation: 0,
-              margin: EdgeInsets.zero,
-              color: theme.colorScheme.surfaceContainerLow,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: theme.colorScheme.primary,
-                      size: 22,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        t.t('pdf_content_fit_settings_description'),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            Text(
+              t.t('pdf_content_fit_settings_page_title'), // "Merge PDF"
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
+            Text(
+              t.t('pdf_content_fit_settings_description'),
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+            ),
+            const SizedBox(height: 16),
+
             Text(
               t.t('pdf_content_fit_settings_choose_mode_label'),
               style: theme.textTheme.titleMedium?.copyWith(
