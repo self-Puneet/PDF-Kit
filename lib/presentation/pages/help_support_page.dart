@@ -11,6 +11,7 @@ class HelpSupportPage extends StatefulWidget {
 class _HelpSupportPageState extends State<HelpSupportPage> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
+  String _selectedSection = 'help_section_all';
 
   @override
   void dispose() {
@@ -24,15 +25,22 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
     final faqs = _faqItems(t);
 
     final normalizedQuery = _query.trim().toLowerCase();
-    final filtered = normalizedQuery.isEmpty
+
+    // Filter by section first
+    var filtered = _selectedSection == 'help_section_all'
         ? faqs
-        : faqs
-              .where(
-                (f) =>
-                    f.question.toLowerCase().contains(normalizedQuery) ||
-                    f.answer.toLowerCase().contains(normalizedQuery),
-              )
-              .toList(growable: false);
+        : faqs.where((f) => f.section == _selectedSection).toList();
+
+    // Then filter by search query
+    if (normalizedQuery.isNotEmpty) {
+      filtered = filtered
+          .where(
+            (f) =>
+                f.question.toLowerCase().contains(normalizedQuery) ||
+                f.answer.toLowerCase().contains(normalizedQuery),
+          )
+          .toList(growable: false);
+    }
 
     return Scaffold(
       appBar: AppBar(title: Text(t.t('settings_help_center_title'))),
@@ -41,18 +49,67 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
           padding: screenPadding,
           child: Column(
             children: [
+              // Section chips
+              SizedBox(
+                height: 48,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    for (final sectionKey in [
+                      'help_section_all',
+                      'help_section_general',
+                      'help_section_features',
+                      'help_section_files',
+                      'help_section_troubleshooting',
+                    ])
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          selectedColor: Theme.of(context).colorScheme.primary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surface,
+                          label: Text(
+                            t.t(sectionKey),
+                            style: TextStyle(
+                              color: _selectedSection == sectionKey
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          selected: _selectedSection == sectionKey,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() => _selectedSection = sectionKey);
+                            }
+                          },
+                          checkmarkColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: BorderSide(
+                              color: _selectedSection == sectionKey
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
               Padding(
-                padding: EdgeInsetsGeometry.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: TextField(
                   controller: _searchController,
                   onChanged: (v) => setState(() => _query = v),
                   decoration: InputDecoration(
-                    hintText: 'Search',
+                    hintText: t.t('help_search_hint'),
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: _query.trim().isEmpty
                         ? null
                         : IconButton(
-                            tooltip: 'Clear',
+                            tooltip: t.t('help_clear_tooltip'),
                             onPressed: () {
                               _searchController.clear();
                               setState(() => _query = '');
@@ -71,7 +128,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                         child: Padding(
                           padding: const EdgeInsets.all(24),
                           child: Text(
-                            'No FAQs found. Try a different search.',
+                            t.t('help_no_results'),
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodyLarge,
                           ),
@@ -95,26 +152,40 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                               ),
                             ),
                             child: ExpansionTile(
+                              shape: const Border(),
+                              collapsedShape: const Border(),
                               title: Text(
                                 item.question,
                                 style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(fontWeight: FontWeight.w600),
                               ),
-                              childrenPadding: const EdgeInsets.fromLTRB(
-                                16,
-                                0,
-                                16,
-                                16,
+                              tilePadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
                               ),
                               children: [
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    item.answer,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(height: 1.4),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  child: Divider(
+                                    height: 1,
+                                    thickness: 1,
+                                    color: Theme.of(context).colorScheme.outline
+                                        .withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      item.answer,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(height: 1.4),
+                                    ),
                                   ),
                                 ),
                               ],
@@ -131,76 +202,80 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
   }
 
   List<_FaqItem> _faqItems(AppLocalizations t) {
-    return const [
+    return [
+      // General
       _FaqItem(
-        question: 'What can I do with PDF Kit?',
-        answer:
-            'PDF Kit helps you manage PDFs and files on your device. You can merge, split, compress, reorder pages, convert images to PDF, convert PDF to images, and add/remove password protection.',
+        section: 'help_section_general',
+        question: t.t('help_faq_general_1_question'),
+        answer: t.t('help_faq_general_1_answer'),
       ),
       _FaqItem(
-        question: 'Where are my generated PDFs saved?',
-        answer:
-            'The output is saved to the destination folder selected during the flow. You can also set a default save folder from Settings → Default save location.',
+        section: 'help_section_general',
+        question: t.t('help_faq_general_2_question'),
+        answer: t.t('help_faq_general_2_answer'),
       ),
       _FaqItem(
-        question: 'How do I change the default save location?',
-        answer:
-            'Open Settings → Default save location, pick a folder, and confirm. New outputs will be saved there unless you choose a different folder during an action.',
+        section: 'help_section_general',
+        question: t.t('help_faq_general_3_question'),
+        answer: t.t('help_faq_general_3_answer'),
+      ),
+      // Features
+      _FaqItem(
+        section: 'help_section_features',
+        question: t.t('help_faq_features_1_question'),
+        answer: t.t('help_faq_features_1_answer'),
       ),
       _FaqItem(
-        question: 'How do I merge multiple PDFs into one?',
-        answer:
-            'Tap Merge on the home tools grid, select at least 2 PDFs, then continue to merge. You can reorder files before merging if the merge screen provides the option.',
+        section: 'help_section_features',
+        question: t.t('help_faq_features_2_question'),
+        answer: t.t('help_faq_features_2_answer'),
       ),
       _FaqItem(
-        question: 'How do I convert images to a single PDF?',
-        answer:
-            'Tap Images to PDF, select 2+ images, then continue. Arrange images if prompted, and save the generated PDF.',
+        section: 'help_section_features',
+        question: t.t('help_faq_features_3_question'),
+        answer: t.t('help_faq_features_3_answer'),
       ),
       _FaqItem(
-        question: 'How do I split a PDF into pages/files?',
-        answer:
-            'Tap Split, select a single PDF, then choose the page range or split options on the Split screen and save the result.',
+        section: 'help_section_features',
+        question: t.t('help_faq_features_4_question'),
+        answer: t.t('help_faq_features_4_answer'),
       ),
       _FaqItem(
-        question: 'How do I reorder pages in a PDF?',
-        answer:
-            'Tap Reorder, select a single PDF, then drag pages to rearrange them. Save to export the new PDF with the updated order.',
+        section: 'help_section_features',
+        question: t.t('help_faq_features_5_question'),
+        answer: t.t('help_faq_features_5_answer'),
       ),
       _FaqItem(
-        question: 'How does PDF compression work?',
-        answer:
-            'Tap Compress, select a PDF, then choose a compression level (if available). Higher compression usually reduces file size but may reduce quality.',
+        section: 'help_section_features',
+        question: t.t('help_faq_features_6_question'),
+        answer: t.t('help_faq_features_6_answer'),
       ),
       _FaqItem(
-        question: 'How do I add a password to a PDF?',
-        answer:
-            'Tap Protect, pick a PDF (must be unprotected), enter the password, and save. Keep the password safe—without it the file can\'t be opened.',
+        section: 'help_section_features',
+        question: t.t('help_faq_features_7_question'),
+        answer: t.t('help_faq_features_7_answer'),
+      ),
+      // Files
+      _FaqItem(
+        section: 'help_section_files',
+        question: t.t('help_faq_files_1_question'),
+        answer: t.t('help_faq_files_1_answer'),
+      ),
+      // Troubleshooting
+      _FaqItem(
+        section: 'help_section_troubleshooting',
+        question: t.t('help_faq_troubleshooting_1_question'),
+        answer: t.t('help_faq_troubleshooting_1_answer'),
       ),
       _FaqItem(
-        question: 'How do I remove a password from a PDF?',
-        answer:
-            'Tap Unlock/Remove Password, choose a protected PDF, enter the correct password when asked, then save the unlocked copy.',
+        section: 'help_section_files',
+        question: t.t('help_faq_files_2_question'),
+        answer: t.t('help_faq_files_2_answer'),
       ),
       _FaqItem(
-        question: 'Which files are supported?',
-        answer:
-            'The app focuses on PDFs and common image formats. The viewer supports PDFs and images (including GIF previews). If a file can’t be opened, check that the extension matches a supported type.',
-      ),
-      _FaqItem(
-        question: 'I can’t see my files or folders. What should I do?',
-        answer:
-            'This is usually a permission issue. On Android, allow storage/files access when prompted (or from system Settings → Apps → PDF Kit → Permissions). On Android 11+, “All files access” may be required for broad browsing.',
-      ),
-      _FaqItem(
-        question: 'How do I find a file quickly?',
-        answer:
-            'Use the search feature in the file explorer screens (Files/Search). You can also open Recent Files from the home screen to quickly re-open recent documents.',
-      ),
-      _FaqItem(
-        question: 'Why did my action fail or produce an empty output?',
-        answer:
-            'Common causes are selecting the wrong file type (e.g., protected PDF for actions that require unprotected), selecting too few files, or missing storage permissions. Re-try the action and ensure the selection rules shown on the picker are satisfied.',
+        section: 'help_section_troubleshooting',
+        question: t.t('help_faq_troubleshooting_2_question'),
+        answer: t.t('help_faq_troubleshooting_2_answer'),
       ),
     ];
   }
@@ -209,6 +284,11 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
 class _FaqItem {
   final String question;
   final String answer;
+  final String section;
 
-  const _FaqItem({required this.question, required this.answer});
+  const _FaqItem({
+    required this.question,
+    required this.answer,
+    required this.section,
+  });
 }

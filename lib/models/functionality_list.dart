@@ -32,6 +32,7 @@ List<Functionality> getActions(BuildContext context) {
             'selectionId': selectionId,
             'actionText': t('merge_pdf_title'),
             'min': '2', // Merge requires at least 2 files
+            'op': 'merge',
             'allowed': 'unprotected',
             'fileType': 'all',
           },
@@ -64,6 +65,7 @@ List<Functionality> getActions(BuildContext context) {
             'selectionId': selectionId,
             'actionText': t('images_to_pdf_title'),
             'min': '2', // Require at least 2 images
+            'op': 'images_to_pdf',
             'allowed': 'images', // Only allow image files
             'fileType': 'images',
           },
@@ -95,6 +97,7 @@ List<Functionality> getActions(BuildContext context) {
             'selectionId': selectionId,
             'actionText': t('split_pdf_title'),
             'max': '1', // Only one PDF at a time
+            'op': 'split',
             'min': '1',
             'allowed': 'unprotected',
             'fileType': 'pdf',
@@ -132,6 +135,7 @@ List<Functionality> getActions(BuildContext context) {
             'selectionId': selectionId,
             'actionText': t('protect_pdf_title'),
             'max': '1',
+            'op': 'protect',
             'min': '1',
             'allowed': 'unprotected',
             'fileType': 'pdf',
@@ -164,6 +168,7 @@ List<Functionality> getActions(BuildContext context) {
             'selectionId': selectionId,
             'actionText': t('unlock_pdf_title'),
             'max': '1',
+            'op': 'unlock',
             'min': '1',
             'allowed': 'protected',
             'fileType': 'pdf',
@@ -196,6 +201,7 @@ List<Functionality> getActions(BuildContext context) {
             'selectionId': selectionId,
             'actionText': t('compress_pdf_button'),
             'max': '1',
+            'op': 'compress',
             'min': '1',
             'allowed': 'unprotected',
             'fileType': 'pdf',
@@ -229,6 +235,7 @@ List<Functionality> getActions(BuildContext context) {
             'selectionId': selectionId,
             'actionText': t('pdf_to_image_title'),
             'max': '1',
+            'op': 'pdf_to_image',
             'min': '1',
             'allowed': 'unprotected',
             'fileType': 'pdf',
@@ -261,6 +268,7 @@ List<Functionality> getActions(BuildContext context) {
             'selectionId': selectionId,
             'actionText': t('reorder_pdf_title'),
             'max': '1',
+            'op': 'reorder',
             'min': '1',
             'allowed': 'unprotected',
             'fileType': 'pdf',

@@ -6,11 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 class AboutUsPage extends StatelessWidget {
   const AboutUsPage({super.key});
 
-  static const _orgName = 'Nexio Technologies';
-
-  static const _description =
-      'We provide the digital backbone for modern organizations. NexioTech Cloud specializes in optimizing your workflow through tailored cloud solutions and forward-thinking IT services. Our mission is to bridge the gap between advanced technology and daily efficiency, creating a seamless digital environment where your business can thrive.';
-
   Future<void> _launchUri(BuildContext context, Uri uri) async {
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && context.mounted) {
@@ -21,6 +16,7 @@ class AboutUsPage extends StatelessWidget {
   Widget _headerCard(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final t = AppLocalizations.of(context);
 
     return Card(
       margin: EdgeInsets.zero,
@@ -28,12 +24,12 @@ class AboutUsPage extends StatelessWidget {
       color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _orgName,
+              t.t('about_us_org_name'),
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.3,
@@ -70,7 +66,7 @@ class AboutUsPage extends StatelessWidget {
 
             const SizedBox(height: 8),
             Text(
-              _description,
+              t.t('about_us_description'),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: cs.onSurfaceVariant,
                 height: 1.45,
@@ -96,19 +92,18 @@ class AboutUsPage extends StatelessWidget {
       color: cs.surfaceContainerLow,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-              child: Text(
-                title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            Text(
+              title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
               ),
             ),
+
+            const SizedBox(height: 2),
             ...children,
           ],
         ),
@@ -124,7 +119,7 @@ class AboutUsPage extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       leading: Icon(icon),
       title: Text(title),
       subtitle: Text(subtitle),
@@ -152,12 +147,12 @@ class AboutUsPage extends StatelessWidget {
                   const SizedBox(height: 12),
                   _sectionCard(
                     context,
-                    title: 'Links',
+                    title: t.t('about_us_links_section_title'),
                     children: [
                       _linkTile(
                         context,
                         icon: Icons.language,
-                        title: 'Website',
+                        title: t.t('about_us_link_website_title'),
                         subtitle: cfg.orgWebsiteLink,
                         onTap: () =>
                             _launchUri(context, Uri.parse(cfg.orgWebsiteLink)),
@@ -165,7 +160,7 @@ class AboutUsPage extends StatelessWidget {
                       _linkTile(
                         context,
                         icon: Icons.help_outline,
-                        title: 'Help',
+                        title: t.t('about_us_link_help_title'),
                         subtitle: cfg.orgHelpMail,
                         onTap: () => _launchUri(
                           context,
@@ -175,7 +170,7 @@ class AboutUsPage extends StatelessWidget {
                       _linkTile(
                         context,
                         icon: Icons.connect_without_contact,
-                        title: 'Connect',
+                        title: t.t('about_us_link_connect_title'),
                         subtitle: cfg.orgConnectMail,
                         onTap: () => _launchUri(
                           context,
@@ -185,7 +180,7 @@ class AboutUsPage extends StatelessWidget {
                       _linkTile(
                         context,
                         icon: Icons.call,
-                        title: 'Call',
+                        title: t.t('about_us_link_call_title'),
                         subtitle: cfg.orgContactNumber,
                         onTap: () => _launchUri(
                           context,
@@ -195,7 +190,7 @@ class AboutUsPage extends StatelessWidget {
                       _linkTile(
                         context,
                         icon: Icons.code,
-                        title: 'GitHub Organization',
+                        title: t.t('about_us_link_github_title'),
                         subtitle: cfg.orgGithubLink,
                         onTap: () =>
                             _launchUri(context, Uri.parse(cfg.orgGithubLink)),

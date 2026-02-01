@@ -11,24 +11,28 @@ class AboutPdfKitPage extends StatelessWidget {
 
   static const _appName = 'PDF Seva';
 
-  Future<List<_AboutPermissionItem>> _loadPermissionItems() async {
+  Future<List<_AboutPermissionItem>> _loadPermissionItems(
+    BuildContext context,
+  ) async {
     if (kIsWeb) return const [];
     if (defaultTargetPlatform != TargetPlatform.android) return const [];
 
+    final t = AppLocalizations.of(context);
+
     final items = <_AboutPermissionItem>[
       _AboutPermissionItem(
-        title: 'All files access',
-        purpose: 'Read and write PDFs in your device storage.',
+        title: t.t('about_pdf_kit_permission_all_files_title'),
+        purpose: t.t('about_pdf_kit_permission_all_files_purpose'),
         permission: Permission.manageExternalStorage,
       ),
       _AboutPermissionItem(
-        title: 'Photos / Images',
-        purpose: 'Used for Image related operations.',
+        title: t.t('about_pdf_kit_permission_photos_title'),
+        purpose: t.t('about_pdf_kit_permission_photos_purpose'),
         permission: Permission.photos,
       ),
       _AboutPermissionItem(
-        title: 'Videos',
-        purpose: 'Only used when you pick videos (if required).',
+        title: t.t('about_pdf_kit_permission_videos_title'),
+        purpose: t.t('about_pdf_kit_permission_videos_purpose'),
         permission: Permission.videos,
       ),
     ];
@@ -60,15 +64,16 @@ class AboutPdfKitPage extends StatelessWidget {
   }
 
   Future<void> _openPrivacyPolicy(BuildContext context, String url) async {
+    final t = AppLocalizations.of(context);
     final uri = Uri.tryParse(url);
     if (uri == null) {
-      AppSnackbar.show('Invalid privacy policy URL');
+      AppSnackbar.show(t.t('about_pdf_kit_error_invalid_privacy_url'));
       return;
     }
 
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && context.mounted) {
-      AppSnackbar.show('Could not open the link');
+      AppSnackbar.show(t.t('about_pdf_kit_error_could_not_open_link'));
     }
   }
 
@@ -230,70 +235,70 @@ class AboutPdfKitPage extends StatelessWidget {
     );
   }
 
-  Widget _simpleTile(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    String? subtitle,
-    VoidCallback? onTap,
-    Widget? trailing,
-  }) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
+  // Widget _simpleTile(
+  //   BuildContext context, {
+  //   required IconData icon,
+  //   required String title,
+  //   String? subtitle,
+  //   VoidCallback? onTap,
+  //   Widget? trailing,
+  // }) {
+  //   final theme = Theme.of(context);
+  //   final cs = theme.colorScheme;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer.withValues(alpha: 0.45),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, size: 18, color: cs.primary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              if (trailing != null) ...[
-                const SizedBox(width: 8),
-                trailing,
-              ] else if (onTap != null) ...[
-                const SizedBox(width: 8),
-                Icon(Icons.chevron_right, color: cs.onSurfaceVariant, size: 18),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  //   return Material(
+  //     color: Colors.transparent,
+  //     child: InkWell(
+  //       onTap: onTap,
+  //       borderRadius: BorderRadius.circular(10),
+  //       child: Padding(
+  //         padding: const EdgeInsets.symmetric(vertical: 6),
+  //         child: Row(
+  //           children: [
+  //             Container(
+  //               padding: const EdgeInsets.all(8),
+  //               decoration: BoxDecoration(
+  //                 color: cs.primaryContainer.withValues(alpha: 0.45),
+  //                 borderRadius: BorderRadius.circular(8),
+  //               ),
+  //               child: Icon(icon, size: 18, color: cs.primary),
+  //             ),
+  //             const SizedBox(width: 12),
+  //             Expanded(
+  //               child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 children: [
+  //                   Text(
+  //                     title,
+  //                     style: theme.textTheme.bodyMedium?.copyWith(
+  //                       fontWeight: FontWeight.w600,
+  //                     ),
+  //                   ),
+  //                   if (subtitle != null) ...[
+  //                     const SizedBox(height: 2),
+  //                     Text(
+  //                       subtitle,
+  //                       style: theme.textTheme.bodyMedium?.copyWith(
+  //                         color: cs.onSurfaceVariant,
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ],
+  //               ),
+  //             ),
+  //             if (trailing != null) ...[
+  //               const SizedBox(width: 8),
+  //               trailing,
+  //             ] else if (onTap != null) ...[
+  //               const SizedBox(width: 8),
+  //               Icon(Icons.chevron_right, color: cs.onSurfaceVariant, size: 18),
+  //             ],
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _paragraph(BuildContext context, String text) {
     final theme = Theme.of(context);
@@ -342,13 +347,13 @@ class AboutPdfKitPage extends StatelessWidget {
     return Card(
       margin: EdgeInsets.zero,
       elevation: 0,
-      color: cs.surface,
+      // color: cs.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.55)),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         onTap: () => _handlePermissionTap(context, item),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -506,7 +511,7 @@ class AboutPdfKitPage extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
-    final text = _statusText(status);
+    final text = _statusText(context, status);
 
     final Color bg;
     final Color fg;
@@ -551,15 +556,26 @@ class AboutPdfKitPage extends StatelessWidget {
     );
   }
 
-  String _statusText(PermissionStatus? status) {
+  String _statusText(BuildContext context, PermissionStatus? status) {
+    final t = AppLocalizations.of(context);
     return switch (status) {
-      PermissionStatus.granted => 'Granted',
-      PermissionStatus.limited => 'Limited',
-      PermissionStatus.denied => 'Denied',
-      PermissionStatus.restricted => 'Restricted',
-      PermissionStatus.permanentlyDenied => 'Blocked',
-      PermissionStatus.provisional => 'Provisional',
-      null => 'Unknown',
+      PermissionStatus.granted => t.t(
+        'about_pdf_kit_permission_status_granted',
+      ),
+      PermissionStatus.limited => t.t(
+        'about_pdf_kit_permission_status_limited',
+      ),
+      PermissionStatus.denied => t.t('about_pdf_kit_permission_status_denied'),
+      PermissionStatus.restricted => t.t(
+        'about_pdf_kit_permission_status_restricted',
+      ),
+      PermissionStatus.permanentlyDenied => t.t(
+        'about_pdf_kit_permission_status_blocked',
+      ),
+      PermissionStatus.provisional => t.t(
+        'about_pdf_kit_permission_status_provisional',
+      ),
+      null => t.t('about_pdf_kit_permission_status_unknown'),
     };
   }
 
@@ -603,61 +619,65 @@ class AboutPdfKitPage extends StatelessWidget {
                   // const SizedBox(height: 8),
                   _sectionCard(
                     context,
-                    title: 'App information',
+                    title: t.t('about_pdf_kit_section_app_info'),
                     children: [
-                      _kvRow(context, k: 'App name', v: _appName),
                       _kvRow(
                         context,
-                        k: 'Package name',
+                        k: t.t('about_pdf_kit_app_name_label'),
+                        v: _appName,
+                      ),
+                      _kvRow(
+                        context,
+                        k: t.t('about_pdf_kit_package_name_label'),
                         v: 'cloud.nexiotech.pdfseva',
                       ),
-                      _kvRow(context, k: 'Version', v: versionText),
-                      _kvRow(context, k: 'API levels', v: '${cfg.apiLevel}+'),
-                      _kvRow(context, k: 'Target SDK', v: cfg.targetSdkVersion),
+                      _kvRow(
+                        context,
+                        k: t.t('about_pdf_kit_version_label'),
+                        v: versionText,
+                      ),
+                      _kvRow(
+                        context,
+                        k: t.t('about_pdf_kit_api_levels_label'),
+                        v: '${cfg.apiLevel}+',
+                      ),
+                      _kvRow(
+                        context,
+                        k: t.t('about_pdf_kit_target_sdk_label'),
+                        v: cfg.targetSdkVersion,
+                      ),
                     ],
                   ),
 
                   // const SizedBox(height: 16),
                   _sectionCard(
                     context,
-                    title: 'What is PDF Seva?',
+                    title: t.t('about_pdf_kit_section_what_is'),
                     children: [
-                      _paragraph(
-                        context,
-                        'PDF Seva is a lightweight PDF utility app that lets you view, manage, and perform essential operations on PDF files stored on your device.',
-                      ),
+                      _paragraph(context, t.t('about_pdf_kit_description_1')),
                       const SizedBox(height: 12),
-                      _paragraph(
-                        context,
-                        'Document operations are performed locally to keep things fast, simple, and in your control.',
-                      ),
+                      _paragraph(context, t.t('about_pdf_kit_description_2')),
                     ],
                   ),
                   const SizedBox(height: 16),
 
                   _sectionCard(
                     context,
-                    title: 'Features',
+                    title: t.t('about_pdf_kit_section_features'),
                     children: [
-                      _bullet(
-                        context,
-                        'Access and browse PDF files from device storage',
-                      ),
-                      _bullet(context, 'View PDF documents smoothly'),
-                      _bullet(context, 'Split PDF files into smaller PDFs'),
-                      _bullet(
-                        context,
-                        'Merge multiple PDF files into a single document',
-                      ),
-                      _bullet(context, 'Organize and manage PDF documents'),
-                      _bullet(context, 'Quickly access recent PDF files'),
+                      _bullet(context, t.t('about_pdf_kit_feature_1')),
+                      _bullet(context, t.t('about_pdf_kit_feature_2')),
+                      _bullet(context, t.t('about_pdf_kit_feature_3')),
+                      _bullet(context, t.t('about_pdf_kit_feature_4')),
+                      _bullet(context, t.t('about_pdf_kit_feature_5')),
+                      _bullet(context, t.t('about_pdf_kit_feature_6')),
                     ],
                   ),
                   const SizedBox(height: 16),
 
                   _sectionCard(
                     context,
-                    title: 'Permissions used',
+                    title: t.t('about_pdf_kit_section_permissions'),
                     headerAction: !isAndroid
                         ? null
                         : IconButton(
@@ -683,17 +703,17 @@ class AboutPdfKitPage extends StatelessWidget {
                     children: [
                       _paragraph(
                         context,
-                        'PDF Seva may request storage/media permissions so it can show your PDFs and save newly created files. Tap any permission below to open this app\'s permission settings.',
+                        t.t('about_pdf_kit_permissions_description'),
                       ),
                       const SizedBox(height: 12),
                       if (!isAndroid)
                         _paragraph(
                           context,
-                          'Permission status is shown on Android only.',
+                          t.t('about_pdf_kit_permissions_android_only'),
                         )
                       else
                         FutureBuilder<List<_AboutPermissionItem>>(
-                          future: _loadPermissionItems(),
+                          future: _loadPermissionItems(context),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
@@ -704,7 +724,7 @@ class AboutPdfKitPage extends StatelessWidget {
                             if (items.isEmpty) {
                               return _paragraph(
                                 context,
-                                'Could not read permission status on this device.',
+                                t.t('about_pdf_kit_permissions_read_error'),
                               );
                             }
 
@@ -725,40 +745,96 @@ class AboutPdfKitPage extends StatelessWidget {
 
                   _sectionCard(
                     context,
-                    title: 'Data & privacy',
+                    title: t.t('about_pdf_kit_section_privacy'),
                     children: [
-                      _bullet(context, 'No account required'),
-                      _bullet(
-                        context,
-                        'No documents are uploaded to external servers',
-                      ),
-                      _bullet(
-                        context,
-                        'No personal data is collected or tracked',
-                      ),
-                      _bullet(
-                        context,
-                        'All processing happens locally on your device',
-                      ),
+                      _bullet(context, t.t('about_pdf_kit_privacy_bullet_1')),
+                      _bullet(context, t.t('about_pdf_kit_privacy_bullet_2')),
+                      _bullet(context, t.t('about_pdf_kit_privacy_bullet_3')),
+                      _bullet(context, t.t('about_pdf_kit_privacy_bullet_4')),
                       const SizedBox(height: 12),
                       Card(
                         margin: EdgeInsets.zero,
                         elevation: 0,
-                        child: _simpleTile(
-                          context,
-                          icon: Icons.privacy_tip_outlined,
-                          title: 'Privacy policy',
-                          subtitle: 'Privacy policy link is here',
-                          trailing: Icon(
-                            Icons.open_in_new,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                            size: 18,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: Theme.of(context).colorScheme.outlineVariant
+                                .withValues(alpha: 0.55),
                           ),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
                           onTap: () => _openPrivacyPolicy(
                             context,
                             cfg.privacyPolicyLink,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primaryContainer
+                                        .withValues(alpha: 0.45),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    Icons.privacy_tip_outlined,
+                                    size: 18,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        t.t(
+                                          'about_pdf_kit_privacy_policy_title',
+                                        ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        t.t(
+                                          'about_pdf_kit_privacy_policy_subtitle',
+                                        ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                              height: 1.3,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.open_in_new,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                  size: 18,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
