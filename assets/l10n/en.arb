@@ -17,6 +17,10 @@
   "common_retry": "Retry",
   "common_open": "Open",
   "common_rename": "Rename",
+  "rename_sheet_title": "Rename",
+  "rename_field_label": "New name",
+  "rename_field_hint": "Enter new name",
+  "rename_button": "Rename",
   "common_delete": "Delete",
   "common_share": "Share",
   "common_search": "Search",
@@ -264,8 +268,7 @@
   ,"compress_pdf_medium_sub": "Medium size, medium quality"
   ,"compress_pdf_low_sub": "Largest size, better quality"
   ,"compress_pdf_button": "Compress"
-  ,"compress_pdf_compressing": "Compressing..."
-  ,"compress_pdf_select_first_error": "Select a PDF first"
+  ,"compress_pdf_compressing": "Compressing..."  ,"compress_pdf_service_warning": "Note: This compression feature is currently in development and works best with large PDF files. Smaller files may not compress significantly."  ,"compress_pdf_select_first_error": "Select a PDF first"
   ,"compress_pdf_result_pattern": "Compressed \"{original}\" ({level}) → {result}"
   ,"@compress_pdf_result_pattern": {"description": "Snackbar pattern after compression.", "placeholders": {"original": {"type": "String"}, "level": {"type": "String"}, "result": {"type": "String"}}}
 
@@ -480,6 +483,21 @@
   ,"images_to_pdf_title": "Convert Images to PDF"
   ,"pdf_to_image_title": "Convert PDF to Images"
   ,"split_pdf_title": "Split PDF"
+  ,"split_pdf_description": "Select page ranges to extract from your PDF"
+  ,"split_pdf_selected_pdf_label": "Selected PDF"
+  ,"split_pdf_page_preview_label": "Page Preview"
+  ,"split_pdf_destination_folder_label": "Destination Folder"
+  ,"split_pdf_naming_pattern_label": "Output naming pattern"
+  ,"split_pdf_naming_pattern_hint": "filename_____"
+  ,"split_pdf_total_pages_helper": "Total pages: {count}"
+  ,"@split_pdf_total_pages_helper": {"placeholders": {"count": {"type": "String"}}}
+  ,"split_pdf_page_ranges_label": "Page Ranges"
+  ,"split_pdf_no_pdf_selected": "No PDF selected"
+  ,"split_pdf_button": "Split PDF"
+  ,"split_pdf_range_start_label": "Start"
+  ,"split_pdf_range_start_hint": "1"
+  ,"split_pdf_range_end_label": "End"
+  ,"split_pdf_validation_error": "Please add at least one valid page range"
   ,"reorder_pdf_title": "Reorder PDF Pages"
   ,"reorder_pdf_description": "Reorder, rotate, or remove pages from your PDF. Tap a page to preview, drag to reorder, and save your customized document."
   ,"reorder_pdf_button": "Reorder"
@@ -569,6 +587,13 @@
   "placeholders": { "count": { "type": "int" } }
 },
 
+"selection_error_pdf_only": "Only PDF files can be selected for this operation.",
+"selection_error_image_only": "Only image files can be selected for this operation.",
+"selection_error_pdf_not_protected": "This PDF is not protected with a password.",
+"selection_error_pdf_protected": "Action not allowed on protected PDF. Unlock it first to proceed.",
+"snackbar_file_renamed": "File renamed successfully",
+"snackbar_removed_from_recent": "Removed from recent files",
+
 "onboarding_screen1_title": "Your Files, Fully Private",
 "onboarding_screen1_subtitle": "Work offline with complete peace of mind.\nNothing leaves your device — your data stays safe, secure, and personal to you.",
 
@@ -610,6 +635,19 @@
   ,"@pdf_to_image_destination_snackbar": {"placeholders": {"folderName": {"type": "String"}}}
   ,"pdf_to_image_loading_default_folder": "Loading default folder..."
   ,"pdf_to_image_select_folder_placeholder": "Select destination folder"
+  ,"pdf_page_selector_title": "Select Pages"
+  ,"pdf_page_selector_hint": "e.g., 1-5, 8, 10-15"
+  ,"pdf_page_selector_helper": "Enter page ranges to select, separated by commas"
+  ,"pdf_page_selector_selected_count": "{count} of {total} page{plural} selected"
+  ,"@pdf_page_selector_selected_count": {"placeholders": {"count": {"type": "String"}, "total": {"type": "String"}, "plural": {"type": "String"}}}
+  ,"pdf_page_selector_error_empty": "At least one page must be selected"
+  ,"pdf_page_selector_error_invalid_range": "Invalid range format. Use format like 1-5"
+  ,"pdf_page_selector_error_invalid_number": "Please enter valid page numbers"
+  ,"pdf_page_selector_error_out_of_range": "Pages must be between 1 and {total}"
+  ,"@pdf_page_selector_error_out_of_range": {"placeholders": {"total": {"type": "String"}}}
+  ,"pdf_page_selector_error_start_greater": "Start page must be less than or equal to end page"
+  ,"pdf_page_selector_error_page_out_of_range": "Page must be between 1 and {total}"
+  ,"@pdf_page_selector_error_page_out_of_range": {"placeholders": {"total": {"type": "String"}}}
   ,"common_done": "Done"
 
   ,"progress_dialog_keep_open": "Please keep the app open while we finish."

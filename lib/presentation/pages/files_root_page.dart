@@ -1215,7 +1215,8 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
           (updatedFiles) {
             if (mounted) {
               _loadRecentFiles();
-              AppSnackbar.show('Removed from recent files');
+              final t = AppLocalizations.of(context);
+              AppSnackbar.show(t.t('snackbar_removed_from_recent'));
             }
           },
         );
@@ -1240,7 +1241,8 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
               (renamedFileInfo) {
                 if (mounted) {
                   _loadRecentFiles();
-                  AppSnackbar.show('File renamed successfully');
+                  final t = AppLocalizations.of(context);
+                  AppSnackbar.show(t.t('snackbar_file_renamed'));
                 }
               },
             );

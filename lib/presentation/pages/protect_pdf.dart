@@ -297,13 +297,6 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   decoration: BoxDecoration(
                     color: Colors.transparent,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        offset: const Offset(0, -2),
-                        blurRadius: 8,
-                      ),
-                    ],
                   ),
                   child: SafeArea(
                     bottom: true,

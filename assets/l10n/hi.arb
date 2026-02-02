@@ -17,6 +17,10 @@
   "common_retry": "पुनः प्रयास करें",
   "common_open": "खोलें",
   "common_rename": "नाम बदलें",
+  "rename_sheet_title": "नाम बदलें",
+  "rename_field_label": "नया नाम",
+  "rename_field_hint": "नया नाम दर्ज करें",
+  "rename_button": "नाम बदलें",
   "common_delete": "हटाएँ",
   "common_share": "साझा करें",
   "common_search": "खोजें",
@@ -216,6 +220,10 @@
 
   ,"selection_limit_error": "आप अधिकतम {count, plural, one {# फ़ाइल} other {# फ़ाइलें}} चुन सकते हैं।"
   ,"@selection_limit_error": {"description": "Shown when user exceeds maximum selectable files.", "placeholders": {"count": {"type": "int"}}}
+  ,"selection_limit_error_single": "आप अधिकतम {count} फ़ाइल चुन सकते हैं।"
+  ,"@selection_limit_error_single": {"description": "Shown when user exceeds maximum selectable files (exactly 1 allowed).", "placeholders": {"count": {"type": "int"}}}
+  ,"selection_limit_error_multiple": "आप अधिकतम {count} फ़ाइलें चुन सकते हैं।"
+  ,"@selection_limit_error_multiple": {"description": "Shown when user exceeds maximum selectable files (more than 1 allowed).", "placeholders": {"count": {"type": "int"}}}
 
   ,"compress_pdf_title": "PDF संपीड़ित करें"
   ,"compress_pdf_description": "स्मार्ट संपीड़न के साथ PDF का आकार कम करें, गुणवत्ता समायोजित करें, सेव स्थान चुनें और फ़ाइल का नाम बदलें। PDF कभी भी जोड़ें और जल्दी से एक हल्का, अनुकूलित दस्तावेज़ बनाएँ।"
@@ -229,6 +237,7 @@
   ,"compress_pdf_low_sub": "सबसे बड़ा आकार, बेहतर गुणवत्ता"
   ,"compress_pdf_button": "संपीड़ित करें"
   ,"compress_pdf_compressing": "संपीड़ित किया जा रहा है..."
+  ,"compress_pdf_service_warning": "नोट: यह कंप्रेशन फीचर अभी विकास के तहत है और बड़ी PDF फ़ाइलों के साथ बेहतर काम करता है। छोटी फ़ाइलों में ज्यादा कंप्रेशन नहीं हो सकता।"
   ,"compress_pdf_select_first_error": "पहले एक PDF चुनें"
   ,"compress_pdf_result_pattern": "\"{original}\" ({level}) → {result} संपीड़ित"
   ,"@compress_pdf_result_pattern": {"description": "Snackbar pattern after compression.", "placeholders": {"original": {"type": "String"}, "level": {"type": "String"}, "result": {"type": "String"}}}
@@ -273,7 +282,7 @@
 
   ,"common_edit": "संपादित करें"
   ,"common_remove": "हटाएँ"
-  ,"common_open_snackbar": "खोला गया"
+  ,"common_open_snackbar": "खोलें"
 
   ,"selection_action_default": "क्रिया"
   ,"selection_selected_label": "{count} चयनित"
@@ -303,6 +312,16 @@
   ,"settings_grid_view_layout_subtitle": "फ़ाइलें और फ़ोल्डर कैसे दिखें"
   ,"settings_pdf_content_fit_title": "PDF सामग्री फ़िट मोड"
   ,"settings_pdf_content_fit_subtitle": "चित्र और PDF कैसे फिट हों"
+  ,"pdf_content_fit_settings_page_title": "PDF सामग्री फ़िट"
+  ,"pdf_content_fit_settings_description": "दर्शक में पीडीएफ और छवियाँ कैसे फिट हों चुनें। यह केवल स्क्रीन पर सामग्री के प्रदर्शन को प्रभावित करता है।"
+  ,"pdf_content_fit_settings_choose_mode_label": "मोड चुनें"
+  ,"pdf_content_fit_settings_applied_snackbar": "सामग्री फिट अपडेट हो गया"
+  ,"pdf_content_fit_mode_original_title": "Original"
+  ,"pdf_content_fit_mode_original_description": "सामग्री को उसके मूल आकार में दिखाएँ।"
+  ,"pdf_content_fit_mode_fit_title": "Fit"
+  ,"pdf_content_fit_mode_fit_description": "उपलब्ध स्थान के भीतर पूरी सामग्री फिट करें।"
+  ,"pdf_content_fit_mode_crop_title": "Crop"
+  ,"pdf_content_fit_mode_crop_description": "स्थान भरें और अतिरिक्त भागों को क्रॉप करें।"
   ,"settings_help_center_title": "सहायता केंद्र"
   ,"settings_help_center_subtitle": "मदद, प्रश्न और उत्तर"
   ,"help_section_all": "सभी"
@@ -513,11 +532,98 @@
 "snackbar_merge_done": "Merge completed successfully",
 "snackbar_compress_done": "Compression completed successfully",
 "snackbar_images_to_pdf_done": "PDF created successfully",
-"snackbar_pdf_to_image_done": "Images created successfully",
-"snackbar_split_done": "Split completed successfully",
-"snackbar_protect_done": "PDF protected successfully",
-"snackbar_unlock_done": "PDF unlocked successfully",
-"snackbar_reorder_done": "Reorder completed successfully",
+  "snackbar_pdf_to_image_done": "छवियाँ सफलतापूर्वक बनाई गईं",
+  "snackbar_split_done": "स्प्लिट सफलतापूर्वक पूर्ण",
+  "snackbar_protect_done": "PDF सफलतापूर्वक सुरक्षित",
+  "snackbar_unlock_done": "PDF सफलतापूर्वक अनलॉक",
+  "snackbar_reorder_done": "रीऑर्डर सफलतापूर्वक पूर्ण",
+
+  "images_to_pdf_title": "छवियों से PDF",
+  "images_to_pdf_description": "कई छवियों को एक PDF में कन्वर्ट करें। क्रम बदलने के लिए ड्रैग करें, नाम बदलें, सेव स्थान चुनें, और कभी भी छवियाँ जोड़ें या संपादित करें।",
+  "images_to_pdf_file_name_label": "फ़ाइल नाम",
+  "images_to_pdf_file_name_hint": "आउटपुट फ़ाइल नाम टाइप करें",
+  "images_to_pdf_save_to_folder_label": "फ़ोल्डर में सेव करें",
+  "images_to_pdf_files_selected": "{count} छवियाँ चयनित",
+  "@images_to_pdf_files_selected": {
+    "description": "Label showing number of images selected for conversion.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "images_to_pdf_reorder": "क्रम बदलें",
+  "images_to_pdf_done": "पूर्ण",
+  "images_to_pdf_add_more_files": "और छवियाँ जोड़ें",
+  "images_to_pdf_button": "PDF में कन्वर्ट करें",
+  "images_to_pdf_loading_default_folder": "डिफ़ॉल्ट फ़ोल्डर लोड हो रहा है...",
+  "images_to_pdf_select_folder_placeholder": "फ़ोल्डर चुनें",
+  "images_to_pdf_destination_snackbar": "गंतव्य: {folderName}",
+  "@images_to_pdf_destination_snackbar": {
+    "description": "Snackbar message showing chosen destination folder.",
+    "placeholders": {"folderName": {"type": "String"}}
+  },
+  "images_to_pdf_default_file_name": "इमेज डॉक्यूमेंट",
+
+  "split_pdf_title": "PDF स्प्लिट करें",
+  "split_pdf_description": "अपने PDF से निकालने के लिए पेज रेंज चुनें",
+  "split_pdf_selected_pdf_label": "चयनित PDF",
+  "split_pdf_page_preview_label": "पेज प्रीव्यू",
+  "split_pdf_destination_folder_label": "गंतव्य फ़ोल्डर",
+  "split_pdf_naming_pattern_label": "आउटपुट नामकरण पैटर्न",
+  "split_pdf_naming_pattern_hint": "filename_____",
+  "split_pdf_total_pages_helper": "कुल पेज: {count}",
+  "@split_pdf_total_pages_helper": {"placeholders": {"count": {"type": "String"}}},
+  "split_pdf_page_ranges_label": "पेज रेंज",
+  "split_pdf_no_pdf_selected": "कोई PDF चयनित नहीं",
+  "split_pdf_button": "PDF स्प्लिट करें",
+  "split_pdf_range_start_label": "शुरुआत",
+  "split_pdf_range_start_hint": "1",
+  "split_pdf_range_end_label": "अंत",
+  "split_pdf_validation_error": "कृपया कम से कम एक मान्य पेज रेंज जोड़ें",
+  "split_pdf_select_folder_title": "गंतव्य फ़ोल्डर चुनें",
+  "split_pdf_select_folder_description": "स्प्लिट की गई फ़ाइलें यहाँ सेव होंगी",
+
+  "pdf_to_image_page_title": "PDF से छवियाँ",
+  "pdf_to_image_page_description": "अपने PDF के सभी पेज को उच्च गुणवत्ता की छवि फ़ाइलों में कन्वर्ट करें। प्रत्येक पेज अलग छवि के रूप में सेव होगा।",
+  "pdf_to_image_name_label": "छवि नाम प्रीफ़िक्स",
+  "pdf_to_image_name_hint": "छवियों के लिए नाम दर्ज करें",
+  "pdf_to_image_name_helper": "छवियाँ इस तरह नामित होंगी: <name>_page_001.jpg, <name>_page_002.jpg, आदि।",
+  "pdf_to_image_destination_label": "छवियाँ सेव करें",
+  "pdf_to_image_selected_file_label": "चयनित PDF फ़ाइल",
+  "pdf_to_image_no_file_selected": "कृपया पिछली स्क्रीन से PDF फ़ाइल चुनें",
+  "pdf_to_image_pages_label": "कन्वर्ट करने के लिए पेज",
+  "pdf_to_image_select_pages_button": "पेज चुनें",
+  "pdf_to_image_select_pages_title": "पेज चुनें",
+  "pdf_to_image_pages_selected": "पेज चयनित",
+  "pdf_to_image_all_pages_info": "PDF के सभी पेज छवियों में कन्वर्ट होंगे",
+  "pdf_to_image_selected_pages_info": "{count} चयनित पेज छवियों में कन्वर्ट होंगे",
+  "@pdf_to_image_selected_pages_info": {"placeholders": {"count": {"type": "String"}}},
+  "pdf_to_image_convert_button": "छवियों में कन्वर्ट करें",
+  "pdf_to_image_converting_button": "कन्वर्ट हो रहा है...",
+  "pdf_to_image_no_file_error": "कोई PDF फ़ाइल चयनित नहीं",
+  "pdf_to_image_default_name": "PDF_Images",
+  "pdf_to_image_destination_snackbar": "गंतव्य {folderName} में बदला गया",
+  "@pdf_to_image_destination_snackbar": {"placeholders": {"folderName": {"type": "String"}}},
+  "pdf_to_image_loading_default_folder": "डिफ़ॉल्ट फ़ोल्डर लोड हो रहा है...",
+  "pdf_to_image_select_folder_placeholder": "गंतव्य फ़ोल्डर चुनें",
+  "pdf_page_selector_title": "पेज चुनें",
+  "pdf_page_selector_hint": "जैसे, 1-5, 8, 10-15",
+  "pdf_page_selector_helper": "चुनने के लिए पेज रेंज दर्ज करें, अल्पविराम से अलग करें",
+  "pdf_page_selector_selected_count": "{total} में से {count} पेज{plural} चयनित",
+  "@pdf_page_selector_selected_count": {"placeholders": {"count": {"type": "String"}, "total": {"type": "String"}, "plural": {"type": "String"}}},
+  "pdf_page_selector_error_empty": "कम से कम एक पेज चयनित होना चाहिए",
+  "pdf_page_selector_error_invalid_range": "अमान्य रेंज फ़ॉर्मेट। जैसे 1-5 का उपयोग करें",
+  "pdf_page_selector_error_invalid_number": "कृपया मान्य पेज नंबर दर्ज करें",
+  "pdf_page_selector_error_out_of_range": "पेज 1 और {total} के बीच होने चाहिए",
+  "@pdf_page_selector_error_out_of_range": {"placeholders": {"total": {"type": "String"}}},
+  "pdf_page_selector_error_start_greater": "शुरुआती पेज अंतिम पेज से कम या बराबर होना चाहिए",
+  "pdf_page_selector_error_page_out_of_range": "पेज 1 और {total} के बीच होना चाहिए",
+  "@pdf_page_selector_error_page_out_of_range": {"placeholders": {"total": {"type": "String"}}},
+  "pdf_to_image_select_folder_title": "गंतव्य फ़ोल्डर चुनें",
+  "pdf_to_image_select_folder_description": "छवियाँ यहाँ सेव होंगी",
+
+  "reorder_pdf_title": "PDF पेज रीऑर्डर करें",
+  "reorder_pdf_description": "अपने PDF से पेज को रीऑर्डर, रोटेट, या हटाएँ। प्रीव्यू के लिए पेज टैप करें, रीऑर्डर के लिए ड्रैग करें, और अपना कस्टमाइज़्ड डॉक्यूमेंट सेव करें।",
+  "reorder_pdf_button": "रीऑर्डर करें",
+  "reorder_pdf_no_file": "कोई PDF चयनित नहीं। कृपया वापस जाएँ और PDF फ़ाइल चुनें।",
+  "reorder_pdf_success": "PDF पेज सफलतापूर्वक रीऑर्डर किए गए",
 
 "action_images_to_pdf_label": "छवियों से PDF",
 "action_pdf_to_image_label": "PDF से छवि",
@@ -533,7 +639,14 @@
 "files_pdfs_folder": "PDF",
 "files_downloads_folder": "डाउनलोड",
 "files_images_folder": "छवियाँ",
-"files_screenshots_folder": "स्क्रीनशॉट"
+"files_screenshots_folder": "स्क्रीनशॉट",
+
+"selection_error_pdf_only": "इस ऑपरेशन के लिए केवल PDF फ़ाइलें चुनी जा सकती हैं।",
+"selection_error_image_only": "इस ऑपरेशन के लिए केवल इमेज फ़ाइलें चुनी जा सकती हैं।",
+"selection_error_pdf_not_protected": "यह PDF पासवर्ड से प्रोटेक्टेड नहीं है।",
+"selection_error_pdf_protected": "प्रोटेक्टेड PDF पर यह एक्शन संभव नहीं। पहले इसे अनलॉक करें।",
+"snackbar_file_renamed": "फ़ाइल सफलतापूर्वक रीनेम की गई",
+"snackbar_removed_from_recent": "हाल की फ़ाइलों से हटाया गया"
 
 
 }

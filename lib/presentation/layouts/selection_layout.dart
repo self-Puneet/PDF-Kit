@@ -75,9 +75,11 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
   void _handleProviderUpdate() {
     // Handle validation errors first (show snackbar)
     if (provider.lastValidationError != null) {
+      final t = AppLocalizations.of(context);
+      final errorMessage = t.t(provider.lastValidationError!);
       AppSnackbar.showSnackBar(
         SnackBar(
-          content: Text(provider.lastValidationError!),
+          content: Text(errorMessage),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -107,6 +109,8 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
 
   @override
   Widget build(BuildContext context) {
+    // Set context for localization
+    provider.setContext(context);
     return SelectionScope(
       provider: provider,
       child: Scaffold(

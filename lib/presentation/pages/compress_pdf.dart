@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
@@ -233,8 +232,6 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
 
   @override
   Widget build(BuildContext context) {
-    print(AppLocalizations.of(context).t('compress_pdf_title'));
-
     final theme = Theme.of(context);
     return Consumer<SelectionProvider>(
       builder: (context, selection, _) {
@@ -359,12 +356,6 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                                   children: [
                                     _buildInfoRow(
                                       context,
-                                      'Pipeline',
-                                      'Rasterize → JPEG → PDF',
-                                    ),
-                                    const SizedBox(height: 4),
-                                    _buildInfoRow(
-                                      context,
                                       'Default preset',
                                       'DPI ${preset.dpi}, Q ${preset.jpegQuality}%, Max ${preset.maxLongSidePx}px',
                                     ),
@@ -394,14 +385,16 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                             Row(
                               children: [
                                 Icon(
-                                  Icons.info_outline,
+                                  Icons.warning_amber_outlined,
                                   size: 18,
                                   color: theme.colorScheme.primary,
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'These values come from the compression/rasterization services. If the output is not smaller than the original, the compressor may retry once with a stronger preset.',
+                                    AppLocalizations.of(
+                                      context,
+                                    ).t('compress_pdf_service_warning'),
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: theme.colorScheme.onSurfaceVariant,
                                     ),

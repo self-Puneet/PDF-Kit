@@ -185,7 +185,7 @@ class _FitModeCard extends StatelessWidget {
             ? cs.primaryContainer.withValues(alpha: 0.15)
             : cs.surfaceContainerLow,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.only(left: 0, right: 12, top: 12, bottom: 12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [

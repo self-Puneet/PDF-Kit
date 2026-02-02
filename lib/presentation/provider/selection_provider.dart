@@ -1,5 +1,7 @@
 // selection_provider.dart - same implementation as before
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/service/pdf_protect_service.dart';
 
@@ -14,6 +16,7 @@ class SelectionProvider extends ChangeNotifier {
   String?
   _fileType; // 'all', 'pdf', 'images' - defines the scope of file filtering
   // String? _lastErrorMessage; // surfaced when exceeding limit
+  BuildContext? _context;
 
   // Cache for PDF protection status checks to avoid repeated file I/O
   final Map<String, bool> _protectionStatusCache = {};
@@ -81,9 +84,13 @@ class SelectionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setContext(BuildContext context) {
+    _context = context;
+  }
+
   Future<String?> _validatePdfOnly(FileInfo file) async {
     if (file.extension.toLowerCase() != 'pdf') {
-      return 'Only PDF files can be selected for this operation.';
+      return 'selection_error_pdf_only';
     }
     return null;
   }
@@ -102,7 +109,7 @@ class SelectionProvider extends ChangeNotifier {
       'heif',
     };
     if (!imageExtensions.contains(file.extension.toLowerCase())) {
-      return 'Only image files can be selected for this operation.';
+      return 'selection_error_image_only';
     }
     return null;
   }
@@ -164,9 +171,9 @@ class SelectionProvider extends ChangeNotifier {
 
       // Validate based on filter
       if (_allowedFilter == 'protected' && !isProtected) {
-        return 'This PDF is not protected with a password.';
+        return 'selection_error_pdf_not_protected';
       } else if (_allowedFilter == 'unprotected' && isProtected) {
-        return 'Action not allowed on protected PDF. Unlock it first to proceed.';
+        return 'selection_error_pdf_protected';
       }
       return null;
     } catch (e) {
