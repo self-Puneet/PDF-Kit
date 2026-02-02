@@ -183,9 +183,22 @@ class _FitModeCard extends StatelessWidget {
         margin: EdgeInsets.zero,
         color: isSelected
             ? cs.primaryContainer.withValues(alpha: 0.15)
-            : cs.surfaceContainerLow,
+            : Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: isSelected
+              ? BorderSide(color: cs.primary, width: 1.5)
+              : (theme.brightness == Brightness.light
+                    ? BorderSide(color: cs.outline.withOpacity(0.15), width: 1)
+                    : BorderSide.none),
+        ),
         child: Padding(
-          padding: const EdgeInsets.only(left: 0, right: 12, top: 12, bottom: 12),
+          padding: const EdgeInsets.only(
+            left: 0,
+            right: 12,
+            top: 12,
+            bottom: 12,
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [

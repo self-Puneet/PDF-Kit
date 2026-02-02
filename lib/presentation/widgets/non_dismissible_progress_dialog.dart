@@ -16,6 +16,12 @@ class ProgressDialogController {
   String _localizeStage(BuildContext context, String value) {
     final t = AppLocalizations.of(context);
 
+    // If the value starts with a known progress key prefix, it's a localization key
+    if (value.startsWith('progress_stage_')) {
+      return _tOrFallback(t, value, value);
+    }
+
+    // Legacy fallback for hardcoded strings (in case other parts still use them)
     String? key;
     switch (value) {
       case 'Preparing…':

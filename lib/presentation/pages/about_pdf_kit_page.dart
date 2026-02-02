@@ -350,7 +350,12 @@ class AboutPdfKitPage extends StatelessWidget {
       // color: cs.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.55)),
+        side: Theme.of(context).brightness == Brightness.light
+            ? BorderSide(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                width: 1,
+              )
+            : BorderSide.none,
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -757,10 +762,12 @@ class AboutPdfKitPage extends StatelessWidget {
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(
-                            color: Theme.of(context).colorScheme.outlineVariant
-                                .withValues(alpha: 0.55),
-                          ),
+        side: Theme.of(context).brightness == Brightness.light
+            ? BorderSide(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                width: 1,
+              )
+            : BorderSide.none,
                         ),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(12),

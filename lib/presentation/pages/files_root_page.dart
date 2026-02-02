@@ -545,10 +545,12 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-          width: 1,
-        ),
+        side: Theme.of(context).brightness == Brightness.light
+            ? BorderSide(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                width: 1,
+              )
+            : BorderSide.none,
       ),
       margin: EdgeInsets.zero,
       child: InkWell(
@@ -635,10 +637,12 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-          width: 1,
-        ),
+        side: Theme.of(context).brightness == Brightness.light
+            ? BorderSide(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                width: 1,
+              )
+            : BorderSide.none,
       ),
       child: InkWell(
         onTap: onTap,

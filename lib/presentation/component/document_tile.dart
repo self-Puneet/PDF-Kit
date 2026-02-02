@@ -282,8 +282,21 @@ class _DocEntryCardState extends State<DocEntryCard> {
     );
 
     return Material(
-      borderRadius: BorderRadius.circular(12),
-      color: Colors.black.withAlpha(widget.disabled ? 12 : 28),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: Theme.of(context).brightness == Brightness.light
+            ? BorderSide(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                width: 1,
+              )
+            : BorderSide.none,
+      ),
+      color: widget.disabled
+          ? Theme.of(context).cardColor.withOpacity(0.5)
+          : Theme.of(context).cardColor,
+
+          
+
       shadowColor: Colors.black.withAlpha(28),
       elevation: 2,
       child: InkWell(
@@ -335,7 +348,7 @@ class _DocEntryCardState extends State<DocEntryCard> {
                             : BoxFit.fitHeight;
 
                         child = ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(8),
                           child: SizedBox.square(
                             dimension: 56,
                             child: Stack(
@@ -414,7 +427,7 @@ class _DocEntryCardState extends State<DocEntryCard> {
                         );
                       }
                       return ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                         child: child,
                       );
                     },

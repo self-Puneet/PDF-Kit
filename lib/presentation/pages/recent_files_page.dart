@@ -30,7 +30,7 @@ class RecentFilesPage extends StatefulWidget {
   State<RecentFilesPage> createState() => _RecentFilesPageState();
 }
 
-class _RecentFilesPageState extends State<RecentFilesPage> {
+class _RecentFilesPageState extends State<RecentFilesPage> with RouteAware {
   List<FileInfo> _files = [];
   bool _isLoading = true;
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
@@ -39,6 +39,29 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
   void initState() {
     super.initState();
     debugPrint('📱 [RecentFilesPage] initState called');
+    _loadRecentFiles();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Subscribe to RouteObserver
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called when returning to this page
+    debugPrint('🔄 [RecentFilesPage] Returning to page, refreshing...');
     _loadRecentFiles();
   }
 
@@ -277,14 +300,25 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : _files.isEmpty
-                    ? _buildEmptyState(context, theme)
-                    : AnimatedList(
-                        key: _listKey,
-                        padding: const EdgeInsets.only(bottom: 16),
-                        initialItemCount: _files.length,
-                        itemBuilder: (context, i, animation) {
-                          if (i >= _files.length)
-                            return const SizedBox.shrink();
+                    ? RefreshIndicator(
+                        onRefresh: _loadRecentFiles,
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height - 200,
+                            child: _buildEmptyState(context, theme),
+                          ),
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadRecentFiles,
+                        child: AnimatedList(
+                          key: _listKey,
+                          padding: const EdgeInsets.only(bottom: 16),
+                          initialItemCount: _files.length,
+                          itemBuilder: (context, i, animation) {
+                            if (i >= _files.length)
+                              return const SizedBox.shrink();
 
                           return SlideTransition(
                             position: animation.drive(
@@ -334,6 +368,7 @@ class _RecentFilesPageState extends State<RecentFilesPage> {
                           );
                         },
                       ),
+              ),
               ),
             ],
           ),

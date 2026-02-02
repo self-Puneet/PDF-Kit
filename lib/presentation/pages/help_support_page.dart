@@ -83,7 +83,9 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                               setState(() => _selectedSection = sectionKey);
                             }
                           },
-                          checkmarkColor: Colors.white,
+                          checkmarkColor: Theme.of(
+                            context,
+                          ).colorScheme.onPrimary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                             side: BorderSide(
@@ -122,6 +124,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                   ),
                 ),
               ),
+              SizedBox(height: 8),
               Expanded(
                 child: filtered.isEmpty
                     ? Center(
@@ -137,7 +140,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                     : ListView.separated(
                         // padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                         itemCount: filtered.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 4),
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {
                           final item = filtered[index];
                           return Card(

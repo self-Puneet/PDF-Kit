@@ -233,7 +233,7 @@
     "placeholders": {"fileName": {"type": "String"}}
   }
 
-  ,"home_brand_title": "PDF Kit"
+  ,"home_brand_title": "PDF Seva"
   ,"home_get_started_title": "Get started with your PDFs"
   ,"home_get_started_message": "Scan documents or import files to see them here."
   ,"home_get_started_scan": "Scan a document"
@@ -370,8 +370,8 @@
   ,"help_clear_tooltip": "Clear"
   ,"help_no_results": "No FAQs found. Try a different search."
   
-  ,"help_faq_general_1_question": "What can I do with PDF Kit?"
-  ,"help_faq_general_1_answer": "PDF Kit helps you manage PDFs and files on your device. You can merge, split, compress, reorder pages, convert images to PDF, convert PDF to images, and add/remove password protection."
+  ,"help_faq_general_1_question": "What can I do with PDF Seva?"
+  ,"help_faq_general_1_answer": "PDF Seva helps you manage PDFs and files on your device. You can merge, split, compress, reorder pages, convert images to PDF, convert PDF to images, and add/remove password protection."
   ,"help_faq_general_2_question": "Where are my generated PDFs saved?"
   ,"help_faq_general_2_answer": "The output is saved to the destination folder selected during the flow. You can also set a default save folder from Settings → Default save location."
   ,"help_faq_general_3_question": "How do I change the default save location?"
@@ -398,7 +398,7 @@
   ,"help_faq_files_2_answer": "Use the search feature in the file explorer screens (Files/Search). You can also open Recent Files from the home screen to quickly re-open recent documents."
   
   ,"help_faq_troubleshooting_1_question": "I can't see my files or folders. What should I do?"
-  ,"help_faq_troubleshooting_1_answer": "This is usually a permission issue. On Android, allow storage/files access when prompted (or from system Settings → Apps → PDF Kit → Permissions). On Android 11+, 'All files access' may be required for broad browsing."
+  ,"help_faq_troubleshooting_1_answer": "This is usually a permission issue. On Android, allow storage/files access when prompted (or from system Settings → Apps → PDF Seva → Permissions). On Android 11+, 'All files access' may be required for broad browsing."
   ,"help_faq_troubleshooting_2_question": "Why did my action fail or produce an empty output?"
   ,"help_faq_troubleshooting_2_answer": "Common causes are selecting the wrong file type (e.g., protected PDF for actions that require unprotected), selecting too few files, or missing storage permissions. Re-try the action and ensure the selection rules shown on the picker are satisfied."
   ,"settings_about_pdf_kit_title": "About PDF Seva"
@@ -652,13 +652,30 @@
 
   ,"progress_dialog_keep_open": "Please keep the app open while we finish."
   ,"progress_dialog_merging_title": "Merging PDF"
+  ,"progress_dialog_protecting_title": "Protecting PDF"
+  ,"progress_dialog_unlocking_title": "Unlocking PDF"
 
   ,"progress_stage_preparing": "Preparing…"
   ,"progress_stage_starting": "Starting…"
   ,"progress_stage_analyzing_pdf": "Analyzing PDF…"
   ,"progress_stage_compressing": "Compressing…"
   ,"progress_stage_finalizing": "Finalizing…"
+  ,"progress_stage_validating_inputs": "Validating inputs"
+  ,"progress_stage_encrypting_pdf": "Encrypting PDF"
+  ,"progress_stage_decrypting_pdf": "Decrypting PDF"
+  ,"progress_stage_writing_output": "Writing output"
+  ,"progress_stage_cleaning_up": "Cleaning up"
   ,"progress_stage_done": "Done"
+  
+  ,"error_file_not_found": "PDF file not found"
+  ,"error_invalid_password": "Password cannot be empty"
+  ,"error_incorrect_password": "Incorrect password. Please try again."
+  ,"error_failed_create_protected_pdf": "Failed to create protected PDF"
+  ,"error_failed_create_unlocked_pdf": "Failed to create unlocked PDF"
+  ,"error_failed_protect_pdf": "Failed to protect PDF"
+  ,"error_failed_unlock_pdf": "Failed to unlock PDF"
+  ,"error_failed_check_pdf": "Failed to check PDF"
+  ,"error_file_read_write": "File error"
   ,"snackbar_merge_done": "Merge completed successfully"
   ,"snackbar_compress_done": "Compression completed successfully"
   ,"snackbar_images_to_pdf_done": "PDF created successfully"

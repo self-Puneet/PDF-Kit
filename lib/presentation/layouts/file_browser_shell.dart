@@ -338,8 +338,8 @@ class _FileBrowserShellState extends State<FileBrowserShell> with RouteAware {
     await showModalBottomSheet(
       context: context,
       useRootNavigator: true,
-      backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),

@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/models/functionality_list.dart';
 import 'package:pdf_kit/models/functionality_model.dart';
@@ -10,6 +11,7 @@ import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:pdf_kit/service/open_service.dart';
 import 'package:pdf_kit/presentation/sheets/rename_file_sheet.dart';
 import 'package:pdf_kit/service/file_service.dart';
+import 'package:pdf_kit/providers/theme_provider.dart';
 
 /// HOME TAB
 class HomeTab extends StatefulWidget {
@@ -90,6 +92,23 @@ class _HomeTabState extends State<HomeTab> {
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
           const Spacer(),
+          IconButton(
+            icon: Icon(
+              Theme.of(context).brightness == Brightness.dark
+                  ? Icons.light_mode_outlined
+                  : Icons.dark_mode_outlined,
+            ),
+            onPressed: () {
+              final isDark = Theme.of(context).brightness == Brightness.dark;
+              Provider.of<ThemeProvider>(
+                context,
+                listen: false,
+              ).setTheme(isDark ? 'light' : 'dark');
+            },
+            tooltip: Theme.of(context).brightness == Brightness.dark
+                ? 'Switch to Light Mode'
+                : 'Switch to Dark Mode',
+          ),
           IconButton(
             icon: const Icon(Icons.bug_report_outlined),
             onPressed: () async {
@@ -391,17 +410,23 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
             ),
             const SizedBox(height: 8),
             Expanded(
-              child: ListView.separated(
-                itemCount: files.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final file = files[index];
-                  return DocEntryCard(
-                    info: file,
-                    onOpen: () => OpenService.open(file.path),
-                    onMenu: (action) => _handleFileMenu(file, action),
-                  );
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  setState(() => _loadRecentFiles());
+                  await _recentFilesFuture;
                 },
+                child: ListView.separated(
+                  itemCount: files.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final file = files[index];
+                    return DocEntryCard(
+                      info: file,
+                      onOpen: () => OpenService.open(file.path),
+                      onMenu: (action) => _handleFileMenu(file, action),
+                    );
+                  },
+                ),
               ),
             ),
           ],

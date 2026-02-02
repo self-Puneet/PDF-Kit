@@ -197,7 +197,7 @@
     "placeholders": { "fileName": { "type": "String" } }
   }
 
-  ,"home_brand_title": "PDF Kit"
+  ,"home_brand_title": "PDF Seva"
   ,"home_get_started_title": "Comece a trabalhar com seus PDFs"
   ,"home_get_started_message": "Digitalize documentos ou importe arquivos para vê-los aqui."
   ,"home_get_started_scan": "Digitalizar documento"

@@ -57,6 +57,16 @@ class SettingsTile extends StatelessWidget {
     return Card(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
+      color: Theme.of(context).cardColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: Theme.of(context).brightness == Brightness.light
+            ? BorderSide(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                width: 1,
+              )
+            : BorderSide.none,
+      ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
         leading: leading,

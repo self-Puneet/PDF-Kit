@@ -27,7 +27,7 @@ class PdfProtectionService {
   }) async {
     final stopwatch = Stopwatch()..start();
     try {
-      _report(onProgress, 0.03, 'Validating inputs');
+      _report(onProgress, 0.03, 'progress_stage_validating_inputs');
       // Validate password
       if (password.isEmpty) {
         return const Left(InvalidPasswordFailure());
@@ -39,7 +39,7 @@ class PdfProtectionService {
         return const Left(FileNotFoundFailure());
       }
 
-      _report(onProgress, 0.18, 'Encrypting PDF');
+      _report(onProgress, 0.18, 'progress_stage_encrypting_pdf');
       // Use ares_defence_labs_lock_smith_pdf to protect the PDF.
       final String outputPath = _outputPathFor(pdfPath, '_protected');
 
@@ -49,27 +49,27 @@ class PdfProtectionService {
         password: password,
       );
 
-      _report(onProgress, 0.78, 'Writing output');
+      _report(onProgress, 0.78, 'progress_stage_writing_output');
 
       // Replace original with protected output
       final File outFile = File(outputPath);
       if (!await outFile.exists()) {
         return const Left(
-          PdfProtectionFailure('Failed to create protected PDF'),
+          PdfProtectionFailure('error_failed_create_protected_pdf'),
         );
       }
 
       final List<int> bytes = await outFile.readAsBytes();
       await pdfFile.writeAsBytes(bytes);
 
-      _report(onProgress, 0.92, 'Cleaning up');
+      _report(onProgress, 0.92, 'progress_stage_cleaning_up');
 
       // Clean up temporary file
       try {
         await outFile.delete();
       } catch (_) {}
 
-      _report(onProgress, 1.0, 'Done');
+      _report(onProgress, 1.0, 'progress_stage_done');
 
       stopwatch.stop();
       int pageCount = 0;
@@ -86,12 +86,10 @@ class PdfProtectionService {
 
       return Right(pdfPath);
     } on FileSystemException catch (e) {
-      return Left(FileReadWriteFailure('File error: ${e.message}'));
+      return Left(FileReadWriteFailure('error_file_read_write'));
     } catch (e) {
       debugPrint('❌ [PdfProtectionService] Error protecting PDF: $e');
-      return Left(
-        PdfProtectionFailure('Failed to protect PDF: ${e.toString()}'),
-      );
+      return const Left(PdfProtectionFailure('error_failed_protect_pdf'));
     }
   }
 
@@ -160,9 +158,7 @@ class PdfProtectionService {
             );
         return Right(isEncrypted);
       } catch (pluginError) {
-        return Left(
-          PdfProtectionFailure('Failed to check PDF: ${e.toString()}'),
-        );
+        return const Left(PdfProtectionFailure('error_failed_check_pdf'));
       }
     }
   }
@@ -175,7 +171,7 @@ class PdfProtectionService {
   }) async {
     final stopwatch = Stopwatch()..start();
     try {
-      _report(onProgress, 0.03, 'Validating inputs');
+      _report(onProgress, 0.03, 'progress_stage_validating_inputs');
       // Validate password
       if (password.isEmpty) {
         return const Left(InvalidPasswordFailure());
@@ -189,7 +185,7 @@ class PdfProtectionService {
 
       // Try to load the PDF with password
       try {
-        _report(onProgress, 0.18, 'Decrypting PDF');
+        _report(onProgress, 0.18, 'progress_stage_decrypting_pdf');
         final String outputPath = _outputPathFor(pdfPath, '_unlocked');
 
         await AresDefenceLabsLocksmithPdf.decryptPdf(
@@ -198,25 +194,25 @@ class PdfProtectionService {
           password: password,
         );
 
-        _report(onProgress, 0.78, 'Writing output');
+        _report(onProgress, 0.78, 'progress_stage_writing_output');
 
         final File outFile = File(outputPath);
         if (!await outFile.exists()) {
           return const Left(
-            PdfProtectionFailure('Failed to create unlocked PDF'),
+            PdfProtectionFailure('error_failed_create_unlocked_pdf'),
           );
         }
 
         final List<int> bytes = await outFile.readAsBytes();
         await pdfFile.writeAsBytes(bytes);
 
-        _report(onProgress, 0.92, 'Cleaning up');
+        _report(onProgress, 0.92, 'progress_stage_cleaning_up');
 
         try {
           await outFile.delete();
         } catch (_) {}
 
-        _report(onProgress, 1.0, 'Done');
+        _report(onProgress, 1.0, 'progress_stage_done');
 
         stopwatch.stop();
         // Get page count
@@ -242,18 +238,14 @@ class PdfProtectionService {
         if (e.toString().toLowerCase().contains('password') ||
             e.toString().toLowerCase().contains('invalid') ||
             e.toString().toLowerCase().contains('encrypted')) {
-          return const Left(
-            PdfProtectionFailure('Incorrect password. Please try again.'),
-          );
+          return const Left(PdfProtectionFailure('error_incorrect_password'));
         }
         rethrow;
       }
     } on FileSystemException catch (e) {
-      return Left(FileReadWriteFailure('File error: ${e.message}'));
+      return const Left(FileReadWriteFailure('error_file_read_write'));
     } catch (e) {
-      return Left(
-        PdfProtectionFailure('Failed to unlock PDF: ${e.toString()}'),
-      );
+      return const Left(PdfProtectionFailure('error_failed_unlock_pdf'));
     }
   }
 

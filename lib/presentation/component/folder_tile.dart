@@ -22,10 +22,18 @@ class FolderEntryCard extends StatelessWidget {
         : info.readableSize;
 
     return Material(
-      color: Colors.black.withAlpha(28),
+      color: Theme.of(context).cardColor,
       shadowColor: Colors.black.withAlpha(28),
       elevation: 2,
-      borderRadius: BorderRadius.circular(12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: Theme.of(context).brightness == Brightness.light
+            ? BorderSide(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                width: 1,
+              )
+            : BorderSide.none,
+      ),
 
       child: InkWell(
         borderRadius: BorderRadius.circular(12),

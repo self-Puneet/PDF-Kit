@@ -333,8 +333,8 @@
   ,"help_clear_tooltip": "साफ़ करें"
   ,"help_no_results": "कोई प्रश्न नहीं मिला। कृपया अन्य खोज करें।"
   
-  ,"help_faq_general_1_question": "PDF Kit से मैं क्या कर सकता हूँ?"
-  ,"help_faq_general_1_answer": "PDF Kit आपके डिवाइस पर पीडीएफ और फ़ाइलों को मैनेज करने में मदद करता है। आप मर्ज, स्प्लिट, कंप्रेस, पेज रीऑर्डर, इमेज को पीडीएफ में कन्वर्ट, पीडीएफ को इमेज में कन्वर्ट, और पासवर्ड प्रोटेक्शन ऐड/रिमूव कर सकते हैं।"
+  ,"help_faq_general_1_question": "PDF सेवा से मैं क्या कर सकता हूँ?"
+  ,"help_faq_general_1_answer": "PDF सेवा आपके डिवाइस पर पीडीएफ और फ़ाइलों को मैनेज करने में मदद करता है। आप मर्ज, स्प्लिट, कंप्रेस, पेज रीऑर्डर, इमेज को पीडीएफ में कन्वर्ट, पीडीएफ को इमेज में कन्वर्ट, और पासवर्ड प्रोटेक्शन ऐड/रिमूव कर सकते हैं।"
   ,"help_faq_general_2_question": "मेरी जेनरेट की गई पीडीएफ कहाँ सेव होती है?"
   ,"help_faq_general_2_answer": "आउटपुट उस डेस्टिनेशन फ़ोल्डर में सेव होता है जो फ़्लो के दौरान चुना गया था। आप सेटिंग्स → डिफ़ॉल्ट सेव लोकेशन से डिफ़ॉल्ट फ़ोल्डर भी सेट कर सकते हैं।"
   ,"help_faq_general_3_question": "डिफ़ॉल्ट सेव लोकेशन कैसे बदलें?"
@@ -361,7 +361,7 @@
   ,"help_faq_files_2_answer": "फ़ाइल एक्सप्लोरर स्क्रीन (Files/Search) में सर्च फ़ीचर का उपयोग करें। आप होम स्क्रीन से Recent Files भी खोल सकते हैं और हाल के डॉक्युमेंट फिर से खोल सकते हैं।"
   
   ,"help_faq_troubleshooting_1_question": "मैं अपनी फ़ाइलें या फ़ोल्डर नहीं देख पा रहा। क्या करूँ?"
-  ,"help_faq_troubleshooting_1_answer": "यह आमतौर पर परमिशन की समस्या है। Android पर, जब पूछा जाए तो स्टोरेज/फ़ाइल एक्सेस अलाउ करें (या सिस्टम सेटिंग्स → ऐप्स → PDF Kit → Permissions से)। Android 11+ पर, ब्रॉड ब्राउज़िंग के लिए 'All files access' की ज़रूरत हो सकती है।"
+  ,"help_faq_troubleshooting_1_answer": "यह आमतौर पर परमिशन की समस्या है। Android पर, जब पूछा जाए तो स्टोरेज/फ़ाइल एक्सेस अलाउ करें (या सिस्टम सेटिंग्स → ऐप्स → PDF सेवा → Permissions से)। Android 11+ पर, ब्रॉड ब्राउज़िंग के लिए 'All files access' की ज़रूरत हो सकती है।"
   ,"help_faq_troubleshooting_2_question": "मेरा एक्शन फ़ेल क्यों हुआ या एम्प्टी आउटपुट क्यों मिला?"
   ,"help_faq_troubleshooting_2_answer": "आम कारण हैं गलत फ़ाइल टाइप सेलेक्ट करना (जैसे प्रोटेक्टेड पीडीएफ उन एक्शन के लिए जिन्हें अनप्रोटेक्टेड चाहिए), बहुत कम फ़ाइलें सेलेक्ट करना, या स्टोरेज परमिशन मिसिंग होना। एक्शन फिर से ट्राई करें और सुनिश्चित करें कि पिकर पर दिखाए गए सिलेक्शन रूल्स सैटिस्फ़ाई हों।"
   ,"settings_about_pdf_kit_title": "PDF Seva के बारे में"
@@ -646,7 +646,43 @@
 "selection_error_pdf_not_protected": "यह PDF पासवर्ड से प्रोटेक्टेड नहीं है।",
 "selection_error_pdf_protected": "प्रोटेक्टेड PDF पर यह एक्शन संभव नहीं। पहले इसे अनलॉक करें।",
 "snackbar_file_renamed": "फ़ाइल सफलतापूर्वक रीनेम की गई",
-"snackbar_removed_from_recent": "हाल की फ़ाइलों से हटाया गया"
+"snackbar_removed_from_recent": "हाल की फ़ाइलों से हटाया गया",
+
+"progress_dialog_keep_open": "कृपया ऐप को open रखें जब तक हम finish करें।",
+"progress_dialog_merging_title": "PDF Merge हो रहा है",
+"progress_dialog_protecting_title": "PDF Protect हो रहा है",
+"progress_dialog_unlocking_title": "PDF Unlock हो रहा है",
+
+"progress_stage_preparing": "तैयारी हो रही है…",
+"progress_stage_starting": "शुरू हो रहा है…",
+"progress_stage_analyzing_pdf": "PDF का विश्लेषण हो रहा है…",
+"progress_stage_compressing": "Compress हो रहा है…",
+"progress_stage_finalizing": "अंतिम रूप दे रहे हैं…",
+"progress_stage_validating_inputs": "Inputs की जांच हो रही है",
+"progress_stage_encrypting_pdf": "PDF encrypt हो रहा है",
+"progress_stage_decrypting_pdf": "PDF decrypt हो रहा है",
+"progress_stage_writing_output": "Output लिखा जा रहा है",
+"progress_stage_cleaning_up": "साफ़ किया जा रहा है",
+"progress_stage_done": "पूर्ण",
+
+"error_file_not_found": "PDF फ़ाइल नहीं मिली",
+"error_invalid_password": "Password खाली नहीं हो सकता",
+"error_incorrect_password": "गलत password। कृपया फिर से प्रयास करें।",
+"error_failed_create_protected_pdf": "Protected PDF बनाने में विफल",
+"error_failed_create_unlocked_pdf": "Unlocked PDF बनाने में विफल",
+"error_failed_protect_pdf": "PDF protect करने में विफल",
+"error_failed_unlock_pdf": "PDF unlock करने में विफल",
+"error_failed_check_pdf": "PDF की जांच में विफल",
+"error_file_read_write": "फ़ाइल error",
+
+"snackbar_merge_done": "Merge सफलतापूर्वक पूर्ण हुआ",
+"snackbar_compress_done": "Compression सफलतापूर्वक पूर्ण हुआ",
+"snackbar_images_to_pdf_done": "PDF सफलतापूर्वक बनाया गया",
+"snackbar_pdf_to_image_done": "Images सफलतापूर्वक बनाई गईं",
+"snackbar_split_done": "Split सफलतापूर्वक पूर्ण हुआ",
+"snackbar_protect_done": "PDF सफलतापूर्वक protect किया गया",
+"snackbar_unlock_done": "PDF सफलतापूर्वक unlock किया गया",
+"snackbar_reorder_done": "Reorder सफलतापूर्वक पूर्ण हुआ"
 
 
 }

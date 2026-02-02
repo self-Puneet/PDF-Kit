@@ -27,6 +27,9 @@ class FunctionButton extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: tint.withAlpha((0.12 * 255).toInt()),
                   shape: BoxShape.circle,
+                  border: Theme.of(context).brightness == Brightness.dark
+                      ? Border.all(color: tint.withOpacity(0.3), width: 1.5)
+                      : null,
                 ),
                 child: Icon(data.icon, color: tint, size: 26),
               ),

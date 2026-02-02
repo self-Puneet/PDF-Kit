@@ -196,7 +196,7 @@
     "placeholders": { "fileName": { "type": "String" } }
   }
 
-  ,"home_brand_title": "PDF Kit"
+  ,"home_brand_title": "PDF Seva"
   ,"home_get_started_title": "আপনার PDF দিয়ে শুরু করুন"
   ,"home_get_started_message": "দস্তাবেজ স্ক্যান করুন বা ফাইল আমদানি করুন, সেগুলো এখানে প্রদর্শিত হবে।"
   ,"home_get_started_scan": "দস্তাবেজ স্ক্যান করুন"

@@ -515,7 +515,7 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
         return Scaffold(
           appBar: AppBar(
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              icon: const Icon(Icons.arrow_back),
               onPressed: () => context.pop(),
             ),
           ),
@@ -771,8 +771,14 @@ class _RangeInputWidget extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? Colors.grey.shade200 : Colors.grey.shade300,
+          color: isActive ? theme.cardColor : theme.cardColor.withOpacity(0.5),
           borderRadius: BorderRadius.circular(8),
+          border: theme.brightness == Brightness.light
+              ? Border.all(
+                  color: theme.colorScheme.outline.withOpacity(0.2),
+                  width: 1,
+                )
+              : null,
         ),
         child: Opacity(
           opacity: opacity,
@@ -785,14 +791,16 @@ class _RangeInputWidget extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isActive
                       ? theme.colorScheme.primary
-                      : Colors.grey.shade400,
+                      : theme.colorScheme.outline.withOpacity(0.5),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
                     '${index + 1}',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: isActive
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onSurface.withOpacity(0.6),
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),

@@ -197,7 +197,7 @@
     "placeholders": { "fileName": { "type": "String" } }
   }
 
-  ,"home_brand_title": "PDF Kit"
+  ,"home_brand_title": "PDF Seva"
   ,"home_get_started_title": "Commencez avec vos PDF"
   ,"home_get_started_message": "Scannez des documents ou importez des fichiers pour les voir ici."
   ,"home_get_started_scan": "Scanner un document"

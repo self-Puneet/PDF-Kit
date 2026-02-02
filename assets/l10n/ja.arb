@@ -197,7 +197,7 @@
     "placeholders": { "fileName": { "type": "String" } }
   }
 
-  ,"home_brand_title": "PDF Kit"
+  ,"home_brand_title": "PDF Seva"
   ,"home_get_started_title": "PDFの利用を開始する"
   ,"home_get_started_message": "文書をスキャンするかファイルをインポートすると、ここに表示されます。"
   ,"home_get_started_scan": "文書をスキャン"

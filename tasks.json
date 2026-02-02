@@ -1,0 +1,3 @@
+{
+    "issues" : ["provider of file system need to track if the pdf is protected or not setted by the protect service. if protected pdf it is than the rendering of the component of the document tile will be changed", ""]
+}

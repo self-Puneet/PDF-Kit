@@ -197,13 +197,14 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
                 icon: const Icon(Icons.checklist),
                 label: Text(selectedLabel),
                 style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
+                  elevation: WidgetStateProperty.all(0),
                   backgroundColor: WidgetStateProperty.resolveWith<Color?>((
                     states,
                   ) {
                     if (states.contains(WidgetState.disabled)) {
                       return null;
                     }
-                    return Theme.of(context).colorScheme.primary.withAlpha(15);
+                    return Theme.of(context).colorScheme.primary.withAlpha(40);
                   }),
                   iconColor: WidgetStateProperty.resolveWith<Color?>((states) {
                     if (states.contains(WidgetState.disabled)) {
@@ -217,6 +218,7 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
                     if (states.contains(WidgetState.disabled)) return null;
                     return theme.colorScheme.primary;
                   }),
+                  side: WidgetStateProperty.all(BorderSide.none),
                 ),
               ),
             ),
