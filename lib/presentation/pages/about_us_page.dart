@@ -40,7 +40,9 @@ class AboutUsPage extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: cs.surface,
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.white
+                      : cs.surface,
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(
                     color: cs.outlineVariant.withValues(alpha: 0.35),

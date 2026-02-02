@@ -357,16 +357,20 @@ class _PdfPageSelectorState extends State<PdfPageSelector> {
               final pageNum = index + 1;
               final isSelected = _selectedPages.contains(pageNum);
 
-              return PdfPageThumbnail(
-                key: ValueKey(pageNum),
-                pageNum: pageNum,
-                isSelected: isSelected,
-                thumbnailBytes: _pageCache[pageNum],
-                rotation: 0.0,
-                onToggle: () => _togglePage(pageNum),
-                showRotateButton: false,
-                showRemoveButton: false,
-                showSelectButton: true,
+              return InkWell(
+                onTap: () => _togglePage(pageNum),
+                borderRadius: BorderRadius.circular(12),
+                child: PdfPageThumbnail(
+                  key: ValueKey(pageNum),
+                  pageNum: pageNum,
+                  isSelected: isSelected,
+                  thumbnailBytes: _pageCache[pageNum],
+                  rotation: 0.0,
+                  onToggle: () => _togglePage(pageNum),
+                  showRotateButton: false,
+                  showRemoveButton: false,
+                  showSelectButton: true,
+                ),
               );
             },
           ),

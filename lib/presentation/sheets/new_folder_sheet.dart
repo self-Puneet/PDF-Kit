@@ -131,8 +131,11 @@ Future<void> showNewFolderSheet({
                               child: TextButton(
                                 onPressed: () => Navigator.of(ctx).maybePop(),
                                 style: TextButton.styleFrom(
-                                  backgroundColor: const Color(0xFFE9EDFF),
-                                  foregroundColor: const Color(0xFF3D5AFE),
+                                  backgroundColor: theme
+                                      .colorScheme
+                                      .primaryContainer
+                                      .withOpacity(0.3),
+                                  foregroundColor: theme.colorScheme.primary,
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 16,
                                   ),

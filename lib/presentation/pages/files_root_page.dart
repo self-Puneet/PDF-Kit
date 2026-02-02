@@ -216,6 +216,15 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
       params['fileType'] = widget.fileType!;
     }
 
+    // CRITICAL: Pass the 'op' parameter so routing works correctly
+    final currentOp = GoRouterState.of(context).uri.queryParameters['op'];
+    if (currentOp != null && currentOp.isNotEmpty) {
+      params['op'] = currentOp;
+      debugPrint(
+        '🔗 [FilesRootPage] Passing op="$currentOp" to folder navigation',
+      );
+    }
+
     context.pushNamed(routeName, queryParameters: params);
   }
 

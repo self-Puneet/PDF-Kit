@@ -279,6 +279,15 @@ class _BreadcrumbChip extends StatelessWidget {
       params['actionText'] = selectionActionText!;
     }
 
+    // CRITICAL: Pass the 'op' parameter so routing works correctly
+    final currentOp = GoRouterState.of(context).uri.queryParameters['op'];
+    if (currentOp != null && currentOp.isNotEmpty) {
+      params['op'] = currentOp;
+      debugPrint(
+        '🔗 [Breadcrumb] Passing op="$currentOp" to folder navigation',
+      );
+    }
+
     // Use go() instead of pushNamed() to replace current route
     // This properly manages the navigation stack
     context.goNamed(routeName, queryParameters: params);

@@ -16,6 +16,9 @@ List<Functionality> getActions(BuildContext context) {
       color: Colors.indigo,
       onPressed: (context) async {
         final selectionId = 'merge_${DateTime.now().microsecondsSinceEpoch}';
+        debugPrint(
+          '🔵 [Functionality] MERGE clicked - selectionId: $selectionId',
+        );
         try {
           final mgr = Get.find<SelectionManager>();
           final provider = mgr.of(selectionId);
@@ -26,6 +29,7 @@ List<Functionality> getActions(BuildContext context) {
 
         if (!context.mounted) return;
 
+        debugPrint('🔵 [Functionality] MERGE navigating with op="merge"');
         final result = await context.pushNamed(
           AppRouteName.filesRootFullscreen,
           queryParameters: {
@@ -85,12 +89,16 @@ List<Functionality> getActions(BuildContext context) {
       color: Colors.deepPurple,
       onPressed: (context) async {
         final selectionId = 'split_${DateTime.now().microsecondsSinceEpoch}';
+        debugPrint(
+          '✂️ [Functionality] SPLIT clicked - selectionId: $selectionId',
+        );
         try {
           final mgr = Get.find<SelectionManager>();
           final provider = mgr.of(selectionId);
           provider.setFileType('pdf');
         } catch (_) {}
 
+        debugPrint('✂️ [Functionality] SPLIT navigating with op="split"');
         final result = await context.pushNamed(
           AppRouteName.filesRootFullscreen,
           queryParameters: {
@@ -123,12 +131,16 @@ List<Functionality> getActions(BuildContext context) {
       color: Colors.green,
       onPressed: (context) async {
         final selectionId = 'protect_${DateTime.now().microsecondsSinceEpoch}';
+        debugPrint(
+          '🔒 [Functionality] PROTECT clicked - selectionId: $selectionId',
+        );
         try {
           final mgr = Get.find<SelectionManager>();
           final provider = mgr.of(selectionId);
           provider.setFileType('pdf');
         } catch (_) {}
 
+        debugPrint('🔒 [Functionality] PROTECT navigating with op="protect"');
         final result = await context.pushNamed(
           AppRouteName.filesRootFullscreen,
           queryParameters: {
@@ -256,12 +268,16 @@ List<Functionality> getActions(BuildContext context) {
       color: Colors.brown,
       onPressed: (context) async {
         final selectionId = 'reorder_${DateTime.now().microsecondsSinceEpoch}';
+        debugPrint(
+          '🔄 [Functionality] REORDER clicked - selectionId: $selectionId',
+        );
         try {
           final mgr = Get.find<SelectionManager>();
           final provider = mgr.of(selectionId);
           provider.setFileType('pdf');
         } catch (_) {}
 
+        debugPrint('🔄 [Functionality] REORDER navigating with op="reorder"');
         final result = await context.pushNamed(
           AppRouteName.filesRootFullscreen,
           queryParameters: {

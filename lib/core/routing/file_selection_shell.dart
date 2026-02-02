@@ -9,19 +9,41 @@ import 'package:pdf_kit/presentation/layouts/file_browser_shell.dart'; // [NEW]
 
 final Set<String> _autoOpenedSelectionIds = <String>{};
 
-String _normalizeOp(String? op) => (op ?? '').trim().toLowerCase();
+String _normalizeOp(String? op) {
+  final normalized = (op ?? '').trim().toLowerCase();
+  debugPrint('🔧 [_normalizeOp] Input: "$op" → Output: "$normalized"');
+  return normalized;
+}
 
 String _opFromActionText(String? actionText) {
   final action = (actionText ?? '').toLowerCase();
-  if (action.contains('unlock')) return 'unlock';
-  if (action.contains('protect')) return 'protect';
-  if (action.contains('compress')) return 'compress';
-  if (action.contains('sign')) return 'sign';
-  if (action.contains('images to pdf')) return 'images_to_pdf';
-  if (action.contains('reorder')) return 'reorder';
-  if (action.contains('split')) return 'split';
-  if (action.contains('image')) return 'pdf_to_image';
-  return 'merge';
+  debugPrint(
+    '🔍 [_opFromActionText] actionText: "$actionText" → lowercase: "$action"',
+  );
+
+  String result;
+  if (action.contains('unlock')) {
+    result = 'unlock';
+  } else if (action.contains('protect')) {
+    result = 'protect';
+  } else if (action.contains('compress')) {
+    result = 'compress';
+  } else if (action.contains('sign')) {
+    result = 'sign';
+  } else if (action.contains('images to pdf')) {
+    result = 'images_to_pdf';
+  } else if (action.contains('reorder')) {
+    result = 'reorder';
+  } else if (action.contains('split')) {
+    result = 'split';
+  } else if (action.contains('image')) {
+    result = 'pdf_to_image';
+  } else {
+    result = 'merge';
+  }
+
+  debugPrint('🔍 [_opFromActionText] Result: "$result"');
+  return result;
 }
 
 void _pushOperationRoute({
@@ -31,11 +53,20 @@ void _pushOperationRoute({
   int? minSelectable,
   int? maxSelectable,
 }) {
+  debugPrint('🚀 [_pushOperationRoute] Called with:');
+  debugPrint('   op: "$op"');
+  debugPrint('   selectionId: "$selectionId"');
+  debugPrint('   min: $minSelectable, max: $maxSelectable');
+
   final q = <String, String>{'selectionId': selectionId};
   if (minSelectable != null) q['min'] = minSelectable.toString();
   if (maxSelectable != null) q['max'] = maxSelectable.toString();
 
-  switch (_normalizeOp(op)) {
+  final normalizedOp = _normalizeOp(op);
+  debugPrint('🚀 [_pushOperationRoute] Normalized op: "$normalizedOp"');
+  debugPrint('🚀 [_pushOperationRoute] Entering switch statement...');
+
+  switch (normalizedOp) {
     case 'unlock':
       rootNavKey.currentContext!.pushNamed(
         AppRouteName.unlockPdf,
@@ -102,6 +133,11 @@ ShellRoute buildSelectionShellRoute({
   ShellRoute(
     parentNavigatorKey: rootNavKey,
     builder: (context, state, child) {
+      debugPrint('🏗️ [ShellRoute] Builder called for path: ${state.uri.path}');
+      debugPrint(
+        '🏗️ [ShellRoute] Query parameters: ${state.uri.queryParameters}',
+      );
+
       final actionId = state.uri.queryParameters['actionId'];
       final actionText = state.uri.queryParameters['actionText'];
       final selectionId = state.uri.queryParameters['selectionId'];
@@ -113,6 +149,11 @@ ShellRoute buildSelectionShellRoute({
       // final fileType = state.uri.queryParameters['fileType'];
       final maxSelectable = int.tryParse(maxStr ?? '');
       final minSelectable = int.tryParse(minStr ?? '');
+
+      debugPrint('🏗️ [ShellRoute] Extracted params:');
+      debugPrint('   opParam: "$opParam"');
+      debugPrint('   actionText: "$actionText"');
+      debugPrint('   selectionId: "$selectionId"');
 
       SelectionProvider? provided;
       if (selectionId != null) {
@@ -126,6 +167,8 @@ ShellRoute buildSelectionShellRoute({
       final op = _normalizeOp(opParam).isNotEmpty
           ? _normalizeOp(opParam)
           : _opFromActionText(actionText);
+
+      debugPrint('🏗️ [ShellRoute] Determined op: "$op"');
 
       // Auto-open operation page (used by the viewer options sheet) while
       // keeping the selection UI underneath for "Add more" flows.
@@ -153,7 +196,14 @@ ShellRoute buildSelectionShellRoute({
         minSelectable: minSelectable,
         allowed: allowed,
         onAction: (files) {
+          debugPrint('🎬 [onAction] Called with ${files.length} files');
+          debugPrint('🎬 [onAction] selectionId: "$selectionId"');
+          debugPrint('🎬 [onAction] op: "$op"');
+
           if (selectionId != null) {
+            debugPrint(
+              '🎬 [onAction] Has selectionId, calling _pushOperationRoute',
+            );
             _pushOperationRoute(
               rootNavKey: rootNavKey,
               op: op,
@@ -163,6 +213,8 @@ ShellRoute buildSelectionShellRoute({
             );
             return;
           }
+
+          debugPrint('🎬 [onAction] No selectionId, using fallback logic');
 
           // No selectionId -> fall back to actionId-based callbacks.
           if (actionId != null) {

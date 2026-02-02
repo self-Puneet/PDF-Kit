@@ -229,11 +229,10 @@ class _RecentFilesSectionState extends State<RecentFilesSection> {
   }
 
   void _handleFileOpen(FileInfo file) {
-    debugPrint('🔓 [RecentFilesSection] Opening file: ${file.name}');
-    context.pushNamed(
-      AppRouteName.showPdf,
-      queryParameters: {'path': file.path},
+    debugPrint(
+      '🔓 [RecentFilesSection] Opening file with native opener: ${file.name}',
     );
+    OpenService.open(file.path);
   }
 
   Future<void> _handleFileDelete(FileInfo file) async {

@@ -70,17 +70,24 @@ class _DocEntryCardState extends State<DocEntryCard> {
   static final Map<String, _Thumb> _cache = {};
   late Future<_Thumb?> _thumbnailFuture; // Cache the future itself
 
-  bool get _isPdf => widget.info.extension.toLowerCase() == 'pdf';
-  bool get _isImage => const {
-    'jpg',
-    'jpeg',
-    'png',
-    'gif',
-    'webp',
-    'bmp',
-    'heic',
-    'heif',
-  }.contains(widget.info.extension.toLowerCase());
+  bool get _isPdf {
+    final ext = widget.info.extension.toLowerCase().replaceFirst('.', '');
+    return ext == 'pdf';
+  }
+
+  bool get _isImage {
+    final ext = widget.info.extension.toLowerCase().replaceFirst('.', '');
+    return const {
+      'jpg',
+      'jpeg',
+      'png',
+      'gif',
+      'webp',
+      'bmp',
+      'heic',
+      'heif',
+    }.contains(ext);
+  }
 
   int? _pageCount; // for PDFs only
 
@@ -295,8 +302,6 @@ class _DocEntryCardState extends State<DocEntryCard> {
           ? Theme.of(context).cardColor.withOpacity(0.5)
           : Theme.of(context).cardColor,
 
-          
-
       shadowColor: Colors.black.withAlpha(28),
       elevation: 2,
       child: InkWell(
@@ -336,7 +341,7 @@ class _DocEntryCardState extends State<DocEntryCard> {
                               height: 56,
                               width: 56,
                               borderRadius: BorderRadiusGeometry.all(
-                                Radius.circular(10),
+                                Radius.circular(12),
                               ),
                             ),
                           ),
@@ -379,7 +384,9 @@ class _DocEntryCardState extends State<DocEntryCard> {
                                       borderRadius: BorderRadius.circular(2),
                                     ),
                                     child: Text(
-                                      widget.info.extension.toUpperCase(),
+                                      widget.info.extension
+                                          .replaceFirst('.', '')
+                                          .toUpperCase(),
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 9,

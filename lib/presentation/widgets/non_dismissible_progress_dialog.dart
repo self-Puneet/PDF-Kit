@@ -99,15 +99,19 @@ class ProgressDialogController {
                       },
                     ),
                     const SizedBox(height: 12),
-                    ValueListenableBuilder<String>(
-                      valueListenable: stage,
-                      builder: (context, value, __) {
-                        return Text(
-                          _localizeStage(context, value),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        );
-                      },
+                    // Fixed height container to prevent flickering
+                    SizedBox(
+                      height: 40, // Fixed height for stage text (2 lines max)
+                      child: ValueListenableBuilder<String>(
+                        valueListenable: stage,
+                        builder: (context, value, __) {
+                          return Text(
+                            _localizeStage(context, value),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          );
+                        },
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(keepOpen),
