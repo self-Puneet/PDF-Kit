@@ -29,7 +29,9 @@ class FolderEntryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         side: Theme.of(context).brightness == Brightness.light
             ? BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.15),
                 width: 1,
               )
             : BorderSide.none,

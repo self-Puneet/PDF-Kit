@@ -86,6 +86,7 @@ class PdfProtectionService {
 
       return Right(pdfPath);
     } on FileSystemException catch (e) {
+      debugPrint('❌ [PdfProtectionService] FileSystemException: $e');
       return Left(FileReadWriteFailure('error_file_read_write'));
     } catch (e) {
       debugPrint('❌ [PdfProtectionService] Error protecting PDF: $e');
@@ -243,6 +244,7 @@ class PdfProtectionService {
         rethrow;
       }
     } on FileSystemException catch (e) {
+      debugPrint('❌ [PdfProtectionService] FileSystemException: $e');
       return const Left(FileReadWriteFailure('error_file_read_write'));
     } catch (e) {
       return const Left(PdfProtectionFailure('error_failed_unlock_pdf'));
@@ -252,8 +254,8 @@ class PdfProtectionService {
   static String _outputPathFor(String inputPath, String suffix) {
     final lower = inputPath.toLowerCase();
     if (lower.endsWith('.pdf')) {
-      return inputPath.substring(0, inputPath.length - 4) + suffix + '.pdf';
+      return '${inputPath.substring(0, inputPath.length - 4)}$suffix.pdf';
     }
-    return inputPath + suffix + '.pdf';
+    return '$inputPath$suffix.pdf';
   }
 }

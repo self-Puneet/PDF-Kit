@@ -93,11 +93,13 @@ class LanguageSettingsPage extends StatelessWidget {
                     // `snackbarKey`, after it reflects the new locale.
                     for (var i = 0; i < 10; i++) {
                       final appCtx = snackbarKey.currentContext;
-                      final appLocale = appCtx != null
+                      final appLocale = appCtx != null && appCtx.mounted
                           ? Localizations.maybeLocaleOf(appCtx)
                           : null;
 
-                      if (appCtx != null && appLocale?.languageCode == code) {
+                      if (appCtx != null &&
+                          context.mounted &&
+                          appLocale?.languageCode == code) {
                         final msg = AppLocalizations.of(
                           appCtx,
                         ).t('language_settings_applied_snackbar');
@@ -113,7 +115,7 @@ class LanguageSettingsPage extends StatelessWidget {
 
                     // Fallback: show using whatever app context is available.
                     final appCtx = snackbarKey.currentContext;
-                    if (appCtx == null) return;
+                    if (appCtx == null || !appCtx.mounted) return;
                     final msg = AppLocalizations.of(
                       appCtx,
                     ).t('language_settings_applied_snackbar');

@@ -175,14 +175,13 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
 
   Future<void> _handleFileDelete(FileInfo file) async {
     _rememberTerm(_termFromFileName(file.name));
-    final result = await RecentFilesService.removeRecentFile(file.path);
     final t = AppLocalizations.of(context);
+    final result = await RecentFilesService.removeRecentFile(file.path);
 
     result.fold(
       (error) {
         debugPrint('❌ [RecentFilesSearch] Delete failed: $error');
-        if (mounted) {
-          final msg = t
+        final msg = t
               .t('snackbar_error')
               .replaceAll('{message}', error.toString());
           AppSnackbar.showSnackBar(
@@ -191,7 +190,6 @@ class _RecentFilesSearchPageState extends State<RecentFilesSearchPage> {
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
-        }
       },
       (updatedFiles) {
         debugPrint(

@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pdf_kit/presentation/widget/shimmer.dart';
+import 'package:pdf_kit/presentation/widgets/shimmer.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pdf_kit/models/file_model.dart';
@@ -259,7 +259,7 @@ class _DocEntryCardState extends State<DocEntryCard> {
 
     // Route both PDFs (unprotected) and images to the viewer page
     if (_isPdf || _isImage) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       context.pushNamed(
         AppRouteName.pdfViewer,
         queryParameters: {
@@ -293,13 +293,15 @@ class _DocEntryCardState extends State<DocEntryCard> {
         borderRadius: BorderRadius.circular(12),
         side: Theme.of(context).brightness == Brightness.light
             ? BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.15),
                 width: 1,
               )
             : BorderSide.none,
       ),
       color: widget.disabled
-          ? Theme.of(context).cardColor.withOpacity(0.5)
+          ? Theme.of(context).cardColor.withValues(alpha: 0.5)
           : Theme.of(context).cardColor,
 
       shadowColor: Colors.black.withAlpha(28),
@@ -378,8 +380,8 @@ class _DocEntryCardState extends State<DocEntryCard> {
                                       vertical: 1,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(
-                                        0.6,
+                                      color: Colors.black.withValues(
+                                        alpha: 0.6,
                                       ), // not pure black
                                       borderRadius: BorderRadius.circular(2),
                                     ),
@@ -523,7 +525,7 @@ class _DocEntryCardState extends State<DocEntryCard> {
                   child: Icon(
                     Icons.drag_indicator,
                     color: Theme.of(context).colorScheme.onSurfaceVariant
-                        .withOpacity(widget.disabled ? 0.3 : 1.0),
+                        .withValues(alpha: widget.disabled ? 0.3 : 1.0),
                   ),
                 )
               else if (widget.selectable)
@@ -541,7 +543,9 @@ class _DocEntryCardState extends State<DocEntryCard> {
                           ? Icons.check_box
                           : Icons.check_box_outline_blank,
                       color: widget.disabled
-                          ? Theme.of(context).iconTheme.color?.withOpacity(0.4)
+                          ? Theme.of(
+                              context,
+                            ).iconTheme.color?.withValues(alpha: 0.4)
                           : null,
                     ),
                   ),
@@ -571,7 +575,7 @@ class _DocEntryCardState extends State<DocEntryCard> {
                         Icons.more_vert,
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurfaceVariant.withOpacity(0.3),
+                        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
                       )
                     : PopupMenuButton<String>(
                         onOpened: () {

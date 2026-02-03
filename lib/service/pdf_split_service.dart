@@ -206,9 +206,15 @@ class PdfSplitService {
         );
 
         // Generate output file name
-        final String outputFileName =
+        String outputFileName =
             range.customName ??
             '${baseFileName}_pages_${range.startPage}_to_${range.endPage}.pdf';
+
+        // Handle duplicate filenames
+        outputFileName = _uniqueFileName(
+          baseDir: targetDir.path,
+          baseName: p.basenameWithoutExtension(outputFileName),
+        );
 
         final String outputPath = p.join(targetDir.path, outputFileName);
 
@@ -440,5 +446,18 @@ class PdfSplitService {
     } catch (e) {
       return Left('Failed to open file: ${e.toString()}');
     }
+  }
+
+  static String _uniqueFileName({
+    required String baseDir,
+    required String baseName,
+  }) {
+    var candidate = '$baseName.pdf';
+    var idx = 1;
+    while (File(p.join(baseDir, candidate)).existsSync()) {
+      candidate = '$baseName ($idx).pdf';
+      idx++;
+    }
+    return candidate;
   }
 }

@@ -26,8 +26,8 @@ class ReorderPdfPage extends StatefulWidget {
 }
 
 class _ReorderPdfPageState extends State<ReorderPdfPage> {
-  Set<int> _removedPages = {};
-  Map<int, double> _rotations = {};
+  final Set<int> _removedPages = {};
+  final Map<int, double> _rotations = {};
   List<int> _pageOrder = [];
   bool _isProcessing = false;
   bool _isLoading = true;
@@ -508,7 +508,7 @@ class _ReorderPdfPageState extends State<ReorderPdfPage> {
                             ),
                             decoration: BoxDecoration(
                               color: theme.colorScheme.primaryContainer
-                                  .withOpacity(0.3),
+                                  .withValues(alpha: 0.3),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -616,7 +616,7 @@ class _ReorderPdfPageState extends State<ReorderPdfPage> {
                           if (_isProcessing)
                             Positioned.fill(
                               child: Container(
-                                color: Colors.black.withOpacity(0.3),
+                                color: Colors.black.withValues(alpha: 0.3),
                                 child: Center(
                                   child: Card(
                                     child: Padding(

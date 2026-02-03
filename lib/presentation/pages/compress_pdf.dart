@@ -178,7 +178,9 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
 
           // Navigate to home and clear all routes
           sel.disable();
-          context.go('/');
+          if (context.mounted) {
+            context.go('/');
+          }
 
           // Trigger home page reload
           RecentFilesSection.refreshNotifier.value++;
@@ -199,7 +201,7 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
       } catch (_) {}
 
       smoothTimer.cancel();
-      if (mounted) {
+      if (context.mounted) {
         _progressDialog.dismiss(context);
       }
       progress.dispose();
@@ -321,10 +323,12 @@ class _CompressPdfPageState extends State<CompressPdfPage> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.surfaceContainerHighest
-                              .withOpacity(0.3),
+                              .withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: theme.colorScheme.outline.withOpacity(0.2),
+                            color: theme.colorScheme.outline.withValues(
+                              alpha: 0.2,
+                            ),
                           ),
                         ),
                         child: Column(

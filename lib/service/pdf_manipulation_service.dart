@@ -4,6 +4,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdfx/pdfx.dart' as pdfx;
 import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
 import 'package:pdf_kit/service/analytics_service.dart';
 
 /// 📝 Service for manipulating PDF pages: reordering, rotating, removing.
@@ -162,13 +163,22 @@ class PdfManipulationService {
 
       if (destinationPath != null && destinationPath.isNotEmpty) {
         // Save to specific destination (copy mode)
-        final destFile = File(destinationPath);
+        // Handle duplicate filenames
+        final destDir = p.dirname(destinationPath);
+        final destBaseName = p.basenameWithoutExtension(destinationPath);
+        final uniqueName = _uniqueFileName(
+          baseDir: destDir,
+          baseName: destBaseName,
+        );
+        final finalDestPath = p.join(destDir, uniqueName);
+
+        final destFile = File(finalDestPath);
         // ensure parent exists
         if (!await destFile.parent.exists()) {
           await destFile.parent.create(recursive: true);
         }
         await destFile.writeAsBytes(bytes);
-        debugPrint('💾 [PdfManipulationService] Saved to: $destinationPath');
+        debugPrint('💾 [PdfManipulationService] Saved to: $finalDestPath');
         _report(onProgress, 1.0, 'Done');
 
         // Analytics (duplicate block for copy path)
@@ -190,7 +200,7 @@ class PdfManipulationService {
           timeTaken: stopwatch.elapsed.inMilliseconds / 1000.0,
         );
 
-        return Right(destinationPath);
+        return Right(finalDestPath);
       } else {
         // Overwrite original
         // Write to temp first for safety
@@ -275,8 +285,21 @@ class PdfManipulationService {
   static String _outputPathFor(String inputPath, String suffix) {
     final lower = inputPath.toLowerCase();
     if (lower.endsWith('.pdf')) {
-      return inputPath.substring(0, inputPath.length - 4) + suffix + '.pdf';
+      return '${inputPath.substring(0, inputPath.length - 4)}$suffix.pdf';
     }
-    return inputPath + suffix + '.pdf';
+    return '$inputPath$suffix.pdf';
+  }
+
+  static String _uniqueFileName({
+    required String baseDir,
+    required String baseName,
+  }) {
+    var candidate = '$baseName.pdf';
+    var idx = 1;
+    while (File(p.join(baseDir, candidate)).existsSync()) {
+      candidate = '$baseName ($idx).pdf';
+      idx++;
+    }
+    return candidate;
   }
 }

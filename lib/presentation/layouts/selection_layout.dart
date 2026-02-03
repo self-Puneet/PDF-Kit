@@ -110,7 +110,7 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
   @override
   Widget build(BuildContext context) {
     // Set context for localization
-    provider.setContext(context);
+    // provider.setContext(context);
     return SelectionScope(
       provider: provider,
       child: Scaffold(
@@ -259,9 +259,9 @@ class SelectionScaffoldState extends State<SelectionScaffold> {
 class SelectionScope extends InheritedNotifier<SelectionProvider> {
   const SelectionScope({
     required SelectionProvider provider,
-    required Widget child,
-    Key? key,
-  }) : super(key: key, notifier: provider, child: child);
+    required super.child,
+    super.key,
+  }) : super(notifier: provider);
 
   static SelectionProvider of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<SelectionScope>()!.notifier!;

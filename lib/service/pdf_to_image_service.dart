@@ -133,8 +133,16 @@ class PdfSelectedPagesToImagesService {
 
             final bytes = pageImage.bytes; // Uint8List JPEG bytes. [web:1]
 
-            final fileName =
+            String fileName =
                 '${baseName}_page_${pageIndex.toString().padLeft(3, '0')}.jpg';
+
+            // Handle duplicate filenames
+            fileName = _uniqueFileName(
+              baseDir: baseDir.path,
+              baseName: p.basenameWithoutExtension(fileName),
+              extension: 'jpg',
+            );
+
             final filePath = p.join(baseDir.path, fileName);
             final file = File(filePath);
             _report(onProgress, progress01, 'Saving $fileName');
@@ -197,5 +205,19 @@ class PdfSelectedPagesToImagesService {
       final docsDir = await getApplicationDocumentsDirectory();
       return docsDir;
     }
+  }
+
+  static String _uniqueFileName({
+    required String baseDir,
+    required String baseName,
+    String extension = 'jpg',
+  }) {
+    var candidate = '$baseName.$extension';
+    var idx = 1;
+    while (File(p.join(baseDir, candidate)).existsSync()) {
+      candidate = '$baseName ($idx).$extension';
+      idx++;
+    }
+    return candidate;
   }
 }

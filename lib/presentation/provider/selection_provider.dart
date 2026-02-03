@@ -1,14 +1,12 @@
 // selection_provider.dart - same implementation as before
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/service/pdf_protect_service.dart';
 
 class SelectionProvider extends ChangeNotifier {
   final Map<String, FileInfo> _selected = {};
   final Map<String, int> _rotations = {};
-  List<FileInfo> _orderedFiles = [];
+  List<FileInfo> orderedFiles = [];
   int _mode = 0;
   int? _maxSelectable; // optional upper limit
   int? _minSelectable; // optional lower limit
@@ -16,7 +14,7 @@ class SelectionProvider extends ChangeNotifier {
   String?
   _fileType; // 'all', 'pdf', 'images' - defines the scope of file filtering
   // String? _lastErrorMessage; // surfaced when exceeding limit
-  BuildContext? _context;
+  // BuildContext? _context;
 
   // Cache for PDF protection status checks to avoid repeated file I/O
   final Map<String, bool> _protectionStatusCache = {};
@@ -30,7 +28,7 @@ class SelectionProvider extends ChangeNotifier {
   Map<String, FileInfo> get selected => _selected;
   bool isSelected(String path) => _selected.containsKey(path);
 
-  List<FileInfo> get files => List.unmodifiable(_orderedFiles);
+  List<FileInfo> get files => List.unmodifiable(orderedFiles);
 
   int? get maxSelectable => _maxSelectable;
   int? get minSelectable => _minSelectable;
@@ -41,7 +39,7 @@ class SelectionProvider extends ChangeNotifier {
   int? get lastLimitCount => _lastLimitCount; // NEW
 
   List<MapEntry<FileInfo, int>> get filesWithRotation {
-    return _orderedFiles
+    return orderedFiles
         .map((file) => MapEntry(file, _rotations[file.path] ?? 0))
         .toList(growable: false);
   }
@@ -58,7 +56,7 @@ class SelectionProvider extends ChangeNotifier {
       _mode = 0;
       _selected.clear();
       _rotations.clear();
-      _orderedFiles.clear();
+      orderedFiles.clear();
       _protectionStatusCache.clear();
       notifyListeners();
     }
@@ -84,9 +82,9 @@ class SelectionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setContext(BuildContext context) {
-    _context = context;
-  }
+  // void setContext(BuildContext context) {
+  //   _context = context;
+  // }
 
   Future<String?> _validatePdfOnly(FileInfo file) async {
     if (file.extension.toLowerCase() != 'pdf') {
@@ -186,7 +184,7 @@ class SelectionProvider extends ChangeNotifier {
     if (_selected.containsKey(f.path)) {
       _selected.remove(f.path);
       _rotations.remove(f.path);
-      _orderedFiles.removeWhere((file) => file.path == f.path);
+      orderedFiles.removeWhere((file) => file.path == f.path);
       notifyListeners();
       return;
     }
@@ -220,14 +218,14 @@ class SelectionProvider extends ChangeNotifier {
 
     _selected[f.path] = f;
     _rotations[f.path] = 0;
-    _orderedFiles.add(f);
+    orderedFiles.add(f);
     notifyListeners();
   }
 
   void removeFile(String path) {
     _selected.remove(path);
     _rotations.remove(path);
-    _orderedFiles.removeWhere((file) => file.path == path);
+    orderedFiles.removeWhere((file) => file.path == path);
     notifyListeners();
   }
 
@@ -245,8 +243,8 @@ class SelectionProvider extends ChangeNotifier {
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }
-    final file = _orderedFiles.removeAt(oldIndex);
-    _orderedFiles.insert(newIndex, file);
+    final file = orderedFiles.removeAt(oldIndex);
+    orderedFiles.insert(newIndex, file);
     notifyListeners();
   }
 
@@ -273,7 +271,7 @@ class SelectionProvider extends ChangeNotifier {
         if (!_selected.containsKey(f.path)) {
           _selected[f.path] = f;
           _rotations[f.path] = 0;
-          _orderedFiles.add(f);
+          orderedFiles.add(f);
         }
       }
     }
@@ -285,7 +283,7 @@ class SelectionProvider extends ChangeNotifier {
     for (final f in visible) {
       _selected.remove(f.path);
       _rotations.remove(f.path);
-      _orderedFiles.removeWhere((file) => file.path == f.path);
+      orderedFiles.removeWhere((file) => file.path == f.path);
     }
     if (_mode == 0) _mode = 1;
     notifyListeners();
@@ -294,7 +292,7 @@ class SelectionProvider extends ChangeNotifier {
   void clearKeepEnabled() {
     _selected.clear();
     _rotations.clear();
-    _orderedFiles.clear();
+    orderedFiles.clear();
     _mode = 1;
     // _lastErrorMessage = null;
     notifyListeners();

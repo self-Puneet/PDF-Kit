@@ -206,7 +206,7 @@ class _OnboardingShellPageState extends State<OnboardingShellPage> {
                       decoration: BoxDecoration(
                         color: isActive
                             ? Colors.blue
-                            : Colors.blue.withOpacity(0.3),
+                            : Colors.blue.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );
@@ -426,8 +426,8 @@ class _LanguageSelectionContentState extends State<LanguageSelectionContent> {
               child: Container(
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? Colors.blue.withOpacity(0.1)
-                      : Colors.grey.withOpacity(0.1),
+                      ? Colors.blue.withValues(alpha: 0.1)
+                      : Colors.grey.withValues(alpha: 0.1),
                   border: Border.all(
                     color: isSelected ? Colors.blue : Colors.grey.shade300,
                     width: isSelected ? 2 : 1,

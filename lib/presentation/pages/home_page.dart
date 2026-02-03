@@ -1,6 +1,4 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:pdf_kit/core/app_export.dart';
 import 'package:pdf_kit/models/functionality_list.dart';
 import 'package:pdf_kit/models/functionality_model.dart';
@@ -11,18 +9,16 @@ import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:pdf_kit/service/open_service.dart';
 import 'package:pdf_kit/presentation/sheets/rename_file_sheet.dart';
 import 'package:pdf_kit/service/file_service.dart';
-import 'package:pdf_kit/providers/theme_provider.dart';
 
 /// HOME TAB
 class HomeTab extends StatefulWidget {
-  const HomeTab({Key? key}) : super(key: key);
+  const HomeTab({super.key});
 
   @override
   State<HomeTab> createState() => _HomeTabState();
 }
 
 class _HomeTabState extends State<HomeTab> {
-  static final Random _rng = Random();
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +59,7 @@ class _HomeTabState extends State<HomeTab> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: ClipOval(
@@ -92,48 +88,49 @@ class _HomeTabState extends State<HomeTab> {
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
           const Spacer(),
-          IconButton(
-            icon: Icon(
-              Theme.of(context).brightness == Brightness.dark
-                  ? Icons.light_mode_outlined
-                  : Icons.dark_mode_outlined,
-            ),
-            onPressed: () {
-              final isDark = Theme.of(context).brightness == Brightness.dark;
-              Provider.of<ThemeProvider>(
-                context,
-                listen: false,
-              ).setTheme(isDark ? 'light' : 'dark');
-            },
-            tooltip: Theme.of(context).brightness == Brightness.dark
-                ? 'Switch to Light Mode'
-                : 'Switch to Dark Mode',
-          ),
-          IconButton(
-            icon: const Icon(Icons.bug_report_outlined),
-            onPressed: () async {
-              final exception = Exception(
-                'Crashlytics test exception #${_rng.nextInt(1000000)}',
-              );
+          // IconButton(
+          //   icon: Icon(
+          //     Theme.of(context).brightness == Brightness.dark
+          //         ? Icons.light_mode_outlined
+          //         : Icons.dark_mode_outlined,
+          //   ),
+          //   onPressed: () {
+          //     final isDark = Theme.of(context).brightness == Brightness.dark;
+          //     Provider.of<ThemeProvider>(
+          //       context,
+          //       listen: false,
+          //     ).setTheme(isDark ? 'light' : 'dark');
+          //   },
+          //   tooltip: Theme.of(context).brightness == Brightness.dark
+          //       ? 'Switch to Light Mode'
+          //       : 'Switch to Dark Mode',
+          // ),
+          // IconButton(
+          //   icon: const Icon(Icons.bug_report_outlined),
+          //   onPressed: () async {
+          //     final exception = Exception(
+          //       'Crashlytics test exception #${_rng.nextInt(1000000)}',
+          //     );
 
-              debugPrint(
-                '🧪 [HomeTab] Recording Crashlytics test error: $exception',
-              );
-              throw exception;
-            },
-            tooltip: 'Send test error to Crashlytics',
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_sweep_outlined),
-            onPressed: () async {
-              try {
-                await Prefs.clear();
-              } catch (e) {
-                debugPrint('⚠️ [HomeTab] Prefs.clear failed: $e');
-              }
-            },
-            tooltip: 'Clear local storage',
-          ),
+          //     debugPrint(
+          //       '🧪 [HomeTab] Recording Crashlytics test error: $exception',
+          //     );
+          //     throw exception;
+          //   },
+          //   tooltip: 'Send test error to Crashlytics',
+          // ),
+          // IconButton(
+          //   icon: const Icon(Icons.delete_sweep_outlined),
+          //   onPressed: () async {
+          //     try {
+          //       await Prefs.clear();
+          //     } catch (e) {
+          //       debugPrint('⚠️ [HomeTab] Prefs.clear failed: $e');
+          //     }
+          //   },
+          //   tooltip: 'Clear local storage',
+          // ),
+          
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => context.go('/settings'),
@@ -149,7 +146,7 @@ class _HomeTabState extends State<HomeTab> {
 class QuickActionsGrid extends StatelessWidget {
   final List<Functionality> items;
 
-  const QuickActionsGrid({Key? key, required this.items}) : super(key: key);
+  const QuickActionsGrid({super.key, required this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -179,7 +176,7 @@ class QuickActionsGrid extends StatelessWidget {
 
 /// Section that renders either a recent files list or a "Get Started" card.
 class RecentFilesSection extends StatefulWidget {
-  const RecentFilesSection({Key? key}) : super(key: key);
+  const RecentFilesSection({super.key});
 
   /// External trigger to ask the section to reload its contents.
   /// Increment this notifier's value to request a refresh from other parts of the app.
@@ -446,8 +443,8 @@ class _GetStartedCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            cs.primary.withOpacity(0.10),
-            cs.secondary.withOpacity(0.08),
+            cs.primary.withValues(alpha: 0.10),
+            cs.secondary.withValues(alpha: 0.08),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -461,7 +458,7 @@ class _GetStartedCard extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: cs.primary.withOpacity(0.12),
+              color: cs.primary.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.auto_awesome, color: cs.primary, size: 34),

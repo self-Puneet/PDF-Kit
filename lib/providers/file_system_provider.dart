@@ -80,14 +80,14 @@ class FileSystemProvider extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> loadRoots() async {
-    print('🔍 [FileSystemProvider] loadRoots called');
+    debugPrint('🔍 [FileSystemProvider] loadRoots called');
     final res = await PathService.volumes();
     res.fold(
       (err) {
-        print('❌ [FileSystemProvider] loadRoots error: $err');
+        debugPrint('❌ [FileSystemProvider] loadRoots error: $err');
       },
       (dirs) {
-        print('✅ [FileSystemProvider] loadRoots success: $dirs');
+        debugPrint('✅ [FileSystemProvider] loadRoots success: $dirs');
         _roots = dirs;
         notifyListeners();
       },
@@ -97,18 +97,18 @@ class FileSystemProvider extends ChangeNotifier with WidgetsBindingObserver {
   /// Load files for a specific path.
   /// [forceRefresh] will ignore cache and fetch from disk.
   Future<void> load(String path, {bool forceRefresh = false}) async {
-    print(
+    debugPrint(
       '🔍 [FileSystemProvider] load called for: $path (forceRefresh: $forceRefresh)',
     );
     if (!forceRefresh && _cache.containsKey(path)) {
-      print('📦 [FileSystemProvider] returning cached for: $path');
+      debugPrint('📦 [FileSystemProvider] returning cached for: $path');
       // Data exists, but maybe check if it's stale?
       // For now, trust cache unless forced or auto-refreshed.
       return;
     }
 
     if (_loading.contains(path)) {
-      print('⏳ [FileSystemProvider] already loading: $path');
+      debugPrint('⏳ [FileSystemProvider] already loading: $path');
       return; // Already loading
     }
 
@@ -122,13 +122,15 @@ class FileSystemProvider extends ChangeNotifier with WidgetsBindingObserver {
 
     result.fold(
       (error) {
-        print('❌ [FileSystemProvider] error loading $path: $error');
+        debugPrint('❌ [FileSystemProvider] error loading $path: $error');
         _errors[path] = error.toString();
         // keep old cache if exists? or clear?
         // _cache.remove(path);
       },
       (files) {
-        print('✅ [FileSystemProvider] loaded ${files.length} items for $path');
+        debugPrint(
+          '✅ [FileSystemProvider] loaded ${files.length} items for $path',
+        );
         _cache[path] = files;
       },
     );

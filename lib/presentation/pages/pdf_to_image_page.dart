@@ -1,6 +1,7 @@
 // lib/presentation/pages/pdf_to_image_page.dart
 
 import 'dart:async';
+import 'package:dartz/dartz.dart' as dartz;
 import 'package:flutter/material.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
@@ -240,7 +241,7 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
         ? _suggestDefaultName(pdfFile)
         : _nameCtrl.text.trim();
 
-    late final result;
+    late final dartz.Either<PdfRasterizationFailure, List<File>> result;
     try {
       _progressDialog.show(
         context: context,
@@ -297,7 +298,7 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
             },
           );
 
-      if (mounted) {
+      if (context.mounted) {
         progress.value = 1.0;
         stage.value = 'Done';
         _progressDialog.dismiss(context);
@@ -351,13 +352,13 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
 
         if (!mounted) return;
 
-        final successMsg = AppLocalizations.of(
-          context,
-        ).t('snackbar_pdf_to_image_done');
+        final successMsg = t.t('snackbar_pdf_to_image_done');
 
         // Navigate to home and clear all routes
         selection.disable();
-        context.go('/');
+        if (context.mounted) {
+          context.go('/');
+        }
 
         // Trigger home page reload
         RecentFilesSection.refreshNotifier.value++;
@@ -543,8 +544,8 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
                                 border: Border.all(
-                                  color: theme.colorScheme.outline.withOpacity(
-                                    0.3,
+                                  color: theme.colorScheme.outline.withValues(
+                                    alpha: 0.3,
                                   ),
                                 ),
                                 borderRadius: BorderRadius.circular(12),
@@ -583,7 +584,7 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
                                   color: theme.colorScheme.primaryContainer
-                                      .withOpacity(0.3),
+                                      .withValues(alpha: 0.3),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Row(
@@ -616,9 +617,7 @@ class _PdfToImagePageState extends State<PdfToImagePage> {
             ),
             bottomNavigationBar: Container(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-              ),
+              decoration: BoxDecoration(color: Colors.transparent),
               child: SafeArea(
                 child: SizedBox(
                   width: double.infinity,

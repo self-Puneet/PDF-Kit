@@ -94,7 +94,7 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
 
     final file = selection.files.first;
 
-    late final result;
+    late final dartz.Either<Failure, String> result;
     try {
       // Get root isolate token for platform channel communication
       final rootIsolateToken = RootIsolateToken.instance!;
@@ -125,7 +125,7 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
       } catch (_) {}
 
       smoothTimer.cancel();
-      if (mounted) {
+      if (context.mounted) {
         _progressDialog.dismiss(context);
       }
       progress.dispose();
@@ -181,8 +181,10 @@ class _ProtectPdfPageState extends State<ProtectPdfPage> {
         selection.disable();
 
         // ✅ Navigate to home and trigger refresh
-        context.go('/');
-        RecentFilesSection.refreshNotifier.value++;
+        if (context.mounted) {
+          context.go('/');
+          RecentFilesSection.refreshNotifier.value++;
+        }
       },
     );
   }

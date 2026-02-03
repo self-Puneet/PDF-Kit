@@ -17,7 +17,7 @@ class InvalidPasswordFailure extends Failure {
 }
 
 class FileReadWriteFailure extends Failure {
-  const FileReadWriteFailure(String message) : super(message);
+  const FileReadWriteFailure(super.message);
 }
 
 class PlatformNotSupportedFailure extends Failure {

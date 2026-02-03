@@ -448,10 +448,12 @@
   ,"about_pdf_kit_permissions_android_only": "Permission status is shown on Android only."
   ,"about_pdf_kit_permissions_read_error": "Could not read permission status on this device."
 
-  ,"about_pdf_kit_privacy_bullet_1": "No account required"
-  ,"about_pdf_kit_privacy_bullet_2": "No documents are uploaded to external servers"
-  ,"about_pdf_kit_privacy_bullet_3": "No personal data is collected or tracked"
-  ,"about_pdf_kit_privacy_bullet_4": "All processing happens locally on your device"
+  ,"about_pdf_kit_privacy_bullet_1": "No account or sign-up is required to use the app"
+  ,"about_pdf_kit_privacy_bullet_2": "Your documents are processed locally on your device and are never uploaded to external servers"
+  ,"about_pdf_kit_privacy_bullet_3": "We do not collect personal documents, file contents, or user-identifiable information"
+  ,"about_pdf_kit_privacy_bullet_4": "Anonymous usage analytics may be collected to improve app performance and features"
+  ,"about_pdf_kit_privacy_bullet_5": "Crash reports are collected anonymously to help identify and fix app issues"
+  ,"about_pdf_kit_privacy_bullet_6": "Cloud messaging tokens may be stored securely to enable optional notifications"
 
   ,"about_pdf_kit_privacy_policy_title": "Privacy policy"
   ,"about_pdf_kit_privacy_policy_subtitle": "Privacy policy link is here"

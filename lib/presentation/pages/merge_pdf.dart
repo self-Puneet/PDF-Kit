@@ -327,7 +327,9 @@ class _MergePdfPageState extends State<MergePdfPage> {
 
           // Navigate to home and clear all routes, then reload home page
           selection.disable();
-          context.go('/');
+          if (context.mounted) {
+            context.go('/');
+          }
 
           // Trigger home page reload
           RecentFilesSection.refreshNotifier.value++;
@@ -417,8 +419,8 @@ class _MergePdfPageState extends State<MergePdfPage> {
                             border: const UnderlineInputBorder(),
                             enabledBorder: UnderlineInputBorder(
                               borderSide: BorderSide(
-                                color: theme.colorScheme.primary.withOpacity(
-                                  0.3,
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.3,
                                 ),
                               ),
                             ),
@@ -490,7 +492,7 @@ class _MergePdfPageState extends State<MergePdfPage> {
                           showRemove: false,
                           reorderable: _reorderMode,
                           disabled: _isMerging,
-                          onEdit: () => null,
+                          onEdit: () {},
                           onRemove: () => selection.removeFile(f.path),
                           onOpen: () => context.pushNamed(
                             AppRouteName.showPdf,

@@ -83,7 +83,7 @@ class _BreadcrumbWidgetState extends State<BreadcrumbWidget> {
                 size: 14,
                 color: Theme.of(
                   context,
-                ).textTheme.bodySmall?.color?.withOpacity(0.5),
+                ).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
               ),
             ),
 
@@ -105,7 +105,7 @@ class _BreadcrumbWidgetState extends State<BreadcrumbWidget> {
                   size: 14,
                   color: Theme.of(
                     context,
-                  ).textTheme.bodySmall?.color?.withOpacity(0.5),
+                  ).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
                 ),
               ),
           ],

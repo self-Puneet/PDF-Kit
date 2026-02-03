@@ -38,7 +38,7 @@ class AppSnackbar {
         ? openSnack
         : (t?.t('common_open') ?? 'Open');
 
-    bool _isImagePath(String p) {
+    bool isImagePath(String p) {
       final lower = p.toLowerCase();
       return lower.endsWith('.jpg') ||
           lower.endsWith('.jpeg') ||
@@ -56,7 +56,7 @@ class AppSnackbar {
 
       final lower = path.toLowerCase();
       final isPdf = lower.endsWith('.pdf');
-      final isImage = _isImagePath(path);
+      final isImage = isImagePath(path);
 
       // Always allow forcing native open (used by Protect flow).
       if (isPdf && openProtectedInNativeViewer) {

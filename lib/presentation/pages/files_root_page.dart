@@ -2,8 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:pdf_kit/providers/file_system_provider.dart';
 import 'package:pdf_kit/core/app_export.dart';
-import 'package:pdf_kit/core/constants.dart';
-import 'package:pdf_kit/core/utility/storage_utility.dart';
 import 'package:pdf_kit/service/recent_file_service.dart';
 import 'package:pdf_kit/models/file_model.dart';
 import 'package:pdf_kit/presentation/component/document_tile.dart';
@@ -66,7 +64,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
   @override
   void didPopNext() {
     // Called when the top route has been popped off, and this route shows up.
-    print('🔄 [FilesRootPage] Returning to page, refreshing data...');
+    debugPrint('🔄 [FilesRootPage] Returning to page, refreshing data...');
     _refresh();
   }
 
@@ -124,21 +122,21 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
     // 1. Check if user has a stored path
     String? storedPath = _getStoredPath(prefsKey);
 
-    print('🔍 [Folder Navigation] Checking folder access');
-    print('📁 [Folder Navigation] Stored path: ${storedPath ?? "none"}');
-    print('📂 [Folder Navigation] Default path: $defaultPath');
+    debugPrint('🔍 [Folder Navigation] Checking folder access');
+    debugPrint('📁 [Folder Navigation] Stored path: ${storedPath ?? "none"}');
+    debugPrint('📂 [Folder Navigation] Default path: $defaultPath');
 
     // 2. Validate stored path if it exists
     if (storedPath != null) {
       bool storedExists = await _folderExists(storedPath);
       if (storedExists) {
-        print(
+        debugPrint(
           '✅ [Folder Navigation] Stored folder exists. Navigating to: $storedPath',
         );
         _navigateToFolder(storedPath);
         return;
       } else {
-        print('❌ [Folder Navigation] Stored folder not found. Falling back.');
+        debugPrint('❌ [Folder Navigation] Stored folder not found. Falling back.');
         // Optional: clear invalid stored path?
         // Prefs.remove(prefsKey);
       }
@@ -147,7 +145,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
     // 3. Check default path
     bool defaultExists = await _folderExists(defaultPath);
     if (defaultExists) {
-      print(
+      debugPrint(
         '✅ [Folder Navigation] Default folder exists. Navigating to: $defaultPath',
       );
       // We don't necessarily force-save the default path unless we want to lock it in.
@@ -159,7 +157,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
     }
 
     // 4. Default also missing -> Show Picker
-    print(
+    debugPrint(
       '🎯 [Folder Navigation] Default folder missing. Showing folder picker.',
     );
 
@@ -187,7 +185,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
 
     // If user selected a path
     if (selectedPath != null && selectedPath.isNotEmpty) {
-      print('💾 [Folder Navigation] User selected path: $selectedPath');
+      debugPrint('💾 [Folder Navigation] User selected path: $selectedPath');
 
       // Save to storage
       await Prefs.setString(prefsKey, selectedPath);
@@ -195,7 +193,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
       // Navigate to the selected folder
       _navigateToFolder(selectedPath);
     } else {
-      print('🚫 [Folder Navigation] User cancelled folder selection');
+      debugPrint('🚫 [Folder Navigation] User cancelled folder selection');
     }
   }
 
@@ -241,7 +239,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
           child: Column(
             children: [
               // Header
-              Container(
+              SizedBox(
                 height: 56,
                 child: Row(
                   children: [
@@ -251,7 +249,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
                       decoration: BoxDecoration(
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.15),
+                        ).colorScheme.primary.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
                       child: ClipOval(
@@ -556,7 +554,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
         borderRadius: BorderRadius.circular(12),
         side: Theme.of(context).brightness == Brightness.light
             ? BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                color: Theme.of(context).colorScheme.outline.withValues(alpha:0.15),
                 width: 1,
               )
             : BorderSide.none,
@@ -648,7 +646,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
         borderRadius: BorderRadius.circular(12),
         side: Theme.of(context).brightness == Brightness.light
             ? BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.15),
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15),
                 width: 1,
               )
             : BorderSide.none,
@@ -664,7 +662,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, size: 24, color: color),
@@ -853,7 +851,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(
                           context,
-                        ).textTheme.bodySmall?.color?.withOpacity(0.7),
+                        ).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1113,7 +1111,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(
                 context,
-              ).textTheme.bodySmall?.color?.withOpacity(0.7),
+              ).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
             ),
           ),
         ),
@@ -1183,7 +1181,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
             Icon(
               Icons.history,
               size: 40,
-              color: theme.colorScheme.onSurface.withOpacity(0.3),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 10),
             Text(
@@ -1197,7 +1195,7 @@ class _FilesRootPageState extends State<FilesRootPage> with RouteAware {
             Text(
               t.t('recent_files_empty_message'),
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),

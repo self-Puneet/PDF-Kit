@@ -292,7 +292,7 @@ class PdfCompressService {
     var candidate = '$baseName.pdf';
     var idx = 1;
     while (File(p.join(baseDir, candidate)).existsSync()) {
-      candidate = '${baseName}_$idx.pdf';
+      candidate = '$baseName ($idx).pdf';
       idx++;
     }
     return candidate;

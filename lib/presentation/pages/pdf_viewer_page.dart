@@ -529,7 +529,6 @@ class _FileViewerPageState extends State<FileViewerPage> {
                                 // Some native errors might be generic
                                 (_password == null &&
                                     error.toString().isNotEmpty)) {
-                              // HACK: Re-enable loading state and show password dialog
                               // But we can't show dialog in build. Schedule it.
                               Future.microtask(() {
                                 if (!context.mounted) return;
@@ -599,10 +598,10 @@ class _FileViewerPageState extends State<FileViewerPage> {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.7),
+                          color: Colors.black.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
+                            color: Colors.white.withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),

@@ -421,10 +421,12 @@
   ,"about_pdf_kit_permissions_android_only": "परमिशन स्टेटस सिर्फ एंड्रॉयड पर दिखता है।"
   ,"about_pdf_kit_permissions_read_error": "इस डिवाइस पर परमिशन स्टेटस नहीं पढ़ा जा सका।"
 
-  ,"about_pdf_kit_privacy_bullet_1": "कोई अकाउंट जरूरी नहीं"
-  ,"about_pdf_kit_privacy_bullet_2": "कोई डॉक्यूमेंट एक्सटर्नल सर्वर पर अपलोड नहीं होते"
-  ,"about_pdf_kit_privacy_bullet_3": "कोई पर्सनल डेटा इकट्ठा या ट्रैक नहीं होता"
-  ,"about_pdf_kit_privacy_bullet_4": "सभी प्रोसेसिंग आपके डिवाइस पर लोकली होती है"
+  ,"about_pdf_kit_privacy_bullet_1": "ऐप का उपयोग करने के लिए किसी खाते या साइन-अप की आवश्यकता नहीं है"
+  ,"about_pdf_kit_privacy_bullet_2": "आपके दस्तावेज़ आपके डिवाइस पर स्थानीय रूप से संसाधित किए जाते हैं और कभी भी बाहरी सर्वर पर अपलोड नहीं किए जाते"
+  ,"about_pdf_kit_privacy_bullet_3": "हम व्यक्तिगत दस्तावेज़, फ़ाइल सामग्री या उपयोगकर्ता-पहचान योग्य जानकारी एकत्र नहीं करते हैं"
+  ,"about_pdf_kit_privacy_bullet_4": "ऐप के प्रदर्शन और सुविधाओं को बेहतर बनाने के लिए गुमनाम उपयोग विश्लेषण एकत्र किया जा सकता है"
+  ,"about_pdf_kit_privacy_bullet_5": "ऐप की समस्याओं की पहचान और सुधार में मदद के लिए क्रैश रिपोर्ट गुमनाम रूप से एकत्र की जाती हैं"
+  ,"about_pdf_kit_privacy_bullet_6": "वैकल्पिक सूचनाएं सक्षम करने के लिए क्लाउड मैसेजिंग टोकन सुरक्षित रूप से संग्रहीत किए जा सकते हैं"
 
   ,"about_pdf_kit_privacy_policy_title": "प्राइवेसी पॉलिसी"
   ,"about_pdf_kit_privacy_policy_subtitle": "प्राइवेसी पॉलिसी लिंक यहाँ है"
@@ -682,7 +684,36 @@
 "snackbar_split_done": "Split सफलतापूर्वक पूर्ण हुआ",
 "snackbar_protect_done": "PDF सफलतापूर्वक protect किया गया",
 "snackbar_unlock_done": "PDF सफलतापूर्वक unlock किया गया",
-"snackbar_reorder_done": "Reorder सफलतापूर्वक पूर्ण हुआ"
+"snackbar_reorder_done": "Reorder सफलतापूर्वक पूर्ण हुआ",
 
+"common_done": "पूर्ण",
+"delete_file_title": "फ़ाइल हटाएं?",
+"delete_file_message": "क्या आप वाकई हटाना चाहते हैं",
+"delete_file_confirm": "हटाएं",
+"filter_file_type_pdf_mode": "PDF मोड",
+"filter_file_type_images_mode": "इमेज मोड",
+"folder_picker_description_pdfs": "सभी जेनरेट की गई और इम्पोर्ट की गई फ़ाइलें यहाँ स्टोर की जाएंगी जब तक कि आप कोई अलग स्थान नहीं चुनते।",
+"pdf_options_rename": "नाम बदलें",
+"pdf_options_delete": "हटाएं",
+"pdf_options_split": "विभाजित करें",
+"pdf_options_protect": "सुरक्षित करें / पासवर्ड हटाएं",
+"pdf_options_compress": "PDF संपीड़ित करें",
+"pdf_options_move_to_folder": "फ़ोल्डर में ले जाएं",
+"pdf_to_image_title": "PDF को इमेज में बदलें",
+"recent_files_empty": "कोई हाल की फ़ाइल नहीं",
+"recent_files_filter_empty_pdf": "केवल PDF फ़ाइलें चयन योग्य हैं",
+"recent_files_filter_empty_images": "केवल इमेज फ़ाइलें चयन योग्य हैं",
+"settings_default_camera_location_title": "डिफ़ॉल्ट कैमरा स्थान",
+"settings_default_camera_location_subtitle": "कैमरा फ़ोटो कहाँ सहेजी जाएं चुनें",
+"settings_default_screenshot_location_title": "डिफ़ॉल्ट स्क्रीनशॉट स्थान",
+"settings_default_screenshot_location_subtitle": "स्क्रीनशॉट कहाँ सहेजे जाएं चुनें",
+"settings_filter_options_description": "ऐप में फ़ाइलों और फ़ोल्डर्स को देखते समय डिफ़ॉल्ट रूप से कौन से फ़िल्टर लागू किए जाएं चुनें।",
+"snackbar_success_images_to_pdf": "सफलतापूर्वक {fileName} में बदला गया",
+"@snackbar_success_images_to_pdf": {"placeholders": {"fileName": {"type": "String"}}},
+"snackbar_success_pdf_to_image": "सफलतापूर्वक {count} पृष्ठों को {folderName} में इमेज में बदला गया",
+"@snackbar_success_pdf_to_image": {"placeholders": {"count": {"type": "String"}, "folderName": {"type": "String"}}},
+"snackbar_removed_from_recent": "हाल की फ़ाइलों से हटाया गया",
+"watermark_pdf_title": "वॉटरमार्क जोड़ें",
+"@selection_min_error": {"description": "Shown when user presses action but has selected fewer than the required minimum.", "placeholders": {"count": {"type": "int"}}}
 
 }

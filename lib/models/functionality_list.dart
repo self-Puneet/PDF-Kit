@@ -112,7 +112,7 @@ List<Functionality> getActions(BuildContext context) {
           },
         );
 
-        if (result == true) {
+        if (result == true && context.mounted) {
           // Navigate to split PDF page
           await context.pushNamed(
             AppRouteName.splitPdf,

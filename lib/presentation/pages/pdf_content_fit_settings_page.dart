@@ -93,11 +93,7 @@ class _PdfContentFitSettingsPageState extends State<PdfContentFitSettingsPage> {
               ),
               radio: Radio<PdfContentFitMode>(
                 value: PdfContentFitMode.original,
-                groupValue: _selectedMode,
-                onChanged: (v) {
-                  if (v == null) return;
-                  _setMode(v);
-                },
+                toggleable: false,
               ),
             ),
             const SizedBox(height: 10),
@@ -115,11 +111,7 @@ class _PdfContentFitSettingsPageState extends State<PdfContentFitSettingsPage> {
               ),
               radio: Radio<PdfContentFitMode>(
                 value: PdfContentFitMode.fit,
-                groupValue: _selectedMode,
-                onChanged: (v) {
-                  if (v == null) return;
-                  _setMode(v);
-                },
+                toggleable: false,
               ),
             ),
             const SizedBox(height: 10),
@@ -137,11 +129,7 @@ class _PdfContentFitSettingsPageState extends State<PdfContentFitSettingsPage> {
               ),
               radio: Radio<PdfContentFitMode>(
                 value: PdfContentFitMode.crop,
-                groupValue: _selectedMode,
-                onChanged: (v) {
-                  if (v == null) return;
-                  _setMode(v);
-                },
+                toggleable: false,
               ),
             ),
           ],
@@ -189,7 +177,10 @@ class _FitModeCard extends StatelessWidget {
           side: isSelected
               ? BorderSide(color: cs.primary, width: 1.5)
               : (theme.brightness == Brightness.light
-                    ? BorderSide(color: cs.outline.withOpacity(0.15), width: 1)
+                    ? BorderSide(
+                        color: cs.outline.withValues(alpha: 0.15),
+                        width: 1,
+                      )
                     : BorderSide.none),
         ),
         child: Padding(

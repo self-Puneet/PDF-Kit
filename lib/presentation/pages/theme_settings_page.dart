@@ -128,13 +128,13 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? theme.colorScheme.primary.withOpacity(0.08)
+              ? theme.colorScheme.primary.withValues(alpha: 0.08)
               : theme.cardColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
                 ? theme.colorScheme.primary
-                : theme.dividerColor.withOpacity(0.3),
+                : theme.dividerColor.withValues(alpha: 0.3),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -143,7 +143,7 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.15),
+                color: iconColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: iconColor, size: 28),
@@ -166,7 +166,7 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
                   Text(
                     subtitle,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                       height: 1.3,
                     ),
                   ),

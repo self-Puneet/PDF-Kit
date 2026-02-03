@@ -67,8 +67,8 @@ Future<void> showNewFolderSheet({
                           height: 4,
                           margin: const EdgeInsets.only(top: 0, bottom: 16),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.onSurface.withOpacity(
-                              0.18,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.18,
                             ),
                             borderRadius: BorderRadius.circular(4),
                           ),
@@ -134,7 +134,7 @@ Future<void> showNewFolderSheet({
                                   backgroundColor: theme
                                       .colorScheme
                                       .primaryContainer
-                                      .withOpacity(0.3),
+                                      .withValues(alpha: 0.3),
                                   foregroundColor: theme.colorScheme.primary,
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 16,

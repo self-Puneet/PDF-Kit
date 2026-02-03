@@ -94,7 +94,7 @@ class _UnlockPdfPageState extends State<UnlockPdfPage> {
 
     final file = selection.files.first;
 
-    late final result;
+    late final dartz.Either<Failure, String> result;
     try {
       // Get root isolate token for platform channel communication
       final rootIsolateToken = RootIsolateToken.instance!;
@@ -125,12 +125,12 @@ class _UnlockPdfPageState extends State<UnlockPdfPage> {
       } catch (_) {}
 
       smoothTimer.cancel();
-      if (mounted) {
-        _progressDialog.dismiss(context);
-      }
       progress.dispose();
       stage.dispose();
 
+      if (context.mounted) {
+        _progressDialog.dismiss(context);
+      }
       if (mounted) {
         setState(() => _isUnlocking = false);
       } else {
@@ -138,6 +138,7 @@ class _UnlockPdfPageState extends State<UnlockPdfPage> {
       }
     }
 
+    if (!mounted) return;
     result.fold(
       (failure) {
         if (!mounted) return;
@@ -180,8 +181,10 @@ class _UnlockPdfPageState extends State<UnlockPdfPage> {
         selection.disable();
 
         // ✅ Navigate to home and trigger refresh
-        context.go('/');
-        RecentFilesSection.refreshNotifier.value++;
+        if (context.mounted) {
+          context.go('/');
+          RecentFilesSection.refreshNotifier.value++;
+        }
       },
     );
   }

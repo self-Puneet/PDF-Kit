@@ -18,13 +18,13 @@ class RecentFilesPage extends StatefulWidget {
   final void Function(List<FileInfo> files)? onSelectionAction;
 
   const RecentFilesPage({
-    Key? key,
+    super.key,
     this.selectable = false,
     this.selectionActionText,
     this.selectionId,
     this.isFullscreenRoute = false,
     this.onSelectionAction,
-  }) : super(key: key);
+  });
 
   @override
   State<RecentFilesPage> createState() => _RecentFilesPageState();
@@ -219,12 +219,12 @@ class _RecentFilesPageState extends State<RecentFilesPage> with RouteAware {
   }
 
   Future<void> _openClearRecentFilesSheet() async {
+    final t = AppLocalizations.of(context);
     await showClearRecentFilesSheet(
       context: context,
       onClear: () async {
         debugPrint('🧹 [RecentFilesPage] Clear All pressed');
         final result = await RecentFilesService.clearRecentFiles();
-        final t = AppLocalizations.of(context);
 
         result.fold(
           (error) {
@@ -265,7 +265,7 @@ class _RecentFilesPageState extends State<RecentFilesPage> with RouteAware {
           Icon(
             Icons.history,
             size: 64,
-            color: theme.colorScheme.onSurface.withOpacity(0.3),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
@@ -317,8 +317,9 @@ class _RecentFilesPageState extends State<RecentFilesPage> with RouteAware {
                           padding: const EdgeInsets.only(bottom: 16),
                           initialItemCount: _files.length,
                           itemBuilder: (context, i, animation) {
-                            if (i >= _files.length)
+                            if (i >= _files.length) {
                               return const SizedBox.shrink();
+                            }
 
                           return SlideTransition(
                             position: animation.drive(
@@ -390,7 +391,7 @@ class _RecentFilesPageState extends State<RecentFilesPage> with RouteAware {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: ClipOval(

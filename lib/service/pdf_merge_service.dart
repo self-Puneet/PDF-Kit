@@ -287,6 +287,12 @@ class PdfMergeService {
         finalFileName = '$finalFileName.pdf';
       }
 
+      // Handle duplicate filenames
+      finalFileName = _uniqueFileName(
+        baseDir: targetDir.path,
+        baseName: p.basenameWithoutExtension(finalFileName),
+      );
+
       final outputPath = p.join(targetDir.path, finalFileName);
 
       debugPrint('📊 [MergeService] Merging ${files.length} files');
@@ -538,5 +544,18 @@ class PdfMergeService {
         ),
       );
     }
+  }
+
+  static String _uniqueFileName({
+    required String baseDir,
+    required String baseName,
+  }) {
+    var candidate = '$baseName.pdf';
+    var idx = 1;
+    while (File(p.join(baseDir, candidate)).existsSync()) {
+      candidate = '$baseName ($idx).pdf';
+      idx++;
+    }
+    return candidate;
   }
 }

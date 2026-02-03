@@ -429,9 +429,9 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
         },
       );
 
-      if (mounted) {
-        progress.value = 1.0;
-        stage.value = 'Done';
+      progress.value = 1.0;
+      stage.value = 'Done';
+      if (context.mounted) {
         _progressDialog.dismiss(context);
       }
     } finally {
@@ -469,7 +469,7 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
       }
 
       // Update FileSystemProvider to show files in Downloads folder
-      if (downloadsPath != null && createdFiles.isNotEmpty) {
+      if (context.mounted && downloadsPath != null && createdFiles.isNotEmpty) {
         try {
           final fileSystemProvider = context.read<FileSystemProvider>();
           await fileSystemProvider.addFiles(downloadsPath, createdFiles);
@@ -478,6 +478,7 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
         }
       }
 
+      if (!context.mounted) return;
       final successMsg = AppLocalizations.of(context).t('snackbar_split_done');
 
       selection.disable();
@@ -487,12 +488,15 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
       // Show simple success snackbar instead of dialog
       Future.delayed(const Duration(milliseconds: 300), () {
         if (result.outputPaths.isEmpty) return;
-        AppSnackbar.showSuccessWithOpen(
-          message: successMsg,
-          path: result.outputPaths.first,
-        );
+        if (context.mounted) {
+          AppSnackbar.showSuccessWithOpen(
+            message: successMsg,
+            path: result.outputPaths.first,
+          );
+        }
       });
     } else {
+      if (!context.mounted) return;
       AppSnackbar.showSnackBar(
         SnackBar(
           content: Text(result.errorMessage ?? 'Failed to split PDF'),
@@ -596,14 +600,16 @@ class _SplitPdfPageState extends State<SplitPdfPage> {
                                           : Container(
                                               color: theme
                                                   .colorScheme
-                                                  .surfaceVariant,
+                                                  .surfaceContainerHighest,
                                             ),
                                     ),
                                   ),
                                   Container(
                                     padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(
-                                      color: theme.colorScheme.surfaceVariant,
+                                      color: theme
+                                          .colorScheme
+                                          .surfaceContainerHighest,
                                       borderRadius: const BorderRadius.vertical(
                                         bottom: Radius.circular(7),
                                       ),
@@ -771,11 +777,13 @@ class _RangeInputWidget extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? theme.cardColor : theme.cardColor.withOpacity(0.5),
+          color: isActive
+              ? theme.cardColor
+              : theme.cardColor.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(8),
           border: theme.brightness == Brightness.light
               ? Border.all(
-                  color: theme.colorScheme.outline.withOpacity(0.2),
+                  color: theme.colorScheme.outline.withValues(alpha: 0.2),
                   width: 1,
                 )
               : null,
@@ -791,7 +799,7 @@ class _RangeInputWidget extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isActive
                       ? theme.colorScheme.primary
-                      : theme.colorScheme.outline.withOpacity(0.5),
+                      : theme.colorScheme.outline.withValues(alpha: 0.5),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -800,7 +808,7 @@ class _RangeInputWidget extends StatelessWidget {
                     style: TextStyle(
                       color: isActive
                           ? theme.colorScheme.onPrimary
-                          : theme.colorScheme.onSurface.withOpacity(0.6),
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),

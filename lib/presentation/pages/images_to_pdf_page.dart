@@ -1,7 +1,7 @@
 // lib/presentation/pages/images_to_pdf_page.dart
 
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
+import 'package:dartz/dartz.dart' as dartz;
 import 'dart:async';
 import 'dart:io';
 import 'package:pdf_kit/models/file_model.dart';
@@ -180,7 +180,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> {
 
     final files = selection.files;
 
-    late final result;
+    late final dartz.Either<CustomException, FileInfo> result;
     try {
       // Pass destination folder to merge service
       result = await PdfMergeService.mergePdfs(
@@ -205,7 +205,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> {
         _isConverting = false;
       }
 
-      if (mounted) {
+      if (context.mounted) {
         _progressDialog.dismiss(context);
       }
 
@@ -250,7 +250,9 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> {
 
         // Navigate to home and clear all routes, then reload home page
         selection.disable();
-        context.go('/');
+        if (context.mounted) {
+          context.go('/');
+        }
 
         // Trigger home page reload
         RecentFilesSection.refreshNotifier.value++;
@@ -332,8 +334,8 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> {
                             border: const UnderlineInputBorder(),
                             enabledBorder: UnderlineInputBorder(
                               borderSide: BorderSide(
-                                color: theme.colorScheme.primary.withOpacity(
-                                  0.3,
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.3,
                                 ),
                               ),
                             ),
@@ -405,7 +407,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> {
                           // showRemove: true,
                           reorderable: _reorderMode,
                           disabled: _isConverting,
-                          onEdit: () => null,
+                          onEdit: () {},
                           onRemove: () => selection.removeFile(f.path),
                           onOpen: () => context.pushNamed(
                             AppRouteName.showPdf,

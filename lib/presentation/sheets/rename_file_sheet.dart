@@ -51,7 +51,9 @@ Future<void> showRenameFileSheet({
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(28),
                 child: Container(
-                  color: theme.dialogBackgroundColor,
+                  color:
+                      theme.dialogTheme.backgroundColor ??
+                      theme.colorScheme.surface,
                   child: Padding(
                     padding: const EdgeInsets.only(
                       left: 20,
@@ -67,8 +69,8 @@ Future<void> showRenameFileSheet({
                           height: 4,
                           margin: const EdgeInsets.only(top: 0, bottom: 16),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.onSurface.withOpacity(
-                              0.18,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.18,
                             ),
                             borderRadius: BorderRadius.circular(4),
                           ),
@@ -138,7 +140,7 @@ Future<void> showRenameFileSheet({
                                   backgroundColor: theme
                                       .colorScheme
                                       .primaryContainer
-                                      .withOpacity(0.3),
+                                      .withValues(alpha: 0.3),
                                   foregroundColor: theme.colorScheme.primary,
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 16,
