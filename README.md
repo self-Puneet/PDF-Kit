@@ -1,4 +1,4 @@
-# PDF Kit &nbsp; [![Get it on Google Play](https://img.shields.io/badge/Get%20it%20on-Google%20Play-black?style=for-the-badge&logo=google-play&logoColor=00D26A)](https://play.google.com/store/apps/details?id=cloud.nexiotech.pdfseva)
+# PDF Kit &nbsp; [![Get it on Google Play](https://img.shields.io/badge/Now%20Available-Google%20Play-green?style=for-the-badge&logo=google-play)](https://play.google.com/store/apps/details?id=cloud.nexiotech.pdfseva)
 
 <center><img src="assets/mockup.png" style="height: 50%; max-height: 500px; width: auto;" alt="PDF Kit mockup" />
 </center>
